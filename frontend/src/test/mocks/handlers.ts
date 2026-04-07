@@ -74,6 +74,16 @@ export const handlers = [
     return HttpResponse.json([])
   }),
   http.get('/api/protocols/', () => HttpResponse.json([mockProtocol])),
+  http.post('/api/protocols/', async ({ request }) => {
+    const body = await request.json() as Record<string, unknown>
+    return HttpResponse.json({ ...mockProtocol, ...body, id: 'protocol-uuid-new' }, { status: 201 })
+  }),
+  http.get('/api/protocols/:id', ({ params }) => HttpResponse.json(mockProtocol)),
+  http.put('/api/protocols/:id', async ({ request }) => {
+    const body = await request.json() as Record<string, unknown>
+    return HttpResponse.json({ ...mockProtocol, ...body })
+  }),
+  http.delete('/api/protocols/:id', () => new HttpResponse(null, { status: 204 })),
   http.post('/api/execution-plans/', () => HttpResponse.json(mockPlan, { status: 201 })),
   http.get('/api/execution-plans/:id', () => HttpResponse.json(mockPlan)),
   http.patch('/api/execution-plans/:id', async ({ request }) => {
