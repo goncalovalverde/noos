@@ -1,0 +1,91 @@
+{
+  "test_name": "TMT-A",
+  "source": "NEURONORMA",
+  "age_ranges": [
+    {
+      "age_min": 50, "age_max": 64,
+      "education_ranges": [
+        {
+          "education_min": 0, "education_max": 7,
+          "conversion_table": {
+            "20": {"pe": 17, "percentil": 96.0},
+            "30": {"pe": 16, "percentil": 93.2},
+            "45": {"pe": 14, "percentil": 82.0},
+            "60": {"pe": 12, "percentil": 75.0},
+            "90": {"pe": 10, "percentil": 50.0},
+            "120": {"pe": 8, "percentil": 25.0},
+            "180": {"pe": 5, "percentil": 10.0},
+            "240": {"pe": 3, "percentil": 5.0}
+          }
+        },
+        {
+          "education_min": 8, "education_max": 12,
+          "conversion_table": {
+            "20": {"pe": 18, "percentil": 97.0},
+            "30": {"pe": 16, "percentil": 93.2},
+            "40": {"pe": 14, "percentil": 82.0},
+            "55": {"pe": 12, "percentil": 75.0},
+            "80": {"pe": 10, "percentil": 50.0},
+            "110": {"pe": 8, "percentil": 25.0},
+            "160": {"pe": 5, "percentil": 10.0},
+            "220": {"pe": 3, "percentil": 5.0}
+          }
+        },
+        {
+          "education_min": 13, "education_max": 30,
+          "conversion_table": {
+            "18": {"pe": 19, "percentil": 99.0},
+            "25": {"pe": 17, "percentil": 95.0},
+            "35": {"pe": 15, "percentil": 86.0},
+            "50": {"pe": 13, "percentil": 79.0},
+            "70": {"pe": 11, "percentil": 63.0},
+            "100": {"pe": 9, "percentil": 37.0},
+            "140": {"pe": 6, "percentil": 16.0},
+            "200": {"pe": 3, "percentil": 5.0}
+          }
+        }
+      ]
+    },
+    {
+      "age_min": 65, "age_max": 100,
+      "education_ranges": [
+        {
+          "education_min": 0, "education_max": 7,
+          "conversion_table": {
+            "30": {"pe": 14, "percentil": 82.0},
+            "45": {"pe": 12, "percentil": 75.0},
+            "60": {"pe": 10, "percentil": 50.0},
+            "90": {"pe": 8, "percentil": 25.0},
+            "120": {"pe": 6, "percentil": 16.0},
+            "180": {"pe": 4, "percentil": 8.0},
+            "240": {"pe": 2, "percentil": 3.0}
+          }
+        },
+        {
+          "education_min": 8, "education_max": 12,
+          "conversion_table": {
+            "25": {"pe": 15, "percentil": 86.0},
+            "40": {"pe": 13, "percentil": 79.0},
+            "55": {"pe": 11, "percentil": 63.0},
+            "80": {"pe": 9, "percentil": 37.0},
+            "110": {"pe": 7, "percentil": 16.0},
+            "160": {"pe": 5, "percentil": 10.0},
+            "220": {"pe": 3, "percentil": 5.0}
+          }
+        },
+        {
+          "education_min": 13, "education_max": 30,
+          "conversion_table": {
+            "22": {"pe": 16, "percentil": 93.2},
+            "35": {"pe": 14, "percentil": 82.0},
+            "50": {"pe": 12, "percentil": 75.0},
+            "75": {"pe": 10, "percentil": 50.0},
+            "105": {"pe": 8, "percentil": 25.0},
+            "150": {"pe": 5, "percentil": 10.0},
+            "210": {"pe": 3, "percentil": 5.0}
+          }
+        }
+      ]
+    }
+  ]
+}

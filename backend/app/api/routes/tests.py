@@ -7,6 +7,9 @@ from app.models.audit_log import AuditLog
 from app.schemas.test_session import TestSessionCreate, TestSessionUpdate, TestSessionOut
 from app.auth.dependencies import get_current_active_user, require_role
 from app.models.user import User
+from app.models.patient import Patient
+from app.services.normatives.calculator import calculator
+from app.services.normatives.raw_score_extractor import extract_raw_score
 
 router = APIRouter(prefix="/api/tests", tags=["tests"])
 
@@ -25,6 +28,16 @@ async def create_test(
     session.set_raw_data(body.raw_data)
     if body.qualitative_data:
         session.set_qualitative_data(body.qualitative_data)
+
+    patient = db.query(Patient).filter(Patient.id == body.patient_id).first()
+    if patient:
+        try:
+            raw_score = extract_raw_score(body.test_type, body.raw_data)
+            scores = calculator.calculate(body.test_type, raw_score, patient.age, patient.education_years)
+            session.set_calculated_scores(scores)
+        except Exception:
+            pass
+
     db.add(session)
     db.commit()
     db.refresh(session)
@@ -80,6 +93,16 @@ async def update_test(
     session.set_raw_data(body.raw_data)
     if body.qualitative_data is not None:
         session.set_qualitative_data(body.qualitative_data)
+
+    patient = db.query(Patient).filter(Patient.id == session.patient_id).first()
+    if patient:
+        try:
+            raw_score = extract_raw_score(session.test_type, body.raw_data)
+            scores = calculator.calculate(session.test_type, raw_score, patient.age, patient.education_years)
+            session.set_calculated_scores(scores)
+        except Exception:
+            pass
+
     db.add(AuditLog(
         user_id=current_user.id,
         action="test.update",

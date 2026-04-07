@@ -1,0 +1,68 @@
+{
+  "test_name": "Fluidez-FAS",
+  "source": "NEURONORMA",
+  "age_ranges": [
+    {
+      "age_min": 50, "age_max": 64,
+      "education_ranges": [
+        {
+          "education_min": 0, "education_max": 10,
+          "conversion_table": {
+            "15": {"pe": 4, "percentil": 8.0},
+            "20": {"pe": 6, "percentil": 16.0},
+            "28": {"pe": 8, "percentil": 25.0},
+            "35": {"pe": 10, "percentil": 50.0},
+            "43": {"pe": 12, "percentil": 75.0},
+            "52": {"pe": 14, "percentil": 82.0},
+            "62": {"pe": 16, "percentil": 93.2},
+            "75": {"pe": 18, "percentil": 97.0}
+          }
+        },
+        {
+          "education_min": 11, "education_max": 30,
+          "conversion_table": {
+            "20": {"pe": 4, "percentil": 8.0},
+            "28": {"pe": 6, "percentil": 16.0},
+            "36": {"pe": 8, "percentil": 25.0},
+            "44": {"pe": 10, "percentil": 50.0},
+            "53": {"pe": 12, "percentil": 75.0},
+            "63": {"pe": 14, "percentil": 82.0},
+            "74": {"pe": 16, "percentil": 93.2},
+            "87": {"pe": 18, "percentil": 97.0}
+          }
+        }
+      ]
+    },
+    {
+      "age_min": 65, "age_max": 100,
+      "education_ranges": [
+        {
+          "education_min": 0, "education_max": 10,
+          "conversion_table": {
+            "12": {"pe": 4, "percentil": 8.0},
+            "17": {"pe": 6, "percentil": 16.0},
+            "23": {"pe": 8, "percentil": 25.0},
+            "30": {"pe": 10, "percentil": 50.0},
+            "38": {"pe": 12, "percentil": 75.0},
+            "47": {"pe": 14, "percentil": 82.0},
+            "57": {"pe": 16, "percentil": 93.2},
+            "69": {"pe": 18, "percentil": 97.0}
+          }
+        },
+        {
+          "education_min": 11, "education_max": 30,
+          "conversion_table": {
+            "18": {"pe": 4, "percentil": 8.0},
+            "25": {"pe": 6, "percentil": 16.0},
+            "32": {"pe": 8, "percentil": 25.0},
+            "40": {"pe": 10, "percentil": 50.0},
+            "49": {"pe": 12, "percentil": 75.0},
+            "59": {"pe": 14, "percentil": 82.0},
+            "70": {"pe": 16, "percentil": 93.2},
+            "82": {"pe": 18, "percentil": 97.0}
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,72 @@
+{
+  "test_name": "TAVEC",
+  "source": "NEURONORMA",
+  "age_ranges": [
+    {
+      "age_min": 50, "age_max": 64,
+      "education_ranges": [
+        {
+          "education_min": 0, "education_max": 7,
+          "conversion_table": {
+            "20": {"pe": 3, "percentil": 5.0},
+            "25": {"pe": 5, "percentil": 10.0},
+            "30": {"pe": 7, "percentil": 16.0},
+            "35": {"pe": 9, "percentil": 37.0},
+            "40": {"pe": 10, "percentil": 50.0},
+            "45": {"pe": 12, "percentil": 75.0},
+            "50": {"pe": 14, "percentil": 82.0},
+            "55": {"pe": 16, "percentil": 93.2},
+            "60": {"pe": 18, "percentil": 97.0}
+          }
+        },
+        {
+          "education_min": 8, "education_max": 30,
+          "conversion_table": {
+            "25": {"pe": 3, "percentil": 5.0},
+            "30": {"pe": 5, "percentil": 10.0},
+            "36": {"pe": 7, "percentil": 16.0},
+            "41": {"pe": 9, "percentil": 37.0},
+            "46": {"pe": 10, "percentil": 50.0},
+            "51": {"pe": 12, "percentil": 75.0},
+            "55": {"pe": 14, "percentil": 82.0},
+            "59": {"pe": 16, "percentil": 93.2},
+            "63": {"pe": 18, "percentil": 97.0}
+          }
+        }
+      ]
+    },
+    {
+      "age_min": 65, "age_max": 100,
+      "education_ranges": [
+        {
+          "education_min": 0, "education_max": 7,
+          "conversion_table": {
+            "15": {"pe": 3, "percentil": 5.0},
+            "20": {"pe": 5, "percentil": 10.0},
+            "26": {"pe": 7, "percentil": 16.0},
+            "31": {"pe": 9, "percentil": 37.0},
+            "36": {"pe": 10, "percentil": 50.0},
+            "41": {"pe": 12, "percentil": 75.0},
+            "46": {"pe": 14, "percentil": 82.0},
+            "50": {"pe": 16, "percentil": 93.2},
+            "54": {"pe": 18, "percentil": 97.0}
+          }
+        },
+        {
+          "education_min": 8, "education_max": 30,
+          "conversion_table": {
+            "20": {"pe": 3, "percentil": 5.0},
+            "26": {"pe": 5, "percentil": 10.0},
+            "32": {"pe": 7, "percentil": 16.0},
+            "37": {"pe": 9, "percentil": 37.0},
+            "42": {"pe": 10, "percentil": 50.0},
+            "47": {"pe": 12, "percentil": 75.0},
+            "51": {"pe": 14, "percentil": 82.0},
+            "55": {"pe": 16, "percentil": 93.2},
+            "59": {"pe": 18, "percentil": 97.0}
+          }
+        }
+      ]
+    }
+  ]
+}
