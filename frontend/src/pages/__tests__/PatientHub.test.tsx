@@ -87,7 +87,7 @@ describe('PatientHub', () => {
     renderHub()
     await screen.findByText('JMR (1234)')
     await screen.findByText('TMT-A')
-    expect(screen.getAllByText('12').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('8').length).toBeGreaterThan(0)
   })
 
   it('shows empty state when no sessions', async () => {

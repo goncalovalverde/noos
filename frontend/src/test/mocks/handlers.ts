@@ -72,6 +72,44 @@ export const mockPlan = {
   updated_at: '2024-01-15T10:00:00Z',
 }
 
+export const mockCompletedPlan = {
+  ...mockPlan,
+  id: 'plan-uuid-completed',
+  status: 'completed',
+}
+
+export const mockSessionTMT = {
+  ...mockSession,
+  id: 'session-tmt',
+  test_type: 'TMT-A',
+  execution_plan_id: 'plan-uuid-completed',
+  calculated_scores: {
+    puntuacion_escalar: 8,
+    percentil: 25.0,
+    z_score: -0.67,
+    clasificacion: 'Normal',
+    norma_aplicada: { fuente: 'NEURONORMA', test: 'TMT-A', rango_edad: '65-80', rango_educacion: '8-12' },
+  },
+  raw_data: { tiempo: 60, errores: 1 },
+  qualitative_data: { observaciones: '' },
+}
+
+export const mockSessionFluency = {
+  ...mockSession,
+  id: 'session-fluency',
+  test_type: 'Fluidez-FAS',
+  execution_plan_id: 'plan-uuid-completed',
+  calculated_scores: {
+    puntuacion_escalar: 13,
+    percentil: 84.0,
+    z_score: 1.0,
+    clasificacion: 'Superior',
+    norma_aplicada: { fuente: 'NEURONORMA', test: 'Fluidez-FAS', rango_edad: '65-80', rango_educacion: '8-12' },
+  },
+  raw_data: { letra_f: 14, letra_a: 12, letra_s: 11 },
+  qualitative_data: { observaciones: 'Muy buena ejecución' },
+}
+
 export const handlers = [
   http.get('/api/patients/', () => HttpResponse.json([mockPatient])),
   http.post('/api/patients/', async ({ request }) => {
@@ -83,7 +121,7 @@ export const handlers = [
     return HttpResponse.json({ detail: 'Paciente no encontrado' }, { status: 404 })
   }),
   http.get('/api/patients/:id/sessions', ({ params }) => {
-    if (params.id === mockPatient.id) return HttpResponse.json([mockSession])
+    if (params.id === mockPatient.id) return HttpResponse.json([mockSessionTMT, mockSessionFluency])
     return HttpResponse.json([])
   }),
   http.get('/api/protocols/', () => HttpResponse.json([mockProtocol])),
@@ -98,7 +136,10 @@ export const handlers = [
   }),
   http.delete('/api/protocols/:id', () => new HttpResponse(null, { status: 204 })),
   http.post('/api/execution-plans/', () => HttpResponse.json(mockPlan, { status: 201 })),
-  http.get('/api/execution-plans/:id', () => HttpResponse.json(mockPlan)),
+  http.get('/api/execution-plans/:id', ({ params }) => {
+    if (params.id === mockCompletedPlan.id) return HttpResponse.json(mockCompletedPlan)
+    return HttpResponse.json(mockPlan)
+  }),
   http.patch('/api/execution-plans/:id', async ({ request }) => {
     const body = await request.json()
     return HttpResponse.json({ ...mockPlan, ...(body as object) })
@@ -119,5 +160,15 @@ export const handlers = [
     calculated_scores: { puntuacion_escalar: 12, percentil: 75.0, clasificacion: 'Normal', norma_aplicada: { fuente: 'NEURONORMA' } },
     qualitative_data: {}, protocol_id: null, execution_plan_id: 'plan-uuid-1'
   }, { status: 201 })),
+  http.get('/api/reports/:planId/pdf', () =>
+    new HttpResponse(new Uint8Array([0x25, 0x50, 0x44, 0x46]), {
+      headers: { 'content-type': 'application/pdf' },
+    })
+  ),
+  http.get('/api/reports/:planId/word', () =>
+    new HttpResponse(new Uint8Array([0x50, 0x4B, 0x03, 0x04]), {
+      headers: { 'content-type': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' },
+    })
+  ),
 ]
 
