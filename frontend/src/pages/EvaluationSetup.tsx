@@ -13,6 +13,7 @@ export default function EvaluationSetup() {
   const [mode, setMode] = useState<'live' | 'paper'>('live')
   const [loading, setLoading] = useState(true)
   const [starting, setStarting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     protocolsApi.list().then(setProtocols).finally(() => setLoading(false))
@@ -21,10 +22,14 @@ export default function EvaluationSetup() {
   const handleStart = async () => {
     if (!selectedProtocol || !patientId) return
     setStarting(true)
+    setError(null)
     try {
       const plan = await evaluationsApi.create(patientId, selectedProtocol.id, mode)
       await evaluationsApi.update(plan.id, { status: 'active' })
       navigate(`/patients/${patientId}/evaluate/${plan.id}`)
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail
+      setError(msg || 'Error al iniciar la evaluación. Inténtalo de nuevo.')
     } finally {
       setStarting(false)
     }
@@ -105,6 +110,13 @@ export default function EvaluationSetup() {
             ))}
           </div>
         </div>
+
+        {/* Error banner */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 rounded-card px-4 py-3 text-sm">
+            {error}
+          </div>
+        )}
 
         {/* Start button */}
         {selectedProtocol && (
