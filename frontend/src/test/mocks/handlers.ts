@@ -110,7 +110,35 @@ export const mockSessionFluency = {
   qualitative_data: { observaciones: 'Muy buena ejecución' },
 }
 
+// Dashboard / stats mock data
+export const mockOverviewStats = {
+  total_patients: 47,
+  tests_this_week: 12,
+  active_protocols: 5,
+  completed_this_month: 8,
+}
+
+export const mockRecentPlan = {
+  id: 'plan-uuid-1',
+  patient_display_id: 'PKT-1234',
+  patient_id: 'test-uuid-1234',
+  protocol_name: 'Rastreio Cognitivo',
+  status: 'completed',
+  mode: 'live',
+  updated_at: new Date().toISOString(),
+}
+
+export const mockClassificationDist = [
+  { clasificacion: 'Superior', count: 15 },
+  { clasificacion: 'Normal', count: 28 },
+  { clasificacion: 'Limítrofe', count: 8 },
+  { clasificacion: 'Deficitario', count: 4 },
+]
+
 export const handlers = [
+  http.get('/api/stats/overview', () => HttpResponse.json(mockOverviewStats)),
+  http.get('/api/stats/recent-plans', () => HttpResponse.json([mockRecentPlan])),
+  http.get('/api/stats/classification-distribution', () => HttpResponse.json(mockClassificationDist)),
   http.get('/api/patients/', () => HttpResponse.json([mockPatient])),
   http.post('/api/patients/', async ({ request }) => {
     const body = await request.json()
@@ -171,4 +199,3 @@ export const handlers = [
     })
   ),
 ]
-

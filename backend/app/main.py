@@ -10,6 +10,7 @@ from app.api.routes import protocols as protocols_router
 from app.api.routes import tests as tests_router
 from app.api.routes import execution_plans as execution_plans_router
 from app.api.routes import reports as reports_router
+from app.api.routes import stats as stats_router
 
 # Import models so SQLAlchemy registers them before create_all
 from app.models import User, AuditLog, Patient, TestSession, Protocol, ProtocolTest, PatientProtocol, ExecutionPlan  # noqa: F401
@@ -71,6 +72,7 @@ app.include_router(protocols_router.router)
 app.include_router(tests_router.router)
 app.include_router(execution_plans_router.router)
 app.include_router(reports_router.router)
+app.include_router(stats_router.router)
 
 @app.get("/api/health")
 def health():
