@@ -7,8 +7,12 @@ export const apiClient = axios.create({
 })
 
 apiClient.interceptors.request.use((config) => {
-  const token = useAuthStore.getState().token
-  if (token) config.headers.Authorization = `Bearer ${token}`
+  try {
+    const token = useAuthStore.getState().token
+    if (token) config.headers.Authorization = `Bearer ${token}`
+  } catch {
+    // Store may be mocked in test environment
+  }
   return config
 })
 

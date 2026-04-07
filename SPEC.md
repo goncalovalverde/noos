@@ -2197,3 +2197,117 @@ const radarLayout = {
   },
 };
 ```
+
+---
+
+## 23. Abordagem de Desenvolvimento — TDD Obrigatório
+
+> **REGRA PERMANENTE:** Todo o código novo deve seguir Test-Driven Development.
+> Escrever os testes **antes** da implementação. Nunca implementar sem testes a falhar primeiro.
+
+### 23.1 Ciclo TDD
+
+```
+1. RED   → Escrever teste que falha (descreve o comportamento desejado)
+2. GREEN → Implementar o mínimo para o teste passar
+3. REFACTOR → Limpar o código sem quebrar os testes
+```
+
+### 23.2 Backend (pytest)
+
+**Stack de testes:**
+- `pytest` + `pytest-asyncio` — já em requirements.txt
+- `httpx` — cliente async para testar FastAPI (já em requirements.txt)
+- `pytest-cov` — cobertura de código (adicionar a requirements.txt)
+
+**Estrutura:**
+```
+backend/tests/
+├── conftest.py          # fixtures: app, client, db, admin_token, neuro_token
+├── test_auth.py
+├── test_patients.py
+├── test_protocols.py
+├── test_tests.py
+├── test_execution_plans.py
+└── test_normatives.py
+```
+
+**Padrão de teste:**
+```python
+# Sempre testar: sucesso, erro de validação, erro de permissão
+def test_create_patient_success(client, neuro_token):
+    res = client.post("/api/patients/", json={...}, headers=neuro_token)
+    assert res.status_code == 201
+    assert res.json()["display_id"].startswith("PKT-") or "(" in res.json()["display_id"]
+
+def test_create_patient_forbidden_for_observador(client, observer_token):
+    res = client.post("/api/patients/", json={...}, headers=observer_token)
+    assert res.status_code == 403
+```
+
+**Fixtures obrigatórias em `conftest.py`:**
+- `db` — sessão SQLite in-memory isolada por teste
+- `client` — `TestClient` do FastAPI com a DB de teste
+- `admin_token` — headers `{"Authorization": "Bearer <token>"}` com role Administrador
+- `neuro_token` — headers com role Neuropsicólogo
+- `observer_token` — headers com role Observador
+
+### 23.3 Frontend (Vitest + React Testing Library)
+
+**Stack de testes:**
+```json
+"vitest": "^1.6.0",
+"@testing-library/react": "^15.0.0",
+"@testing-library/user-event": "^14.5.2",
+"@testing-library/jest-dom": "^6.4.0",
+"jsdom": "^24.0.0",
+"msw": "^2.3.0"
+```
+
+**Estrutura:**
+```
+frontend/src/
+├── components/
+│   ├── layout/
+│   │   └── __tests__/
+│   │       └── Sidebar.test.tsx
+│   └── patient/
+│       └── __tests__/
+│           └── PatientCard.test.tsx
+└── pages/
+    └── __tests__/
+        └── PatientList.test.tsx
+```
+
+**Padrão de teste:**
+```typescript
+// Testar: render correto, interações do utilizador, estados de erro/loading
+it('mostra lista de pacientes após carregar', async () => {
+  server.use(http.get('/api/patients/', () => HttpResponse.json([mockPatient])))
+  render(<PatientList />)
+  expect(await screen.findByText('PKT-1A2B')).toBeInTheDocument()
+})
+```
+
+**MSW (Mock Service Worker):** usar para interceptar chamadas à API nos testes de frontend — nunca fazer chamadas reais à API nos testes.
+
+### 23.4 Critérios de Aceitação por Feature
+
+Cada feature deve ter testes que cobrem:
+1. **Happy path** — fluxo normal funciona
+2. **Validação** — dados inválidos rejeitados com mensagem correta
+3. **Permissões** — roles sem acesso recebem 403/redirect
+4. **Edge cases** — lista vazia, ID inexistente, etc.
+
+### 23.5 Executar testes
+
+```bash
+# Backend
+cd backend && source venv/bin/activate
+pytest tests/ -v --cov=app --cov-report=term-missing
+
+# Frontend
+cd frontend && npm test
+# ou para UI visual:
+npm run test:ui
+```
