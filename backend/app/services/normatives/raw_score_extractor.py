@@ -7,11 +7,12 @@ def extract_raw_score(test_type: str, raw_data: Dict[str, Any]) -> float:
         "TMT-B":             lambda d: d["tiempo_segundos"],
         "TAVEC":             lambda d: sum(d[f"ensayo_{i}"] for i in range(1, 6)),
         "Fluidez-FAS":       lambda d: d["letra_f"] + d["letra_a"] + d["letra_s"],
-        "Fluidez-Semántica": lambda d: d["animales"] + d["frutas"] + d["categoria_libre"],
+        "Fluidez-Semantica": lambda d: d["animales"] + d["frutas"] + d["categoria_libre"],
         "Rey-Copia":         lambda d: d["puntuacion_bruta"],
         "Rey-Memoria":       lambda d: d["puntuacion_bruta"],
-        "Toulouse-Piéron":   lambda d: d["productividad_neta"],
+        "Toulouse-Pieron":   lambda d: d["productividad_neta"],
         "Torre-de-Londres":  lambda d: _torre_raw(d),
+        "Stroop":            lambda d: _stroop_interference(d),
         "DIVA-5":            lambda d: d["inatención_actual"] + d["hiperactividad_actual"],
         "BRIEF-A":           lambda d: sum(d.values()),
         "WAIS-IV":           lambda d: d["CI_total"],
@@ -28,6 +29,21 @@ def extract_raw_score(test_type: str, raw_data: Dict[str, Any]) -> float:
         return float(sum(v for v in raw_data.values() if isinstance(v, (int, float))))
 
     return float(extractors[test_type](raw_data))
+
+
+def _stroop_interference(raw_data: dict) -> float:
+    """
+    Índice de interferência Stroop: PC_obs - PC_esperado
+    PC_esperado = (P x C) / (P + C)  (fórmula Golden, 1978)
+    Valor positivo = boa inibição de resposta automática.
+    """
+    p = raw_data.get("palabras", 0)
+    c = raw_data.get("colores", 0)
+    pc = raw_data.get("interferencia", 0)
+    if p + c == 0:
+        return float(pc)
+    pc_esperado = (p * c) / (p + c)
+    return float(pc - pc_esperado)
 
 
 def _torre_raw(raw_data: dict) -> float:
