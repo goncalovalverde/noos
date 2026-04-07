@@ -1,5 +1,18 @@
 import { http, HttpResponse } from 'msw'
 import type { Patient } from '@/types/patient'
+import type { UserOut } from '@/api/users'
+
+export const mockUser: UserOut = {
+  id: 'user-uuid-1',
+  username: 'dra.martinez',
+  full_name: 'Dra. Ana Martínez',
+  email: 'ana@triune.es',
+  role: 'Neuropsicólogo',
+  can_manage_protocols: false,
+  is_active: true,
+  created_at: new Date().toISOString(),
+  last_login: new Date().toISOString(),
+}
 
 export const mockPatient: Patient = {
   id: 'test-uuid-1234',
@@ -90,6 +103,16 @@ export const handlers = [
     const body = await request.json()
     return HttpResponse.json({ ...mockPlan, ...(body as object) })
   }),
+  http.get('/api/users/', () => HttpResponse.json([mockUser])),
+  http.post('/api/users/', async ({ request }) => {
+    const body = await request.json() as Record<string, unknown>
+    return HttpResponse.json({ ...mockUser, ...body, id: 'user-uuid-new' }, { status: 201 })
+  }),
+  http.patch('/api/users/:id', async ({ request }) => {
+    const body = await request.json() as Record<string, unknown>
+    return HttpResponse.json({ ...mockUser, ...body })
+  }),
+  http.delete('/api/users/:id', () => new HttpResponse(null, { status: 204 })),
   http.post('/api/tests/', () => HttpResponse.json({
     id: 'test-uuid-new', patient_id: 'test-uuid-1234', test_type: 'TMT-A',
     date: '2024-01-15T10:00:00Z', raw_data: { tiempo_segundos: 60 },
