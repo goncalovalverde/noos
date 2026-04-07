@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Noos -- Pantalla 5: Editor de Protocolos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Work Sans",sans-serif;background:#F6F5F2;color:#270D38;display:flex;height:100vh;overflow:hidden}
+.sb{width:240px;min-width:240px;background:#4B164F;color:white;display:flex;flex-direction:column;height:100vh}
+.sb-logo{padding:26px 24px 22px;border-bottom:1px solid rgba(255,255,255,.12);display:flex;align-items:center;gap:10px}
+.sb-icon{width:32px;height:32px;background:#B738F2;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700}
+.sb-name{font-size:20px;font-weight:600}
+.sb-sub{font-size:10px;font-weight:500;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:1px;margin-top:1px}
+.sb-nav{flex:1;padding:16px 12px;display:flex;flex-direction:column;gap:2px}
+.ni{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;font-size:14px;font-weight:500;color:rgba(255,255,255,.6);cursor:pointer}
+.ni:hover{background:rgba(255,255,255,.1);color:white}
+.ni.act{background:rgba(255,255,255,.15);color:white}
+.sb-user{padding:14px 16px;border-top:1px solid rgba(255,255,255,.12);display:flex;align-items:center;gap:10px}
+.ua{width:34px;height:34px;border-radius:50%;background:#9839D1;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700}
+.un{font-size:13px;font-weight:500}
+.ur{font-size:11px;color:rgba(255,255,255,.5)}
+.main{flex:1;display:flex;overflow:hidden}
+.lp{width:300px;min-width:300px;background:white;border-right:1px solid rgba(0,0,0,.08);display:flex;flex-direction:column;overflow:hidden}
+.lp-head{padding:20px 18px 14px;border-bottom:1px solid rgba(0,0,0,.06)}
+.lp-title{font-size:16px;font-weight:600;color:#270D38;margin-bottom:12px}
+.lp-title span{color:#B738F2}
+.sw{position:relative;margin-bottom:10px}
+.sicon{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:#9ca3af}
+.sinput{font-family:"Work Sans",sans-serif;width:100%;background:#F6F5F2;border:1.5px solid #e5e7eb;border-radius:9px;padding:9px 12px 9px 34px;font-size:13px;color:#270D38;outline:none}
+.sinput:focus{border-color:#9839D1;background:white}
+.chips{display:flex;gap:5px;flex-wrap:wrap}
+.chip{padding:4px 11px;border-radius:9999px;font-size:11px;font-weight:600;cursor:pointer;border:1.5px solid #e5e7eb;color:#7E7E7E;background:transparent}
+.chip:hover{border-color:#d8b4fe;color:#9839D1}
+.chip.on{background:#ede9fe;border-color:#c4b5fd;color:#7c3aed}
+.btn-new{margin:12px 18px 0;display:flex;align-items:center;justify-content:center;gap:7px;background:#9839D1;color:white;border:none;border-radius:9999px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:"Work Sans",sans-serif}
+.btn-new:hover{background:#4B164F}
+.proto-list{flex:1;overflow-y:auto;padding:8px 0}
+.pi{padding:12px 18px;cursor:pointer;border-left:3px solid transparent;border-bottom:1px solid rgba(0,0,0,.04)}
+.pi:hover{background:#fafafa}
+.pi.act{background:#faf5ff;border-left-color:#9839D1}
+.pi-name{font-size:14px;font-weight:600;color:#270D38;margin-bottom:5px}
+.pi-meta{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.cbadge{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;border-radius:9999px;padding:2px 8px}
+.c-completa{background:#ede9fe;color:#6d28d9}
+.c-cribado{background:#dbeafe;color:#1d4ed8}
+.c-memoria{background:#dcfce7;color:#15803d}
+.c-ejecutiva{background:#fce7f3;color:#9d174d}
+.c-seguim{background:#fef9c3;color:#a16207}
+.pi-tc{font-size:11px;color:#7E7E7E}
+.pi-usage{font-size:11px;color:#9839D1;font-weight:500}
+.pi-date{font-size:11px;color:#9ca3af;margin-top:3px}
+.ep{flex:1;display:flex;flex-direction:column;overflow:hidden;background:#F6F5F2}
+.etop{background:white;border-bottom:1px solid rgba(0,0,0,.07);padding:13px 26px;display:flex;align-items:center;gap:12px;flex-shrink:0}
+.estatus{display:flex;align-items:center;gap:6px;font-size:12px;color:#7E7E7E}
+.sdot{width:7px;height:7px;border-radius:50%;background:#fbbf24}
+.sdot.saved{background:#4ade80}
+.emod{font-size:12px;color:#7E7E7E}
+.eacts{margin-left:auto;display:flex;gap:9px}
+.btn-del{background:transparent;color:#ef4444;border:1.5px solid #fecaca;border-radius:9999px;padding:8px 15px;font-size:12px;font-weight:500;cursor:pointer;font-family:"Work Sans",sans-serif;display:flex;align-items:center;gap:5px}
+.btn-del:hover{background:#fee2e2}
+.btn-out{background:transparent;color:#9839D1;border:1.5px solid #d8b4fe;border-radius:9999px;padding:8px 16px;font-size:12px;font-weight:500;cursor:pointer;font-family:"Work Sans",sans-serif;display:flex;align-items:center;gap:5px}
+.btn-out:hover{background:#faf5ff}
+.btn-prim{background:#9839D1;color:white;border:none;border-radius:9999px;padding:9px 20px;font-size:13px;font-weight:600;cursor:pointer;font-family:"Work Sans",sans-serif;display:flex;align-items:center;gap:6px}
+.btn-prim:hover{background:#4B164F}
+.ebody{flex:1;overflow-y:auto;padding:22px 26px;display:flex;flex-direction:column;gap:16px}
+.sc{background:white;border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,.09);border:1px solid rgba(0,0,0,.06);overflow:hidden}
+.sch{padding:13px 20px;border-bottom:1px solid rgba(0,0,0,.05);display:flex;align-items:center;justify-content:space-between}
+.sct{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:#7E7E7E}
+.scb{padding:16px 20px}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:12px}
+.frow.s1{grid-template-columns:1fr}
+.fld{display:flex;flex-direction:column;gap:5px}
+.fld label{font-size:12px;font-weight:600;color:#270D38}
+.tinput,.tarinput{font-family:"Work Sans",sans-serif;background:#F6F5F2;border:1.5px solid #e5e7eb;border-radius:9px;padding:9px 13px;font-size:14px;color:#270D38;outline:none}
+.tinput:focus,.tarinput:focus{border-color:#9839D1;background:white;box-shadow:0 0 0 3px rgba(152,57,209,.10)}
+.tarinput{resize:vertical;min-height:64px;font-size:13px}
+.catsel{display:flex;gap:7px;flex-wrap:wrap}
+.cpill{padding:6px 14px;border-radius:9999px;font-size:12px;font-weight:600;cursor:pointer;border:2px solid transparent}
+.cpill.completa{background:#ede9fe;color:#6d28d9;border-color:#ddd6fe}
+.cpill.cribado{background:#dbeafe;color:#1d4ed8;border-color:#bfdbfe}
+.cpill.memoria{background:#dcfce7;color:#15803d;border-color:#bbf7d0}
+.cpill.ejecutiva{background:#fce7f3;color:#9d174d;border-color:#fbcfe8}
+.cpill.seguim{background:#fef9c3;color:#a16207;border-color:#fde68a}
+.cpill.sel{outline:2.5px solid #9839D1;outline-offset:2px}
+.tei{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid rgba(0,0,0,.05)}
+.tei:last-child{border-bottom:none}
+.dh{color:#d1d5db;cursor:grab;padding:3px 2px;margin-top:3px;flex-shrink:0}
+.dh:hover{color:#9ca3af}
+.onum{width:24px;height:24px;border-radius:7px;background:#ede9fe;color:#7c3aed;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:3px}
+.tei-info{flex:1;min-width:0}
+.tei-name{font-size:14px;font-weight:600;color:#270D38;margin-bottom:2px}
+.tei-dom{font-size:11px;color:#7E7E7E;margin-bottom:6px}
+.note-def{font-family:"Work Sans",sans-serif;width:100%;background:#F6F5F2;border:1.5px solid #e5e7eb;border-radius:8px;padding:7px 11px;font-size:12px;color:#270D38;outline:none}
+.note-def:focus{border-color:#9839D1;background:white}
+.tei-rmv{width:28px;height:28px;border-radius:7px;border:1px solid #e5e7eb;background:transparent;color:#d1d5db;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px}
+.tei-rmv:hover{background:#fee2e2;border-color:#fca5a5;color:#ef4444}
+.add-row{display:flex;align-items:center;gap:10px;padding:12px 0 0;border-top:1.5px dashed #e9d5ff;margin-top:4px}
+.add-sel{font-family:"Work Sans",sans-serif;flex:1;background:#F6F5F2;border:1.5px dashed #c4b5fd;border-radius:9px;padding:9px 13px;font-size:13px;color:#270D38;outline:none;cursor:pointer}
+.add-sel:focus{border-color:#9839D1;background:white;border-style:solid}
+.btn-addtest{background:#9839D1;color:white;border:none;border-radius:9999px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:"Work Sans",sans-serif;white-space:nowrap;display:flex;align-items:center;gap:5px}
+.btn-addtest:hover{background:#4B164F}
+.ibanner{display:flex;align-items:flex-start;gap:10px;background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:12px 16px;font-size:12px;color:#92400e;line-height:1.6}
+.srow{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid rgba(0,0,0,.05)}
+.srow:last-child{border-bottom:none}
+.srl{font-size:13px;font-weight:500;color:#270D38}
+.srs{font-size:11px;color:#7E7E7E;margin-top:1px}
+.toggle{width:38px;height:21px;border-radius:9999px;background:#9839D1;position:relative;cursor:pointer;flex-shrink:0}
+.toggle::after{content:"";width:15px;height:15px;border-radius:50%;background:white;position:absolute;top:3px;left:20px;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:left .15s}
+.toggle.off{background:#e5e7eb}
+.toggle.off::after{left:3px}
+
+  .perm-banner {
+    display: flex; align-items: flex-start; gap: 10px;
+    background: #fff7ed; border: 1px solid #fed7aa; border-radius: 10px;
+    padding: 11px 16px; font-size: 13px; color: #92400e; line-height: 1.5;
+    margin: 0 26px 0;
+  }
+  .perm-banner.hidden { display: none; }
+  .readonly-overlay {
+    position: absolute; inset: 0; z-index: 5;
+    background: rgba(246,245,242,.65); border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    backdrop-filter: blur(1px);
+  }
+  .readonly-overlay.hidden { display: none; }
+  .readonly-msg {
+    background: white; border-radius: 10px; padding: 14px 20px;
+    box-shadow: 0 4px 16px rgba(0,0,0,.1); border: 1px solid rgba(0,0,0,.08);
+    text-align: center; font-size: 13px; color: #7E7E7E;
+  }
+  .perm-toggle-bar {
+    display: flex; align-items: center; gap: 10px;
+    background: #faf5ff; border-bottom: 1px solid rgba(0,0,0,.06);
+    padding: 8px 26px; font-size: 12px; color: #7E7E7E; flex-shrink: 0;
+  }
+  .perm-toggle-bar strong { color: #270D38; }
+  .toggle-sm {
+    width: 34px; height: 18px; border-radius: 9999px; background: #9839D1;
+    position: relative; cursor: pointer; flex-shrink: 0;
+  }
+  .toggle-sm::after {
+    content: ""; width: 12px; height: 12px; border-radius: 50%; background: white;
+    position: absolute; top: 3px; left: 19px; transition: left .15s;
+    box-shadow: 0 1px 2px rgba(0,0,0,.2);
+  }
+  .toggle-sm.off { background: #e5e7eb; }
+  .toggle-sm.off::after { left: 3px; }
+</style>
+</head>
+<body>
+
+<aside class="sb">
+  <div class="sb-logo">
+    <div class="sb-icon">N</div>
+    <div><div class="sb-name">Noos</div><div class="sb-sub">Neuropsicologia</div></div>
+  </div>
+  <nav class="sb-nav">
+    <div class="ni">
+      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Inicio
+    </div>
+    <div class="ni">
+      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+      Pacientes
+    </div>
+    <div class="ni act">
+      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="m9 12 2 2 4-4"/></svg>
+      Protocolos
+    </div>
+    <div class="ni" style="margin-top:auto">
+      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93A10 10 0 1 0 4.93 19.07 10 10 0 0 0 19.07 4.93z"/></svg>
+      Ajustes
+    </div>
+  </nav>
+  <div class="sb-user">
+    <div class="ua">DG</div>
+    <div><div class="un">Dra. Garcia</div><div class="ur">Neuropsicóloga</div></div>
+  </div>
+</aside>
+
+<div class="main">
+
+  <div class="lp">
+    <div class="lp-head">
+      <div class="lp-title">Protocolos <span>clinicos</span></div>
+      <div class="sw">
+        <svg class="sicon" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input class="sinput" placeholder="Buscar protocolo..." />
+      </div>
+      <div class="chips">
+        <span class="chip on" onclick="fc(this)">Todos</span>
+        <span class="chip" onclick="fc(this)">Cribado</span>
+        <span class="chip" onclick="fc(this)">Memoria</span>
+        <span class="chip" onclick="fc(this)">Ejecutiva</span>
+      </div>
+    </div>
+    <button class="btn-new" id="btnNew">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Nuevo protocolo
+    </button>
+    <div class="proto-list">
+      <div class="pi act">
+        <div class="pi-name">Bateria Completa NEURONORMA</div>
+        <div class="pi-meta"><span class="cbadge c-completa">Completa</span><span class="pi-tc">6 tests</span><span class="pi-usage">· 23 usos</span></div>
+        <div class="pi-date">Modificado 28 mar 2026</div>
+      </div>
+      <div class="pi" onclick="sp(this)">
+        <div class="pi-name">Cribado Cognitivo Rapido</div>
+        <div class="pi-meta"><span class="cbadge c-cribado">Cribado</span><span class="pi-tc">3 tests</span><span class="pi-usage">· 41 usos</span></div>
+        <div class="pi-date">Modificado 15 feb 2026</div>
+      </div>
+      <div class="pi" onclick="sp(this)">
+        <div class="pi-name">Protocolo Memoria Episodica</div>
+        <div class="pi-meta"><span class="cbadge c-memoria">Memoria</span><span class="pi-tc">4 tests</span><span class="pi-usage">· 17 usos</span></div>
+        <div class="pi-date">Modificado 2 feb 2026</div>
+      </div>
+      <div class="pi" onclick="sp(this)">
+        <div class="pi-name">Evaluacion Funcion Ejecutiva</div>
+        <div class="pi-meta"><span class="cbadge c-ejecutiva">Ejecutiva</span><span class="pi-tc">5 tests</span><span class="pi-usage">· 9 usos</span></div>
+        <div class="pi-date">Modificado 18 ene 2026</div>
+      </div>
+      <div class="pi" onclick="sp(this)">
+        <div class="pi-name">Seguimiento Post-Tratamiento</div>
+        <div class="pi-meta"><span class="cbadge c-seguim">Seguimiento</span><span class="pi-tc">4 tests</span><span class="pi-usage">· 6 usos</span></div>
+        <div class="pi-date">Creado 5 ene 2026</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ep" style="position:relative">
+    <div class="etop">
+      <div class="estatus" id="estatus"><div class="sdot"></div>Cambios sin guardar</div>
+      <div class="emod">Ultima modificacion: 28 mar 2026 por <strong>Dra. Garcia</strong></div>
+      <div class="eacts">
+        <button class="btn-del">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3,6 5,6 21,6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+          Eliminar
+        </button>
+        <button class="btn-out">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          Duplicar
+        </button>
+        <button class="btn-prim" onclick="markSaved()">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20,6 9,17 4,12"/></svg>
+          Guardar cambios
+        </button>
+      </div>
+    </div>
+
+    
+<!-- Permission simulation bar (for demo) -->
+<div class="perm-toggle-bar">
+  <svg width="13" height="13" fill="none" stroke="#9839D1" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93A10 10 0 1 0 4.93 19.07 10 10 0 0 0 19.07 4.93z"/></svg>
+  <strong>Demo:</strong> Usuario actual tiene permiso de gestionar protocolos
+  <div class="toggle-sm" id="permToggle" onclick="togglePerm()"></div>
+  <span id="permLabel" style="color:#9839D1;font-weight:600;">Activado</span>
+  <span style="margin-left:6px;color:#9ca3af;">(simula el flag <code>can_manage_protocols</code>)</span>
+</div>
+<!-- Read-only banner (shown when no permission) -->
+<div class="perm-banner hidden" id="permBanner">
+  <svg width="15" height="15" fill="none" stroke="#d97706" stroke-width="2" viewBox="0 0 24 24" style="flex-shrink:0;margin-top:1px"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+  <span><strong>Vista de solo lectura.</strong> Puedes usar y customizar estos protocolos para tus pacientes, pero no tienes permiso para editarlos. Contacta al administrador si necesitas modificar protocolos base.</span>
+</div>
+
+<div class="ebody" id="ebody">
+
+      <div class="sc">
+        <div class="sch"><span class="sct">Informacion basica</span></div>
+        <div class="scb">
+          <div class="frow">
+            <div class="fld">
+              <label>Nombre del protocolo</label>
+              <input class="tinput" value="Bateria Completa NEURONORMA" oninput="markUnsaved()" />
+            </div>
+            <div class="fld">
+              <label>Categoria</label>
+              <div class="catsel" style="margin-top:2px">
+                <span class="cpill completa sel" onclick="selCat(this)">Completa</span>
+                <span class="cpill cribado" onclick="selCat(this)">Cribado</span>
+                <span class="cpill memoria" onclick="selCat(this)">Memoria</span>
+                <span class="cpill ejecutiva" onclick="selCat(this)">Ejecutiva</span>
+                <span class="cpill seguim" onclick="selCat(this)">Seguim.</span>
+              </div>
+            </div>
+          </div>
+          <div class="frow s1" style="margin-bottom:0">
+            <div class="fld">
+              <label>Descripcion clinica</label>
+              <textarea class="tarinput" oninput="markUnsaved()">Bateria completa de evaluacion neuropsicologica siguiendo las normas NEURONORMA Espana. Adecuada para adultos mayores de 50 anos. Incluye pruebas de atencion, memoria verbal, funcion ejecutiva, lenguaje y visuoconstruccion.</textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ibanner">
+        <svg width="15" height="15" fill="none" stroke="#d97706" stroke-width="2" viewBox="0 0 24 24" style="flex-shrink:0;margin-top:1px"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/></svg>
+        <span><strong>Este protocolo esta en uso en 23 evaluaciones activas.</strong> Los cambios aqui NO afectan a los planes de pacientes ya creados -- solo a los nuevos que se creen a partir de ahora.</span>
+      </div>
+
+      <div class="sc">
+        <div class="sch">
+          <span class="sct">Tests del protocolo</span>
+          <span style="font-size:11px;color:#7E7E7E">Arrastra para reordenar · Notas predefinidas opcionales</span>
+        </div>
+        <div class="scb" style="padding-bottom:14px">
+
+          <div class="tei">
+            <div class="dh"><svg width="13" height="13" fill="currentColor" viewBox="0 0 24 24"><circle cx="9" cy="5" r="1.4"/><circle cx="15" cy="5" r="1.4"/><circle cx="9" cy="12" r="1.4"/><circle cx="15" cy="12" r="1.4"/><circle cx="9" cy="19" r="1.4"/><circle cx="15" cy="19" r="1.4"/></svg></div>
+            <div class="onum">1</div>
+            <div class="tei-info">
+              <div class="tei-name">TMT-A -- Trail Making Test A</div>
+              <div class="tei-dom">Atencion sostenida &middot; Velocidad psicomotora</div>
+              <input class="note-def" value="Asegurar que el paciente comprende la tarea. Limite: 5 minutos." oninput="markUnsaved()" />
+            </div>
+            <button class="tei-rmv" onclick="rmv(this)"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+          </div>
+
+          <div class="tei">
+            <div class="dh"><svg width="13" height="13" fill="currentColor" viewBox="0 0 24 24"><circle cx="9" cy="5" r="1.4"/><circle cx="15" cy="5" r="1.4"/><circle cx="9" cy="12" r="1.4"/><circle cx="15" cy="12" r="1.4"/><circle cx="9" cy="19" r="1.4"/><circle cx="15" cy="19" r="1.4"/></svg></div>
+            <div class="onum">2</div>
+            <div class="tei-info">
+              <div class="tei-name">TMT-B -- Trail Making Test B</div>
+              <div class="tei-dom">Funcion ejecutiva &middot; Flexibilidad cognitiva</div>
+              <input class="note-def" placeholder="Instruccion predefinida (opcional)..." oninput="markUnsaved()" />
+            </div>
+            <button class="tei-rmv" onclick="rmv(this)"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+          </div>
+
+          <div class="tei">
+            <div class="dh"><svg width="13" height="13" fill="currentColor" viewBox="0 0 24 24"><circle cx="9" cy="5" r="1.4"/><circle cx="15" cy="5" r="1.4"/><circle cx="9" cy="12" r="1.4"/><circle cx="15" cy="12" r="1.4"/><circle cx="9" cy="19" r="1.4"/><circle cx="15" cy="19" r="1.4"/></svg></div>
+            <div class="onum">3</div>
+            <div class="tei-info">
+              <div class="tei-name">TAVEC -- Aprendizaje Verbal</div>
+              <div class="tei-dom">Memoria verbal &middot; Curva de aprendizaje</div>
+              <input class="note-def" value="La lista interferente (Lista B) se aplica entre ensayo 5 y recuerdo inmediato." oninput="markUnsaved()" />
+            </div>
+            <button class="tei-rmv" onclick="rmv(this)"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+          </div>
+
+          <div class="tei">
+            <div class="dh"><svg width="13" height="13" fill="currentColor" viewBox="0 0 24 24"><circle cx="9" cy="5" r="1.4"/><circle cx="15" cy="5" r="1.4"/><circle cx="9" cy="12" r="1.4"/><circle cx="15" cy="12" r="1.4"/><circle cx="9" cy="19" r="1.4"/><circle cx="15" cy="19" r="1.4"/></svg></div>
+            <div class="onum">4</div>
+            <div class="tei-info">
+              <div class="tei-name">Fluidez Fonologica FAS</div>
+              <div class="tei-dom">Lenguaje &middot; Acceso lexico</div>
+              <input class="note-def" value="60 segundos por letra. Excluir nombres propios y variaciones." oninput="markUnsaved()" />
+            </div>
+            <button class="tei-rmv" onclick="rmv(this)"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+          </div>
+
+          <div class="tei">
+            <div class="dh"><svg width="13" height="13" fill="currentColor" viewBox="0 0 24 24"><circle cx="9" cy="5" r="1.4"/><circle cx="15" cy="5" r="1.4"/><circle cx="9" cy="12" r="1.4"/><circle cx="15" cy="12" r="1.4"/><circle cx="9" cy="19" r="1.4"/><circle cx="15" cy="19" r="1.4"/></svg></div>
+            <div class="onum">5</div>
+            <div class="tei-info">
+              <div class="tei-name">Figura de Rey -- Copia</div>
+              <div class="tei-dom">Visuoconstruccion &middot; Organizacion perceptiva</div>
+              <input class="note-def" placeholder="Instruccion predefinida (opcional)..." oninput="markUnsaved()" />
+            </div>
+            <button class="tei-rmv" onclick="rmv(this)"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+          </div>
+
+          <div class="tei">
+            <div class="dh"><svg width="13" height="13" fill="currentColor" viewBox="0 0 24 24"><circle cx="9" cy="5" r="1.4"/><circle cx="15" cy="5" r="1.4"/><circle cx="9" cy="12" r="1.4"/><circle cx="15" cy="12" r="1.4"/><circle cx="9" cy="19" r="1.4"/><circle cx="15" cy="19" r="1.4"/></svg></div>
+            <div class="onum">6</div>
+            <div class="tei-info">
+              <div class="tei-name">Figura de Rey -- Memoria</div>
+              <div class="tei-dom">Memoria visual &middot; Recuerdo diferido</div>
+              <input class="note-def" value="Administrar 20 min despues de Rey-Copia. No avisar al paciente." oninput="markUnsaved()" />
+            </div>
+            <button class="tei-rmv" onclick="rmv(this)"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+          </div>
+
+          <div class="add-row">
+            <select class="add-sel" id="newTestSel">
+              <option value="">-- Seleccionar test para anadir --</option>
+              <option>Torre de Londres</option>
+              <option>Toulouse-Piéron</option>
+              <option>Stroop</option>
+              <option>Semejanzas WAIS</option>
+              <option>Digitos WAIS</option>
+              <option>Fluidez Semantica (Animales)</option>
+              <option>Boston Naming Test (abrev.)</option>
+            </select>
+            <button class="btn-addtest" onclick="addTest()">
+              <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Anadir
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="sc">
+        <div class="sch"><span class="sct">Ajustes del protocolo</span></div>
+        <div class="scb">
+          <div class="srow">
+            <div><div class="srl">Visible para todos los clinicos</div><div class="srs">Si esta desactivado, solo tu puedes usarlo</div></div>
+            <div class="toggle" onclick="this.classList.toggle('off')"></div>
+          </div>
+          <div class="srow">
+            <div><div class="srl">Permitir personalizacion por paciente</div><div class="srs">Los clinicos pueden anadir o excluir tests al asignarlo</div></div>
+            <div class="toggle" onclick="this.classList.toggle('off')"></div>
+          </div>
+          <div class="srow">
+            <div><div class="srl">Guardar variantes como protocolos derivados</div><div class="srs">Las customizaciones frecuentes se pueden reutilizar</div></div>
+            <div class="toggle off" onclick="this.classList.toggle('off')"></div>
+          </div>
+          <div class="srow">
+            <div><div class="srl">Requerir observaciones clinicas en cada test</div><div class="srs">El campo de notas sera obligatorio durante la evaluacion</div></div>
+            <div class="toggle off" onclick="this.classList.toggle('off')"></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<script>
+function togglePerm() {
+  const tog = document.getElementById('permToggle');
+  const hasPerms = tog.classList.toggle('off');  // off = no permission
+  document.getElementById('permLabel').textContent = hasPerms ? 'Desactivado' : 'Activado';
+  document.getElementById('permLabel').style.color = hasPerms ? '#ef4444' : '#9839D1';
+  document.getElementById('permBanner').classList.toggle('hidden', !hasPerms);
+  document.getElementById('readonlyOverlay').classList.toggle('hidden', !hasPerms);
+  document.getElementById('btnNew').style.visibility = hasPerms ? 'hidden' : 'visible';
+  // Disable all inputs in editor
+  document.querySelectorAll('.ep input,.ep textarea,.ep select,.ep button:not(#permToggle)').forEach(el => {
+    if (hasPerms) el.setAttribute('disabled','');
+    else el.removeAttribute('disabled');
+  });
+  // Hide save/delete actions
+  document.querySelectorAll('.btn-del,.btn-out,.btn-prim').forEach(el => {
+    el.style.visibility = hasPerms ? 'hidden' : 'visible';
+  });
+}
+function fc(el){document.querySelectorAll(".chip").forEach(c=>c.classList.remove("on"));el.classList.add("on")}
+function sp(el){document.querySelectorAll(".pi").forEach(p=>p.classList.remove("act"));el.classList.add("act")}
+function selCat(el){document.querySelectorAll(".cpill").forEach(p=>p.classList.remove("sel"));el.classList.add("sel");markUnsaved()}
+function markUnsaved(){document.getElementById("estatus").innerHTML="<div class=\"sdot\"></div>Cambios sin guardar"}
+function markSaved(){document.getElementById("estatus").innerHTML="<div class=\"sdot saved\"></div>Guardado"}
+function rmv(btn){
+  const row=btn.closest(".tei");
+  row.style.transition="opacity .2s,height .2s";
+  row.style.opacity="0";
+  setTimeout(()=>row.remove(),200);
+  markUnsaved();
+}
+function addTest(){
+  const sel=document.getElementById("newTestSel");
+  if(!sel.value)return;
+  alert("Test \""+sel.value+"\" anadido al protocolo.\n(En la app real aparece en la lista con drag-handle y nota predefinida.)");
+  sel.value="";
+  markUnsaved();
+}
+</script>
+</body>
+</html>

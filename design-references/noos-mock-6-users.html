@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Noos -- Pantalla 6: Gestion de Usuarios</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Work Sans",sans-serif;background:#F6F5F2;color:#270D38;display:flex;height:100vh;overflow:hidden}
+.sb{width:240px;min-width:240px;background:#4B164F;color:white;display:flex;flex-direction:column;height:100vh}
+.sb-logo{padding:26px 24px 22px;border-bottom:1px solid rgba(255,255,255,.12);display:flex;align-items:center;gap:10px}
+.sb-icon{width:32px;height:32px;background:#B738F2;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700}
+.sb-name{font-size:20px;font-weight:600}
+.sb-sub{font-size:10px;font-weight:500;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:1px;margin-top:1px}
+.sb-nav{flex:1;padding:16px 12px;display:flex;flex-direction:column;gap:2px}
+.ni{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;font-size:14px;font-weight:500;color:rgba(255,255,255,.6);cursor:pointer}
+.ni:hover{background:rgba(255,255,255,.1);color:white}
+.ni.act{background:rgba(255,255,255,.15);color:white}
+.sb-user{padding:14px 16px;border-top:1px solid rgba(255,255,255,.12);display:flex;align-items:center;gap:10px}
+.ua{width:34px;height:34px;border-radius:50%;background:#9839D1;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700}
+.un{font-size:13px;font-weight:500}
+.ur{font-size:11px;color:rgba(255,255,255,.5)}
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.topbar{background:white;border-bottom:1px solid rgba(0,0,0,.07);padding:16px 32px;display:flex;align-items:center;gap:14px;flex-shrink:0}
+.page-title{font-size:18px;font-weight:600;color:#270D38}
+.page-title span{color:#B738F2}
+.btn-prim{background:#9839D1;color:white;border:none;border-radius:9999px;padding:9px 20px;font-size:13px;font-weight:600;cursor:pointer;font-family:"Work Sans",sans-serif;display:flex;align-items:center;gap:6px;margin-left:auto}
+.btn-prim:hover{background:#4B164F}
+.content{flex:1;overflow-y:auto;padding:24px 32px}
+.admin-note{display:flex;align-items:center;gap:10px;background:#faf5ff;border:1px solid #e9d5ff;border-radius:10px;padding:11px 16px;font-size:12px;color:#6d28d9;margin-bottom:20px}
+.users-table{background:white;border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,.09);border:1px solid rgba(0,0,0,.06);overflow:hidden}
+.table-head{display:grid;grid-template-columns:2fr 1fr 1.4fr 1.4fr 1fr 80px;gap:0;background:#4B164F;color:white}
+.th{padding:11px 16px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.table-row{display:grid;grid-template-columns:2fr 1fr 1.4fr 1.4fr 1fr 80px;border-bottom:1px solid rgba(0,0,0,.05);transition:background .1s}
+.table-row:last-child{border-bottom:none}
+.table-row:hover{background:#fafafa}
+.td{padding:13px 16px;font-size:13px;display:flex;align-items:center}
+.user-info{display:flex;align-items:center;gap:10px}
+.u-avatar{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+.u-name{font-size:14px;font-weight:600;color:#270D38}
+.u-user{font-size:11px;color:#7E7E7E;margin-top:1px}
+.role-badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:9999px;font-size:11px;font-weight:600}
+.role-admin{background:#ede9fe;color:#5b21b6}
+.role-pract{background:#dbeafe;color:#1d4ed8}
+.role-viewer{background:#f3f4f6;color:#6b7280}
+.status-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.dot-on{background:#4ade80}
+.dot-off{background:#d1d5db}
+/* Permission toggle */
+.perm-cell{display:flex;align-items:center;gap:8px}
+.ptoggle{width:36px;height:20px;border-radius:9999px;background:#9839D1;position:relative;cursor:pointer;flex-shrink:0;transition:background .15s}
+.ptoggle::after{content:"";width:14px;height:14px;border-radius:50%;background:white;position:absolute;top:3px;left:19px;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:left .15s}
+.ptoggle.off{background:#e5e7eb}
+.ptoggle.off::after{left:3px}
+.perm-label{font-size:12px;font-weight:500}
+.perm-on{color:#9839D1}
+.perm-off{color:#9ca3af}
+.perm-na{color:#d1d5db;font-size:12px;font-style:italic}
+.perm-tooltip{font-size:10px;color:#9ca3af;margin-top:1px}
+/* Actions */
+.td-actions{display:flex;gap:5px}
+.act-btn{width:28px;height:28px;border-radius:7px;border:1px solid #e5e7eb;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#7E7E7E}
+.act-btn:hover{background:#faf5ff;border-color:#d8b4fe;color:#9839D1}
+/* Legend */
+.legend{margin-top:16px;background:white;border-radius:10px;padding:16px 20px;border:1px solid rgba(0,0,0,.06);font-size:13px}
+.legend-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:#7E7E7E;margin-bottom:10px}
+.legend-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.legend-item{display:flex;align-items:flex-start;gap:8px;font-size:12px;color:#270D38;line-height:1.5}
+.legend-icon{width:18px;height:18px;border-radius:5px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;font-size:10px}
+/* Modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(39,13,56,.45);display:flex;align-items:center;justify-content:center;z-index:100;backdrop-filter:blur(3px)}
+.modal-box{background:white;border-radius:16px;padding:28px 32px;width:460px;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+.modal-title{font-size:18px;font-weight:600;color:#270D38;margin-bottom:4px}
+.modal-sub{font-size:13px;color:#7E7E7E;margin-bottom:22px}
+.modal-section{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:#7E7E7E;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid rgba(0,0,0,.06)}
+.modal-perm-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(0,0,0,.04)}
+.modal-perm-row:last-child{border-bottom:none}
+.mpr-label{font-size:13px;font-weight:500;color:#270D38}
+.mpr-desc{font-size:11px;color:#7E7E7E;margin-top:2px}
+.modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:20px;padding-top:16px;border-top:1px solid rgba(0,0,0,.06)}
+.btn-cancel{background:transparent;border:1.5px solid #e5e7eb;color:#7E7E7E;border-radius:9999px;padding:9px 20px;font-size:13px;font-weight:500;cursor:pointer;font-family:"Work Sans",sans-serif}
+.btn-save{background:#9839D1;color:white;border:none;border-radius:9999px;padding:10px 22px;font-size:13px;font-weight:600;cursor:pointer;font-family:"Work Sans",sans-serif}
+</style>
+</head>
+<body>
+
+<aside class="sb">
+  <div class="sb-logo">
+    <div class="sb-icon">N</div>
+    <div><div class="sb-name">Noos</div><div class="sb-sub">Neuropsicologia</div></div>
+  </div>
+  <nav class="sb-nav">
+    <div class="ni"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Inicio</div>
+    <div class="ni"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Pacientes</div>
+    <div class="ni"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>Protocolos</div>
+    <div class="ni act" style="margin-top:auto"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93A10 10 0 1 0 4.93 19.07 10 10 0 0 0 19.07 4.93z"/></svg>Ajustes</div>
+  </nav>
+  <div class="sb-user"><div class="ua">DG</div><div><div class="un">Dra. Garcia</div><div class="ur">Administrador</div></div></div>
+</aside>
+
+<div class="main">
+  <div class="topbar">
+    <div>
+      <div class="page-title">Gestion de <span>usuarios</span></div>
+      <div style="font-size:12px;color:#7E7E7E;margin-top:2px">Solo los administradores pueden gestionar usuarios y permisos</div>
+    </div>
+    <button class="btn-prim" onclick="openModal('new')">
+      <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+      Nuevo usuario
+    </button>
+  </div>
+
+  <div class="content">
+
+    <div class="admin-note">
+      <svg width="14" height="14" fill="none" stroke="#7c3aed" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      <span>El permiso <strong>Gestionar protocolos</strong> es independiente del rol. Un Neuropsicólogo con este permiso puede crear y editar protocolos base; sin el permiso solo puede usarlos y customizarlos por paciente.</span>
+    </div>
+
+    <div class="users-table">
+      <div class="table-head">
+        <div class="th">Usuario</div>
+        <div class="th">Rol</div>
+        <div class="th">Estado</div>
+        <div class="th" style="color:#d8b4fe">Gestionar protocolos</div>
+        <div class="th">Ultimo acceso</div>
+        <div class="th"></div>
+      </div>
+
+      <!-- Administrador -->
+      <div class="table-row">
+        <div class="td"><div class="user-info"><div class="u-avatar" style="background:#4B164F;color:white">DG</div><div><div class="u-name">Dra. Garcia Martinez</div><div class="u-user">@dgarcia &middot; Administrador</div></div></div></div>
+        <div class="td"><span class="role-badge role-admin">Administrador</span></div>
+        <div class="td" style="gap:7px"><div class="status-dot dot-on"></div><span style="font-size:12px;color:#15803d;font-weight:500">Activo</span></div>
+        <div class="td"><span class="perm-na">Siempre activo</span></div>
+        <div class="td" style="font-size:12px;color:#7E7E7E">Hoy, 09:14</div>
+        <div class="td td-actions">
+          <button class="act-btn" title="Editar" onclick="openModal('edit-dg')"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+        </div>
+      </div>
+
+      <!-- Neuropsicólogo CON permiso de protocolos -->
+      <div class="table-row">
+        <div class="td"><div class="user-info"><div class="u-avatar" style="background:#9839D1;color:white">MS</div><div><div class="u-name">Dr. Morales Sanchez</div><div class="u-user">@morales</div></div></div></div>
+        <div class="td"><span class="role-badge role-pract">Neuropsicólogo</span></div>
+        <div class="td" style="gap:7px"><div class="status-dot dot-on"></div><span style="font-size:12px;color:#15803d;font-weight:500">Activo</span></div>
+        <div class="td">
+          <div class="perm-cell">
+            <div class="ptoggle" onclick="togglePerm(this)"></div>
+            <div><div class="perm-label perm-on">Activado</div><div class="perm-tooltip">Puede crear y editar protocolos</div></div>
+          </div>
+        </div>
+        <div class="td" style="font-size:12px;color:#7E7E7E">Ayer, 16:42</div>
+        <div class="td td-actions">
+          <button class="act-btn" onclick="openModal('edit-ms')"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+        </div>
+      </div>
+
+      <!-- Neuropsicólogo SIN permiso de protocolos -->
+      <div class="table-row">
+        <div class="td"><div class="user-info"><div class="u-avatar" style="background:#6366f1;color:white">LF</div><div><div class="u-name">Dra. Lopez Fernandez</div><div class="u-user">@lopezf</div></div></div></div>
+        <div class="td"><span class="role-badge role-pract">Neuropsicólogo</span></div>
+        <div class="td" style="gap:7px"><div class="status-dot dot-on"></div><span style="font-size:12px;color:#15803d;font-weight:500">Activo</span></div>
+        <div class="td">
+          <div class="perm-cell">
+            <div class="ptoggle off" onclick="togglePerm(this)"></div>
+            <div><div class="perm-label perm-off">Desactivado</div><div class="perm-tooltip">Solo lectura en protocolos</div></div>
+          </div>
+        </div>
+        <div class="td" style="font-size:12px;color:#7E7E7E">Hace 3 dias</div>
+        <div class="td td-actions">
+          <button class="act-btn" onclick="openModal('edit-lf')"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+        </div>
+      </div>
+
+      <!-- Neuropsicólogo SIN permiso - inactivo -->
+      <div class="table-row" style="opacity:.65">
+        <div class="td"><div class="user-info"><div class="u-avatar" style="background:#d1d5db;color:#6b7280">PR</div><div><div class="u-name">Dr. Perez Rodriguez</div><div class="u-user">@perezr</div></div></div></div>
+        <div class="td"><span class="role-badge role-pract">Neuropsicólogo</span></div>
+        <div class="td" style="gap:7px"><div class="status-dot dot-off"></div><span style="font-size:12px;color:#9ca3af;font-weight:500">Inactivo</span></div>
+        <div class="td"><span class="perm-na">Usuario inactivo</span></div>
+        <div class="td" style="font-size:12px;color:#7E7E7E">Hace 2 meses</div>
+        <div class="td td-actions">
+          <button class="act-btn"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+        </div>
+      </div>
+
+      <!-- Observador -->
+      <div class="table-row">
+        <div class="td"><div class="user-info"><div class="u-avatar" style="background:#e0e7ff;color:#4338ca">NT</div><div><div class="u-name">Nuria Torres (becaria)</div><div class="u-user">@ntorres</div></div></div></div>
+        <div class="td"><span class="role-badge role-viewer">Observador</span></div>
+        <div class="td" style="gap:7px"><div class="status-dot dot-on"></div><span style="font-size:12px;color:#15803d;font-weight:500">Activo</span></div>
+        <div class="td"><span class="perm-na">No disponible</span></div>
+        <div class="td" style="font-size:12px;color:#7E7E7E">Hoy, 11:30</div>
+        <div class="td td-actions">
+          <button class="act-btn" onclick="openModal('edit-nt')"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Legend -->
+    <div class="legend">
+      <div class="legend-title">Logica de permisos</div>
+      <div class="legend-grid">
+        <div class="legend-item"><div class="legend-icon" style="background:#4B164F;color:white;font-size:9px">ADM</div><strong>Administrador:</strong>&nbsp;siempre gestiona protocolos</div>
+        <div class="legend-item"><div class="legend-icon" style="background:#dbeafe;color:#1d4ed8;font-size:9px">PRO</div><strong>Neuropsicólogo + permiso:</strong>&nbsp;crea y edita</div>
+        <div class="legend-item"><div class="legend-icon" style="background:#e5e7eb;color:#6b7280;font-size:9px">PRO</div><strong>Neuropsicólogo sin permiso:</strong>&nbsp;solo lectura y customizacion</div>
+        <div class="legend-item"><div class="legend-icon" style="background:#f3f4f6;color:#9ca3af;font-size:9px">VWR</div><strong>Observador:</strong>&nbsp;solo lectura, sin customizacion</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Edit user modal -->
+<div class="modal-overlay" id="userModal" style="display:none" onclick="closeModal(event)">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-title">Editar usuario: <span style="color:#9839D1" id="modalName">Dr. Morales</span></div>
+    <div class="modal-sub">Cambia el rol, estado y permisos especificos</div>
+
+    <div class="modal-section">Rol y estado</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px">
+      <div>
+        <label style="font-size:12px;font-weight:600;color:#270D38;display:block;margin-bottom:5px">Rol</label>
+        <select style="font-family:'Work Sans',sans-serif;width:100%;background:#F6F5F2;border:1.5px solid #e5e7eb;border-radius:9px;padding:9px 13px;font-size:13px;outline:none">
+          <option>Administrador</option>
+          <option selected>Neuropsicólogo</option>
+          <option>Observador</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:12px;font-weight:600;color:#270D38;display:block;margin-bottom:5px">Estado</label>
+        <select style="font-family:'Work Sans',sans-serif;width:100%;background:#F6F5F2;border:1.5px solid #e5e7eb;border-radius:9px;padding:9px 13px;font-size:13px;outline:none">
+          <option selected>Activo</option>
+          <option>Inactivo</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="modal-section">Permisos especificos</div>
+
+    <div class="modal-perm-row">
+      <div>
+        <div class="mpr-label">Gestionar protocolos base</div>
+        <div class="mpr-desc">Crear, editar y eliminar protocolos. Todos los Neuropsicólogos pueden customizarlos por paciente independientemente.</div>
+      </div>
+      <div class="ptoggle" onclick="this.classList.toggle('off');updatePermLabel(this)" style="margin-left:16px;flex-shrink:0"></div>
+    </div>
+
+    <div style="margin-top:12px;padding:10px 12px;background:#f3f4f6;border-radius:8px;font-size:11px;color:#6b7280;line-height:1.6">
+      Cambios futuros: se pueden anadir mas permisos granulares aqui sin cambiar el modelo de roles (ej. "exportar informes", "ver audit logs", etc.)
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+      <button class="btn-save" onclick="closeModal()">Guardar cambios</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function togglePerm(el) {
+  const wasOff = el.classList.toggle('off');
+  const cell = el.closest('.perm-cell');
+  const lbl = cell.querySelector('.perm-label');
+  const tip = cell.querySelector('.perm-tooltip');
+  if (wasOff) { lbl.textContent='Desactivado'; lbl.className='perm-label perm-off'; tip.textContent='Solo lectura en protocolos'; }
+  else { lbl.textContent='Activado'; lbl.className='perm-label perm-on'; tip.textContent='Puede crear y editar protocolos'; }
+}
+function openModal(id) {
+  const names = {'edit-dg':'Dra. Garcia','edit-ms':'Dr. Morales','edit-lf':'Dra. Lopez','edit-nt':'Nuria Torres','new':'nuevo usuario'};
+  document.getElementById('modalName').textContent = names[id] || '';
+  document.getElementById('userModal').style.display='flex';
+}
+function closeModal(e) {
+  if (!e || e.target===document.getElementById('userModal'))
+    document.getElementById('userModal').style.display='none';
+}
+</script>
+</body>
+</html>

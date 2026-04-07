@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Nóos — Pantalla 2: Patient Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Work Sans', sans-serif; background: #F6F5F2; color: #270D38; display: flex; height: 100vh; overflow: hidden; }
+
+  /* ── Sidebar (collapsed icons only) ── */
+  .sidebar {
+    width: 64px; min-width: 64px;
+    background: #4B164F; color: white;
+    display: flex; flex-direction: column;
+    align-items: center;
+    height: 100vh; padding: 20px 0;
+    gap: 6px;
+  }
+  .sidebar-logo-sm {
+    width: 36px; height: 36px; background: #B738F2; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; font-weight: 700; color: white;
+    margin-bottom: 16px;
+  }
+  .nav-icon-btn {
+    width: 42px; height: 42px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    color: rgba(255,255,255,.55); cursor: pointer;
+  }
+  .nav-icon-btn:hover { background: rgba(255,255,255,.1); color: white; }
+  .nav-icon-btn.active { background: rgba(255,255,255,.15); color: white; }
+  .sidebar-spacer { flex: 1; }
+  .user-avatar-sm {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: #9839D1; display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700; color: white;
+  }
+
+  /* ── Main ── */
+  .main { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
+
+  /* ── Patient hero header ── */
+  .patient-header {
+    background: white; border-bottom: 1px solid rgba(0,0,0,.07);
+    padding: 0 32px;
+  }
+  .patient-header-top {
+    display: flex; align-items: center; gap: 16px;
+    padding: 20px 0 16px;
+  }
+  .back-btn {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 13px; color: #9839D1; cursor: pointer; font-weight: 500;
+    background: none; border: none; font-family: 'Work Sans', sans-serif;
+    padding: 6px 10px; border-radius: 8px;
+  }
+  .back-btn:hover { background: #f3e8ff; }
+
+  .patient-info { display: flex; align-items: center; gap: 16px; flex: 1; }
+  .patient-big-avatar {
+    width: 52px; height: 52px; border-radius: 50%;
+    background: linear-gradient(135deg, #9839D1, #B738F2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; font-weight: 600; color: white;
+  }
+  .patient-display-id { font-size: 22px; font-weight: 600; color: #270D38; }
+  .patient-pills { display: flex; gap: 8px; margin-top: 5px; flex-wrap: wrap; }
+  .pill {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 10px; border-radius: 9999px; font-size: 12px; font-weight: 500;
+    background: #f3e8ff; color: #6b21a8;
+  }
+  .pill.gray { background: #f3f4f6; color: #4b5563; }
+
+  .header-actions { margin-left: auto; display: flex; gap: 10px; }
+  .btn-primary {
+    background: #9839D1; color: white; border: none; border-radius: 9999px;
+    padding: 10px 22px; font-size: 14px; font-weight: 500; cursor: pointer;
+    display: flex; align-items: center; gap: 7px;
+    font-family: 'Work Sans', sans-serif;
+  }
+  .btn-primary:hover { background: #4B164F; }
+  .btn-outline {
+    background: transparent; color: #9839D1;
+    border: 1.5px solid #9839D1; border-radius: 9999px;
+    padding: 9px 18px; font-size: 13px; font-weight: 500; cursor: pointer;
+    display: flex; align-items: center; gap: 6px;
+    font-family: 'Work Sans', sans-serif;
+  }
+  .btn-outline:hover { background: #f3e8ff; }
+
+  /* Tabs */
+  .tabs { display: flex; gap: 0; border-top: 1px solid rgba(0,0,0,.06); }
+  .tab {
+    padding: 12px 20px; font-size: 14px; font-weight: 500;
+    color: #7E7E7E; cursor: pointer; border-bottom: 2px solid transparent;
+    transition: color .15s;
+  }
+  .tab:hover { color: #270D38; }
+  .tab.active { color: #9839D1; border-bottom-color: #9839D1; }
+
+  /* ── Content ── */
+  .content { padding: 24px 32px; flex: 1; }
+  .three-col { display: grid; grid-template-columns: 1fr 1fr 340px; gap: 18px; }
+  .card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 1px 4px rgba(0,0,0,.09); border: 1px solid rgba(0,0,0,.06); }
+  .card-title { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: .6px; color: #7E7E7E; margin-bottom: 14px; }
+
+  /* Radar chart SVG */
+  .radar-wrap { position: relative; }
+
+  /* Test results list */
+  .test-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 11px 0; border-bottom: 1px solid rgba(0,0,0,.05);
+  }
+  .test-row:last-child { border-bottom: none; padding-bottom: 0; }
+  .test-row:first-child { padding-top: 0; }
+  .test-name { font-size: 13px; font-weight: 600; color: #270D38; min-width: 100px; }
+  .test-date { font-size: 11px; color: #7E7E7E; }
+
+  .pe-badge {
+    width: 36px; height: 36px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; font-weight: 700; flex-shrink: 0;
+  }
+  .pe-superior  { background: #dcfce7; color: #15803d; }
+  .pe-normal    { background: #dbeafe; color: #1d4ed8; }
+  .pe-limitrofe { background: #fef9c3; color: #a16207; }
+  .pe-defic     { background: #fee2e2; color: #b91c1c; }
+
+  .percentile-bar-wrap { flex: 1; }
+  .percentile-bar-bg   { height: 6px; background: #f3f4f6; border-radius: 9999px; overflow: hidden; }
+  .percentile-bar-fill { height: 100%; border-radius: 9999px; transition: width .6s; }
+  .bar-green  { background: #22c55e; }
+  .bar-blue   { background: #3b82f6; }
+  .bar-yellow { background: #eab308; }
+  .bar-red    { background: #ef4444; }
+  .percentile-label { display: flex; justify-content: space-between; margin-top: 3px; }
+  .pct-val  { font-size: 11px; font-weight: 600; color: #270D38; }
+  .pct-class { font-size: 10px; color: #7E7E7E; font-weight: 500; text-transform: uppercase; letter-spacing: .4px; }
+
+  /* Score summary cards */
+  .score-mini { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+  .score-mini-card {
+    background: #F6F5F2; border-radius: 10px; padding: 14px 16px; text-align: center;
+  }
+  .score-big  { font-size: 32px; font-weight: 700; color: #270D38; line-height: 1; }
+  .score-big.accent { color: #9839D1; }
+  .score-lbl  { font-size: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: .8px; color: #7E7E7E; margin-top: 4px; }
+
+  /* Protocol progress */
+  .protocol-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .protocol-name   { font-size: 14px; font-weight: 600; color: #270D38; }
+  .protocol-prog-bar { height: 8px; background: #f3e8ff; border-radius: 9999px; overflow: hidden; margin-bottom: 8px; }
+  .protocol-prog-fill { height: 100%; background: linear-gradient(90deg, #9839D1, #B738F2); border-radius: 9999px; }
+  .protocol-steps { display: flex; flex-direction: column; gap: 6px; }
+  .protocol-step {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 12px; color: #7E7E7E; padding: 6px 0;
+    border-bottom: 1px solid rgba(0,0,0,.04);
+  }
+  .protocol-step:last-child { border-bottom: none; }
+  .step-dot {
+    width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px;
+  }
+  .step-done    { background: #dcfce7; color: #15803d; }
+  .step-active  { background: #9839D1; color: white; }
+  .step-pending { background: #f3f4f6; color: #9ca3af; border: 1.5px dashed #d1d5db; }
+  .step-name    { font-size: 13px; color: #270D38; font-weight: 500; }
+  .step-sub     { font-size: 11px; color: #7E7E7E; }
+
+  .test-edit-btn {
+    margin-left: 8px; padding: 4px 7px; border-radius: 7px;
+    background: transparent; border: 1px solid #e5e7eb;
+    color: #7E7E7E; cursor: pointer; opacity: 0;
+    transition: opacity .15s, background .15s;
+    display: inline-flex; align-items: center;
+  }
+  .test-row:hover .test-edit-btn { opacity: 1; }
+  .test-edit-btn:hover { background: #f3e8ff; border-color: #d8b4fe; color: #9839D1; }
+
+  /* Edit modal */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(39,13,56,.45);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 100; backdrop-filter: blur(3px);
+  }
+  .modal-box {
+    background: white; border-radius: 16px; padding: 28px 32px;
+    width: 420px; box-shadow: 0 20px 60px rgba(0,0,0,.25);
+  }
+  .modal-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
+  .modal-title  { font-size: 18px; font-weight: 600; color: #270D38; }
+  .modal-close  { background: none; border: none; cursor: pointer; color: #7E7E7E; padding: 4px; border-radius: 6px; }
+  .modal-close:hover { background: #f3f4f6; color: #270D38; }
+  .modal-subtitle { font-size: 13px; color: #7E7E7E; margin-bottom: 20px; }
+  .modal-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 8px; }
+  .modal-field  { display: flex; flex-direction: column; gap: 5px; }
+  .modal-field label { font-size: 12px; font-weight: 600; color: #270D38; }
+  .modal-field input {
+    font-family: 'Work Sans', sans-serif;
+    background: #F6F5F2; border: 1.5px solid #e5e7eb; border-radius: 9px;
+    padding: 10px 14px; font-size: 20px; font-weight: 600; color: #270D38;
+    outline: none; transition: border-color .15s;
+  }
+  .modal-field input:focus { border-color: #9839D1; background: white; box-shadow: 0 0 0 3px rgba(152,57,209,.12); }
+  .modal-warn {
+    background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px;
+    padding: 10px 12px; font-size: 12px; color: #92400e; margin: 14px 0;
+    display: flex; gap: 8px; align-items: flex-start; line-height: 1.5;
+  }
+  .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; }
+  .modal-btn-cancel {
+    background: transparent; border: 1.5px solid #e5e7eb; color: #7E7E7E;
+    border-radius: 9999px; padding: 9px 20px; font-size: 13px; font-weight: 500;
+    cursor: pointer; font-family: 'Work Sans', sans-serif;
+  }
+  .modal-btn-cancel:hover { border-color: #9ca3af; color: #270D38; }
+  .modal-btn-save {
+    background: #9839D1; color: white; border: none; border-radius: 9999px;
+    padding: 10px 22px; font-size: 13px; font-weight: 600; cursor: pointer;
+    font-family: 'Work Sans', sans-serif;
+  }
+  .modal-btn-save:hover { background: #4B164F; }
+
+  .export-dropdown { position: relative; display: inline-block; }
+  .export-menu {
+    position: absolute; right: 0; top: calc(100% + 6px);
+    background: white; border-radius: 10px; border: 1px solid rgba(0,0,0,.1);
+    box-shadow: 0 8px 24px rgba(0,0,0,.12); z-index: 50;
+    min-width: 210px; overflow: hidden; display: none;
+  }
+  .export-menu.open { display: block; }
+  .export-menu-header {
+    padding: 9px 14px 7px; font-size: 10px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .6px; color: #7E7E7E;
+    border-bottom: 1px solid rgba(0,0,0,.06);
+  }
+  .export-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 14px; cursor: pointer; transition: background .1s;
+    font-size: 13px; font-weight: 500; color: #270D38;
+  }
+  .export-item:hover { background: #faf5ff; }
+  .export-item:last-child { border-top: 1px solid rgba(0,0,0,.06); }
+  .export-icon { width: 28px; height: 28px; border-radius: 7px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .exp-pdf  { background: #fee2e2; }
+  .exp-docx { background: #dbeafe; }
+  .export-item-desc { font-size: 11px; color: #7E7E7E; font-weight: 400; margin-top: 1px; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════ SIDEBAR (collapsed) ═══════════════════════════════ -->
+<aside class="sidebar">
+  <div class="sidebar-logo-sm">N</div>
+
+  <div class="nav-icon-btn">
+    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+  </div>
+  <div class="nav-icon-btn active">
+    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+  </div>
+  <div class="nav-icon-btn">
+    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>
+  </div>
+  <div class="sidebar-spacer"></div>
+  <div class="nav-icon-btn">
+    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93A10 10 0 1 0 4.93 19.07 10 10 0 0 0 19.07 4.93z"/></svg>
+  </div>
+  <div class="user-avatar-sm" style="margin-top:8px;">DG</div>
+</aside>
+
+<!-- ═══════════════════════════════ MAIN ═══════════════════════════════ -->
+<div class="main">
+
+  <!-- Patient header -->
+  <div class="patient-header">
+    <div class="patient-header-top">
+      <button class="back-btn">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>
+        Pacientes
+      </button>
+
+      <div style="width:1px;height:32px;background:rgba(0,0,0,.1);"></div>
+
+      <div class="patient-info">
+        <div class="patient-big-avatar">P</div>
+        <div>
+          <div class="patient-display-id">PKT-0042</div>
+          <div class="patient-pills">
+            <span class="pill">68 años</span>
+            <span class="pill">12 años de educación</span>
+            <span class="pill gray">Diestro</span>
+            <span class="pill gray">Registrado 12/01/2026</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <div class="export-dropdown">
+          <button class="btn-outline" onclick="toggleExportMenu()">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Exportar informe
+            <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          <div class="export-menu" id="exportMenu">
+            <div class="export-menu-header">Formato de exportación</div>
+            <div class="export-item" onclick="exportReport('pdf')">
+              <div class="export-icon exp-pdf">
+                <svg width="14" height="14" fill="none" stroke="#ef4444" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
+              </div>
+              <div>
+                <div>Informe PDF</div>
+                <div class="export-item-desc">Listo para imprimir, no editable</div>
+              </div>
+            </div>
+            <div class="export-item" onclick="exportReport('docx')">
+              <div class="export-icon exp-docx">
+                <svg width="14" height="14" fill="none" stroke="#3b82f6" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10,9 9,9 8,9"/></svg>
+              </div>
+              <div>
+                <div>Documento Word (.docx)</div>
+                <div class="export-item-desc">Editable — añade firma y notas</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <button class="btn-primary">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="m9 12 2 2 4-4"/></svg>
+          Nueva evaluación
+        </button>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <div class="tab active">Perfil cognitivo</div>
+      <div class="tab">Historial de tests</div>
+      <div class="tab">Evaluaciones</div>
+      <div class="tab">Informes</div>
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div class="content">
+    <div class="three-col">
+
+      <!-- Col 1: Radar chart -->
+      <div class="card">
+        <div class="card-title">Perfil <span style="color:#B738F2;">cognitivo</span></div>
+
+        <!-- Summary scores -->
+        <div class="score-mini">
+          <div class="score-mini-card">
+            <div class="score-big accent">12</div>
+            <div class="score-lbl">PE Medio</div>
+          </div>
+          <div class="score-mini-card">
+            <div class="score-big">P68</div>
+            <div class="score-lbl">Percentil medio</div>
+          </div>
+        </div>
+
+        <!-- SVG Radar chart placeholder -->
+        <svg viewBox="0 0 260 240" width="100%" style="display:block;">
+          <defs>
+            <radialGradient id="rg" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#9839D1" stop-opacity=".25"/>
+              <stop offset="100%" stop-color="#9839D1" stop-opacity=".05"/>
+            </radialGradient>
+          </defs>
+          <!-- Background circles -->
+          <circle cx="130" cy="115" r="85" fill="none" stroke="#f0e6ff" stroke-width="1"/>
+          <circle cx="130" cy="115" r="63" fill="none" stroke="#f0e6ff" stroke-width="1"/>
+          <circle cx="130" cy="115" r="42" fill="none" stroke="#f0e6ff" stroke-width="1"/>
+          <circle cx="130" cy="115" r="21" fill="none" stroke="#f0e6ff" stroke-width="1"/>
+          <!-- Axis lines (6 tests) -->
+          <line x1="130" y1="30" x2="130" y2="200" stroke="#e9d5ff" stroke-width="1"/>
+          <line x1="57" y1="73" x2="203" y2="157" stroke="#e9d5ff" stroke-width="1"/>
+          <line x1="57" y1="157" x2="203" y2="73" stroke="#e9d5ff" stroke-width="1"/>
+          <!-- Data polygon (scores: TMT-A:13, TMT-B:11, TAVEC:14, FAS:10, Rey-C:12, Rey-M:9) -->
+          <!-- Normalised: /19 * 85 -->
+          <polygon points="130,57 193,90 197,148 130,179 82,155 78,88" fill="url(#rg)" stroke="#9839D1" stroke-width="2.5"/>
+          <!-- Mean polygon (PE=10 → radius 44.7) -->
+          <polygon points="130,70 174,93 174,137 130,160 86,137 86,93" fill="none" stroke="#B738F2" stroke-width="1.5" stroke-dasharray="4,3" opacity=".6"/>
+          <!-- Labels -->
+          <text x="130" y="22" text-anchor="middle" font-size="11" font-family="Work Sans,sans-serif" font-weight="500" fill="#270D38">TMT-A</text>
+          <text x="213" y="76" text-anchor="start" font-size="11" font-family="Work Sans,sans-serif" font-weight="500" fill="#270D38">TMT-B</text>
+          <text x="210" y="163" text-anchor="start" font-size="11" font-family="Work Sans,sans-serif" font-weight="500" fill="#270D38">TAVEC</text>
+          <text x="130" y="218" text-anchor="middle" font-size="11" font-family="Work Sans,sans-serif" font-weight="500" fill="#270D38">FAS</text>
+          <text x="46" y="163" text-anchor="end" font-size="11" font-family="Work Sans,sans-serif" font-weight="500" fill="#270D38">Rey-C</text>
+          <text x="50" y="76" text-anchor="end" font-size="11" font-family="Work Sans,sans-serif" font-weight="500" fill="#270D38">Rey-M</text>
+          <!-- Data dots -->
+          <circle cx="130" cy="57" r="4" fill="#9839D1"/>
+          <circle cx="193" cy="90" r="4" fill="#9839D1"/>
+          <circle cx="197" cy="148" r="4" fill="#9839D1"/>
+          <circle cx="130" cy="179" r="4" fill="#9839D1"/>
+          <circle cx="82" cy="155" r="4" fill="#9839D1"/>
+          <circle cx="78" cy="88" r="4" fill="#9839D1"/>
+          <!-- Legend -->
+          <line x1="20" y1="230" x2="40" y2="230" stroke="#9839D1" stroke-width="2"/>
+          <text x="44" y="234" font-size="10" font-family="Work Sans,sans-serif" fill="#7E7E7E">Paciente</text>
+          <line x1="100" y1="230" x2="120" y2="230" stroke="#B738F2" stroke-width="1.5" stroke-dasharray="4,3"/>
+          <text x="124" y="234" font-size="10" font-family="Work Sans,sans-serif" fill="#7E7E7E">Media población</text>
+        </svg>
+      </div>
+
+      <!-- Col 2: Test results -->
+      <div class="card">
+        <div class="card-title">Resultados por <span style="color:#B738F2;">test</span></div>
+
+        <div>
+          <!-- TMT-A -->
+          <div class="test-row">
+            <div>
+              <div class="test-name">TMT-A</div>
+              <div class="test-date">15 mar 2026</div>
+            </div>
+            <div class="pe-badge pe-superior">13</div>
+            <div class="percentile-bar-wrap">
+              <div class="percentile-bar-bg"><div class="percentile-bar-fill bar-green" style="width:87%;"></div></div>
+              <div class="percentile-label"><span class="pct-val">P87</span><span class="pct-class">Superior</span></div>
+            </div>
+            <button class="test-edit-btn" onclick="openEditModal('TMT-A','84','1')">
+              <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </button>
+          </div>
+
+          <!-- TMT-B -->
+          <div class="test-row">
+            <div>
+              <div class="test-name">TMT-B</div>
+              <div class="test-date">15 mar 2026</div>
+            
+            <button class="test-edit-btn" onclick="openEditModal('TMT-B')">
+              <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </button>
+          </div>
+            <div class="pe-badge pe-normal">11</div>
+            <div class="percentile-bar-wrap">
+              <div class="percentile-bar-bg"><div class="percentile-bar-fill bar-blue" style="width:63%;"></div></div>
+              <div class="percentile-label"><span class="pct-val">P63</span><span class="pct-class">Normal</span></div>
+            </div>
+          </div>
+
+          <!-- TAVEC -->
+          <div class="test-row">
+            <div>
+              <div class="test-name">TAVEC</div>
+              <div class="test-date">22 mar 2026</div>
+            
+            <button class="test-edit-btn" onclick="openEditModal('TAVEC')">
+              <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </button>
+          </div>
+            <div class="pe-badge pe-superior">14</div>
+            <div class="percentile-bar-wrap">
+              <div class="percentile-bar-bg"><div class="percentile-bar-fill bar-green" style="width:91%;"></div></div>
+              <div class="percentile-label"><span class="pct-val">P91</span><span class="pct-class">Superior</span></div>
+            </div>
+          </div>
+
+          <!-- Fluidez-FAS -->
+          <div class="test-row">
+            <div>
+              <div class="test-name">Fluidez-FAS</div>
+              <div class="test-date">22 mar 2026</div>
+            
+            <button class="test-edit-btn" onclick="openEditModal('Fluidez-FAS')">
+              <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </button>
+          </div>
+            <div class="pe-badge pe-normal">10</div>
+            <div class="percentile-bar-wrap">
+              <div class="percentile-bar-bg"><div class="percentile-bar-fill bar-blue" style="width:50%;"></div></div>
+              <div class="percentile-label"><span class="pct-val">P50</span><span class="pct-class">Normal</span></div>
+            </div>
+          </div>
+
+          <!-- Rey-Copia -->
+          <div class="test-row">
+            <div>
+              <div class="test-name">Rey-Copia</div>
+              <div class="test-date">28 mar 2026</div>
+            
+            <button class="test-edit-btn" onclick="openEditModal('Rey-Copia')">
+              <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </button>
+          </div>
+            <div class="pe-badge pe-normal">12</div>
+            <div class="percentile-bar-wrap">
+              <div class="percentile-bar-bg"><div class="percentile-bar-fill bar-blue" style="width:75%;"></div></div>
+              <div class="percentile-label"><span class="pct-val">P75</span><span class="pct-class">Normal</span></div>
+            </div>
+          </div>
+
+          <!-- Rey-Memoria -->
+          <div class="test-row">
+            <div>
+              <div class="test-name">Rey-Memoria</div>
+              <div class="test-date">28 mar 2026</div>
+            
+            <button class="test-edit-btn" onclick="openEditModal('Rey-Memoria')">
+              <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </button>
+          </div>
+            <div class="pe-badge pe-limitrofe">6</div>
+            <div class="percentile-bar-wrap">
+              <div class="percentile-bar-bg"><div class="percentile-bar-fill bar-yellow" style="width:18%;"></div></div>
+              <div class="percentile-label"><span class="pct-val">P18</span><span class="pct-class" style="color:#a16207;">Limítrofe</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Clinical interpretation banner -->
+        <div style="margin-top:14px;padding:12px 14px;background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;">
+          <div style="font-size:12px;font-weight:600;color:#92400e;margin-bottom:4px;">⚠ Memoria diferida</div>
+          <div style="font-size:12px;color:#c2410c;line-height:1.5;">Rendimiento en Rey-Memoria (PE=6, P18) significativamente inferior al resto del perfil. Considerar evaluación adicional de memoria visual.</div>
+        </div>
+      </div>
+
+      <!-- Col 3: Protocol progress -->
+      <div>
+        <div class="card" style="margin-bottom:14px;">
+          <div class="card-title">Protocolo activo</div>
+
+          <div class="protocol-header">
+            <div>
+              <div class="protocol-name">Batería Completa NEURONORMA</div>
+              <div style="font-size:11px;color:#7E7E7E;margin-top:2px;">Iniciado 15 mar 2026</div>
+            </div>
+            <span style="font-size:12px;font-weight:600;color:#9839D1;">6/7</span>
+          </div>
+
+          <div class="protocol-prog-bar">
+            <div class="protocol-prog-fill" style="width:86%;"></div>
+          </div>
+          <div style="font-size:11px;color:#7E7E7E;margin-bottom:14px;">6 de 7 tests completados</div>
+
+          <div class="protocol-steps">
+            <div class="protocol-step">
+              <div class="step-dot step-done">✓</div>
+              <div><div class="step-name">TMT-A</div></div>
+              <span style="margin-left:auto;font-size:11px;color:#7E7E7E;">15/03</span>
+            </div>
+            <div class="protocol-step">
+              <div class="step-dot step-done">✓</div>
+              <div><div class="step-name">TMT-B</div></div>
+              <span style="margin-left:auto;font-size:11px;color:#7E7E7E;">15/03</span>
+            </div>
+            <div class="protocol-step">
+              <div class="step-dot step-done">✓</div>
+              <div><div class="step-name">TAVEC</div></div>
+              <span style="margin-left:auto;font-size:11px;color:#7E7E7E;">22/03</span>
+            </div>
+            <div class="protocol-step">
+              <div class="step-dot step-done">✓</div>
+              <div><div class="step-name">Fluidez-FAS</div></div>
+              <span style="margin-left:auto;font-size:11px;color:#7E7E7E;">22/03</span>
+            </div>
+            <div class="protocol-step">
+              <div class="step-dot step-done">✓</div>
+              <div><div class="step-name">Rey-Copia</div></div>
+              <span style="margin-left:auto;font-size:11px;color:#7E7E7E;">28/03</span>
+            </div>
+            <div class="protocol-step">
+              <div class="step-dot step-done">✓</div>
+              <div><div class="step-name">Rey-Memoria</div></div>
+              <span style="margin-left:auto;font-size:11px;color:#7E7E7E;">28/03</span>
+            </div>
+            <div class="protocol-step" style="background:#f9f5ff;border-radius:8px;padding:8px 6px;border-bottom:none;">
+              <div class="step-dot step-active">→</div>
+              <div>
+                <div class="step-name" style="color:#9839D1;">Torre de Londres</div>
+                <div class="step-sub">Pendiente</div>
+              </div>
+              <button style="margin-left:auto;background:#9839D1;color:white;border:none;border-radius:9999px;padding:5px 14px;font-size:12px;font-weight:500;cursor:pointer;font-family:'Work Sans',sans-serif;">Iniciar</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Notes card -->
+        <div class="card">
+          <div class="card-title">Observaciones clínicas</div>
+          <div style="font-size:13px;color:#270D38;line-height:1.55;font-style:italic;color:#4b5563;">
+            "Paciente colaborador y motivado. Ligera lentificación en TMT-B, posiblemente relacionada con medicación. Memoria diferida significativamente inferior al resto del perfil — a vigilar en siguiente sesión."
+          </div>
+          <div style="margin-top:10px;font-size:11px;color:#7E7E7E;">Dra. García · 28 mar 2026</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+<!-- Edit test modal -->
+<div class="modal-overlay" id="editModal" style="display:none;" onclick="closeEditModal(event)">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">Corregir resultado — <span id="modalTestName" style="color:#9839D1;">TMT-A</span></div>
+      </div>
+      <button class="modal-close" onclick="closeEditModal()">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-subtitle">PKT-0042 · Introducido el 15 mar 2026</div>
+
+    <div class="modal-fields">
+      <div class="modal-field">
+        <label>Tiempo (seg)</label>
+        <input type="number" id="modalTiempo" value="84" />
+      </div>
+      <div class="modal-field">
+        <label>Errores</label>
+        <input type="number" id="modalErrores" value="1" />
+      </div>
+    </div>
+
+    <div class="modal-warn">
+      <svg width="14" height="14" fill="none" stroke="#d97706" stroke-width="2" viewBox="0 0 24 24" style="flex-shrink:0;margin-top:1px;"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/></svg>
+      <span>Al guardar, la puntuación escalar y el percentil se recalcularán automáticamente. El cambio quedará registrado en el historial de auditoría.</span>
+    </div>
+
+    <div class="modal-actions">
+      <button class="modal-btn-cancel" onclick="closeEditModal()">Cancelar</button>
+      <button class="modal-btn-save">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" style="display:inline;margin-right:5px;"><polyline points="20,6 9,17 4,12"/></svg>
+        Guardar corrección
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+function openEditModal(testName) {
+  document.getElementById('modalTestName').textContent = testName;
+  document.getElementById('editModal').style.display = 'flex';
+}
+function closeEditModal(e) {
+  if (!e || e.target === document.getElementById('editModal'))
+    document.getElementById('editModal').style.display = 'none';
+}
+</script>
+
+<script>
+function toggleExportMenu() {
+  document.getElementById('exportMenu').classList.toggle('open');
+}
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.export-dropdown'))
+    document.getElementById('exportMenu').classList.remove('open');
+});
+function exportReport(fmt) {
+  alert('Generando informe ' + fmt.toUpperCase() + ' para PKT-0042...\n→ POST /api/reports/generate/pkt-0042\n  body: { format: "' + fmt + '" }');
+  document.getElementById('exportMenu').classList.remove('open');
+}
+</script>
+</body>
+</html>

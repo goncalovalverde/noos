@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Nóos — Pantalla 3: Sesión de Evaluación</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Work Sans', sans-serif; background: #F6F5F2; color: #270D38; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+
+  /* ── Top bar ── */
+  .topbar {
+    height: 60px;
+    background: #4B164F; color: white;
+    display: flex; align-items: center;
+    padding: 0 28px; gap: 20px;
+    flex-shrink: 0;
+  }
+  .session-brand { display: flex; align-items: center; gap: 8px; }
+  .logo-dot { width: 26px; height: 26px; background: #B738F2; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; }
+  .logo-name { font-size: 16px; font-weight: 600; }
+
+  .divider-v { width: 1px; height: 24px; background: rgba(255,255,255,.2); }
+
+  .patient-chip {
+    display: flex; align-items: center; gap: 8px;
+    background: rgba(255,255,255,.12); border-radius: 9999px;
+    padding: 5px 14px 5px 8px;
+  }
+  .chip-avatar {
+    width: 26px; height: 26px; border-radius: 50%;
+    background: #9839D1; display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 700;
+  }
+  .chip-id { font-size: 13px; font-weight: 500; }
+  .chip-meta { font-size: 11px; color: rgba(255,255,255,.6); }
+
+  .session-title { font-size: 14px; font-weight: 500; color: rgba(255,255,255,.8); margin-left: 4px; }
+  .session-title span { color: white; font-weight: 600; }
+
+  .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+  .timer {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 14px; font-weight: 600; color: rgba(255,255,255,.9);
+    background: rgba(255,255,255,.1); border-radius: 9999px;
+    padding: 5px 14px;
+  }
+  .timer-dot { width: 7px; height: 7px; border-radius: 50%; background: #4ade80; animation: pulse 1.5s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:.4;} }
+
+  .btn-exit {
+    background: rgba(255,255,255,.12); color: rgba(255,255,255,.8);
+    border: 1px solid rgba(255,255,255,.2); border-radius: 9999px;
+    padding: 7px 16px; font-size: 13px; font-weight: 500; cursor: pointer;
+    display: flex; align-items: center; gap: 6px;
+    font-family: 'Work Sans', sans-serif;
+  }
+  .btn-exit:hover { background: rgba(255,255,255,.2); color: white; }
+
+  /* ── Progress strip ── */
+  .progress-strip {
+    background: white; border-bottom: 1px solid rgba(0,0,0,.07);
+    padding: 12px 28px; flex-shrink: 0;
+  }
+  .progress-label {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 10px;
+  }
+  .prog-text { font-size: 13px; font-weight: 600; color: #270D38; }
+  .prog-count { font-size: 13px; color: #7E7E7E; }
+
+  .progress-steps { display: flex; gap: 6px; align-items: center; }
+  .step-pill {
+    flex: 1; height: 8px; border-radius: 9999px;
+    position: relative; cursor: pointer;
+  }
+  .step-pill.done    { background: #9839D1; }
+  .step-pill.current { background: linear-gradient(90deg, #9839D1 60%, #d8b4fe 100%); }
+  .step-pill.pending { background: #e5e7eb; }
+  .step-pill.skipped { background: #fde68a; }
+
+  .step-labels {
+    display: flex; gap: 6px; margin-top: 7px;
+  }
+  .step-label-item {
+    flex: 1; text-align: center; font-size: 10px; font-weight: 500;
+    text-transform: uppercase; letter-spacing: .4px;
+  }
+  .step-label-item.done    { color: #9839D1; }
+  .step-label-item.current { color: #270D38; font-weight: 700; }
+  .step-label-item.pending { color: #9ca3af; }
+  .step-label-item.skipped { color: #a16207; }
+
+  /* ── Main evaluation area ── */
+  .eval-area {
+    flex: 1; display: flex; align-items: flex-start; justify-content: center;
+    padding: 32px 28px; overflow-y: auto; gap: 28px;
+  }
+
+  /* Test form card */
+  .test-card {
+    background: white; border-radius: 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.1); border: 1px solid rgba(0,0,0,.06);
+    padding: 32px 36px; max-width: 520px; width: 100%;
+  }
+  .test-header { margin-bottom: 28px; }
+  .test-type-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: #f3e8ff; color: #9839D1; border-radius: 9999px;
+    padding: 4px 12px; font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .6px; margin-bottom: 12px;
+  }
+  .test-title { font-size: 26px; font-weight: 600; color: #270D38; line-height: 1.2; }
+  .test-title span { color: #B738F2; }
+  .test-subtitle { font-size: 14px; color: #7E7E7E; margin-top: 6px; line-height: 1.5; }
+
+  /* Form fields */
+  .form-section { margin-bottom: 24px; }
+  .form-section-title {
+    font-size: 11px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: .8px; color: #7E7E7E; margin-bottom: 12px;
+    padding-bottom: 8px; border-bottom: 1px solid rgba(0,0,0,.06);
+  }
+  .field-group { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field.full { grid-column: 1/-1; }
+  label { font-size: 13px; font-weight: 500; color: #270D38; }
+  .field-hint { font-size: 11px; color: #7E7E7E; margin-top: -3px; }
+  input[type="number"], input[type="text"], textarea {
+    font-family: 'Work Sans', sans-serif;
+    background: #F6F5F2; border: 1.5px solid #e5e7eb;
+    border-radius: 9px; padding: 12px 16px;
+    font-size: 20px; font-weight: 500; color: #270D38;
+    width: 100%; outline: none; transition: border-color .15s, box-shadow .15s;
+  }
+  input[type="number"]:focus, input[type="text"]:focus, textarea:focus {
+    border-color: #9839D1; box-shadow: 0 0 0 3px rgba(152,57,209,.12);
+    background: white;
+  }
+  input[type="number"].focused {
+    border-color: #9839D1; box-shadow: 0 0 0 3px rgba(152,57,209,.12);
+    background: white;
+  }
+  textarea { font-size: 14px; font-weight: 400; resize: vertical; min-height: 80px; }
+  .input-unit {
+    position: relative;
+  }
+  .input-unit input { padding-right: 52px; }
+  .unit-label {
+    position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+    font-size: 12px; font-weight: 500; color: #7E7E7E; pointer-events: none;
+  }
+
+  /* Trials grid (TAVEC-like) */
+  .trials-grid { display: grid; grid-template-columns: repeat(5,1fr); gap: 10px; }
+  .trial-field { display: flex; flex-direction: column; gap: 4px; align-items: center; }
+  .trial-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .4px; color: #7E7E7E; }
+  .trial-input {
+    font-family: 'Work Sans', sans-serif;
+    width: 100%; background: #F6F5F2; border: 1.5px solid #e5e7eb; border-radius: 9px;
+    padding: 10px 8px; font-size: 18px; font-weight: 600; color: #270D38;
+    text-align: center; outline: none;
+  }
+  .trial-input:focus { border-color: #9839D1; box-shadow: 0 0 0 3px rgba(152,57,209,.12); background: white; }
+  .trial-input.filled { border-color: #9839D1; background: white; }
+
+  /* Checklist */
+  .checklist { display: flex; flex-direction: column; gap: 8px; }
+  .check-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 12px; border-radius: 8px; cursor: pointer;
+    border: 1.5px solid #e5e7eb; background: #fafafa;
+  }
+  .check-item:hover { border-color: #9839D1; background: #faf5ff; }
+  .check-item.checked { border-color: #9839D1; background: #faf5ff; }
+  .checkbox {
+    width: 18px; height: 18px; border-radius: 5px;
+    border: 1.5px solid #d1d5db; background: white;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .check-item.checked .checkbox { background: #9839D1; border-color: #9839D1; color: white; }
+  .check-label { font-size: 13px; color: #270D38; font-weight: 500; }
+
+  /* Action buttons */
+  .form-actions {
+    display: flex; gap: 12px; align-items: center;
+    margin-top: 28px; padding-top: 20px;
+    border-top: 1px solid rgba(0,0,0,.06);
+  }
+  .btn-skip {
+    background: transparent; color: #7E7E7E;
+    border: 1.5px solid #e5e7eb; border-radius: 9999px;
+    padding: 11px 20px; font-size: 13px; font-weight: 500; cursor: pointer;
+    font-family: 'Work Sans', sans-serif;
+  }
+  .btn-skip:hover { border-color: #9ca3af; color: #270D38; }
+  .btn-prev {
+    background: transparent; color: #9839D1;
+    border: 1.5px solid #d8b4fe; border-radius: 9999px;
+    padding: 11px 22px; font-size: 13px; font-weight: 500; cursor: pointer;
+    display: flex; align-items: center; gap: 6px;
+    font-family: 'Work Sans', sans-serif;
+  }
+  .btn-prev:hover { background: #faf5ff; }
+  .btn-next {
+    background: #9839D1; color: white; border: none; border-radius: 9999px;
+    padding: 12px 28px; font-size: 14px; font-weight: 600; cursor: pointer;
+    display: flex; align-items: center; gap: 8px; margin-left: auto;
+    font-family: 'Work Sans', sans-serif;
+    box-shadow: 0 2px 8px rgba(152,57,209,.3);
+  }
+  .btn-next:hover { background: #4B164F; }
+
+  /* Side info panel */
+  .info-panel { width: 280px; flex-shrink: 0; display: flex; flex-direction: column; gap: 14px; }
+  .info-card {
+    background: white; border-radius: 12px; padding: 18px 20px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.09); border: 1px solid rgba(0,0,0,.06);
+  }
+  .info-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .6px; color: #7E7E7E; margin-bottom: 10px; }
+  .norms-chip {
+    display: flex; align-items: center; gap: 8px;
+    background: #f3e8ff; border-radius: 8px; padding: 8px 12px; margin-bottom: 8px;
+  }
+  .norms-icon { font-size: 16px; }
+  .norms-text { font-size: 12px; color: #7c3aed; font-weight: 500; }
+  .norm-detail { font-size: 12px; color: #7E7E7E; line-height: 1.6; }
+  .norm-detail strong { color: #270D38; }
+
+  .ref-value-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 6px 0; border-bottom: 1px solid rgba(0,0,0,.05); font-size: 12px;
+  }
+  .ref-value-row:last-child { border-bottom: none; }
+  .ref-key   { color: #7E7E7E; }
+  .ref-val   { font-weight: 600; color: #270D38; }
+  .ref-val.purple { color: #9839D1; }
+
+  .instruction-text { font-size: 12px; color: #4b5563; line-height: 1.7; }
+  .instruction-step {
+    display: flex; gap: 8px; margin-bottom: 6px;
+  }
+  .instr-num {
+    width: 18px; height: 18px; border-radius: 50%; background: #4B164F; color: white;
+    font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; margin-top: 2px;
+  }
+
+  /* ── Mode toggle ── */
+  .mode-toggle {
+    display: flex; background: rgba(255,255,255,.1); border-radius: 9999px;
+    padding: 3px; gap: 2px;
+  }
+  .mode-btn {
+    background: transparent; border: none; color: rgba(255,255,255,.65);
+    border-radius: 9999px; padding: 6px 14px; font-size: 12px; font-weight: 500;
+    cursor: pointer; display: flex; align-items: center; gap: 5px;
+    font-family: 'Work Sans', sans-serif; transition: all .15s;
+  }
+  .mode-btn.active { background: white; color: #4B164F; }
+  .mode-btn:not(.active):hover { color: white; background: rgba(255,255,255,.15); }
+  .paper-banner {
+    background: #fffbeb; border-bottom: 1px solid #fde68a;
+    padding: 8px 28px; font-size: 12px; color: #92400e; font-weight: 500;
+    display: flex; align-items: center; gap: 8px;
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════ TOP BAR ═══════════════════════════════ -->
+<div class="topbar">
+  <div class="session-brand">
+    <div class="logo-dot">N</div>
+    <div class="logo-name">Nóos</div>
+  </div>
+
+  <div class="divider-v"></div>
+
+  <div class="patient-chip">
+    <div class="chip-avatar">P</div>
+    <div>
+      <div class="chip-id">PKT-0042</div>
+    </div>
+  </div>
+
+  <div class="divider-v"></div>
+
+  <div class="session-title">Protocolo: <span>Batería Completa NEURONORMA</span></div>
+
+  <div class="topbar-right">
+    <!-- Mode toggle -->
+    <div class="mode-toggle" id="modeToggle">
+      <button class="mode-btn" id="btnLive" onclick="setMode('live')">
+        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+        En vivo
+      </button>
+      <button class="mode-btn active" id="btnPaper" onclick="setMode('paper')">
+        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
+        Desde papel
+      </button>
+    </div>
+    <!-- Timer — visible only in live mode -->
+    <div class="timer" id="timerEl" style="display:none;">
+      <div class="timer-dot"></div>
+      <span id="timerVal">00:00</span>
+    </div>
+    <button class="btn-exit">
+      <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16,17 21,12 16,7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      <span id="exitLabel">Pausar sesión</span>
+    </button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ PROGRESS ═══════════════════════════════ -->
+<div class="progress-strip">
+  <div class="progress-label">
+    <span class="prog-text" id="sessionModeLabel">Entrada desde papel — PKT-0042</span>
+    <span class="prog-count">Test 3 de 7 — <strong style="color:#9839D1;">TMT-B</strong></span>
+  </div>
+  <div class="progress-steps">
+    <div class="step-pill done"></div>
+    <div class="step-pill done"></div>
+    <div class="step-pill current"></div>
+    <div class="step-pill pending"></div>
+    <div class="step-pill pending"></div>
+    <div class="step-pill pending"></div>
+    <div class="step-pill pending"></div>
+  </div>
+  <div class="step-labels">
+    <div class="step-label-item done">TMT-A</div>
+    <div class="step-label-item done">TAVEC</div>
+    <div class="step-label-item current">TMT-B</div>
+    <div class="step-label-item pending">FAS</div>
+    <div class="step-label-item pending">Rey-C</div>
+    <div class="step-label-item pending">Rey-M</div>
+    <div class="step-label-item pending">T. Londres</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ EVAL AREA ═══════════════════════════════ -->
+
+<!-- Paper mode banner -->
+<div class="paper-banner" id="paperBanner">
+  <svg width="14" height="14" fill="none" stroke="#d97706" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
+  Modo entrada diferida — transcribiendo desde anotaciones en papel. El cronómetro no está activo.
+</div>
+<div class="eval-area">
+
+  <!-- Main form card -->
+  <div class="test-card">
+    <div class="test-header">
+      <div class="test-type-badge">
+        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg>
+        Función ejecutiva · Atención
+      </div>
+      <div class="test-title">Trail Making Test — <span>Parte B</span></div>
+      <div class="test-subtitle">Registro de tiempo de ejecución y número de errores. El paciente debe conectar alternando números y letras (1-A-2-B-3-C…).</div>
+    </div>
+
+    <!-- Raw data fields -->
+    <div class="form-section">
+      <div class="form-section-title">Resultados del test</div>
+      <div class="field-group">
+        <div class="field">
+          <label>Tiempo de ejecución</label>
+          <div class="field-hint">Segundos hasta completar</div>
+          <div class="input-unit">
+            <input type="number" value="187" class="focused" placeholder="0" />
+            <span class="unit-label">seg</span>
+          </div>
+        </div>
+        <div class="field">
+          <label>Número de errores</label>
+          <div class="field-hint">Conexiones incorrectas</div>
+          <div class="input-unit">
+            <input type="number" value="2" placeholder="0" />
+            <span class="unit-label">err</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Qualitative checklist -->
+    <div class="form-section">
+      <div class="form-section-title">Observaciones conductuales</div>
+      <div class="checklist">
+        <div class="check-item checked">
+          <div class="checkbox">✓</div>
+          <span class="check-label">Lentificación progresiva hacia el final</span>
+        </div>
+        <div class="check-item">
+          <div class="checkbox"></div>
+          <span class="check-label">Perseveraciones en secuencia alfanumérica</span>
+        </div>
+        <div class="check-item checked">
+          <div class="checkbox">✓</div>
+          <span class="check-label">Necesitó corrección/pista en ≥2 ocasiones</span>
+        </div>
+        <div class="check-item">
+          <div class="checkbox"></div>
+          <span class="check-label">Impulsividad / inicio sin instrucción completa</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Notes -->
+    <div class="form-section" style="margin-bottom:0;">
+      <div class="form-section-title">Notas del clínico</div>
+      <div class="field">
+        <textarea placeholder="Observaciones adicionales (opcional)…">Ligera tendencia a conectar números sin alternar con letras en el tramo final (4-5 errores autocorregidos que no se contabilizan).</textarea>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="form-actions">
+      <button class="btn-skip">Omitir test</button>
+      <button class="btn-prev">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>
+        Anterior
+      </button>
+      <button class="btn-next">
+        <span id="saveLabel">Guardar registro</span>
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Info panel -->
+  <div class="info-panel">
+
+    <!-- Normativa aplicada -->
+    <div class="info-card">
+      <div class="info-title">Normativa a aplicar</div>
+      <div class="norms-chip">
+        <div class="norms-icon">📊</div>
+        <div class="norms-text">NEURONORMA España</div>
+      </div>
+      <div class="ref-value-row">
+        <span class="ref-key">Rango edad</span>
+        <span class="ref-val purple">65–74 años</span>
+      </div>
+      <div class="ref-value-row">
+        <span class="ref-key">Educación</span>
+        <span class="ref-val purple">8–12 años</span>
+      </div>
+      <div class="ref-value-row">
+        <span class="ref-key">Puntuación máx.</span>
+        <span class="ref-val">—</span>
+      </div>
+      <div class="ref-value-row">
+        <span class="ref-key">Dirección</span>
+        <span class="ref-val">↓ Menor = mejor</span>
+      </div>
+    </div>
+
+    <!-- Resultados previos del mismo paciente -->
+    <div class="info-card">
+      <div class="info-title">Referencia: TMT-A (hoy)</div>
+      <div class="ref-value-row">
+        <span class="ref-key">Tiempo TMT-A</span>
+        <span class="ref-val">84 seg</span>
+      </div>
+      <div class="ref-value-row">
+        <span class="ref-key">PE obtenido</span>
+        <span class="ref-val purple">13</span>
+      </div>
+      <div class="ref-value-row">
+        <span class="ref-key">Percentil</span>
+        <span class="ref-val">P87 — Superior</span>
+      </div>
+      <div style="margin-top:10px;padding:8px 10px;background:#fef9c3;border-radius:8px;font-size:11px;color:#a16207;line-height:1.5;">
+        <strong>Ratio B/A:</strong> Con 187 seg en TMT-B el ratio B/A sería 2.2 — dentro de la normalidad (≤3.0)
+      </div>
+    </div>
+
+    <!-- Instrucciones rápidas -->
+    <div class="info-card">
+      <div class="info-title">Recuerda: procedimiento</div>
+      <div>
+        <div class="instruction-step">
+          <div class="instr-num">1</div>
+          <div class="instruction-text">Mostrar hoja TMT-B. Verificar que el paciente entiende la alternancia número-letra.</div>
+        </div>
+        <div class="instruction-step">
+          <div class="instr-num">2</div>
+          <div class="instruction-text">Iniciar cronómetro cuando empiece a trazar.</div>
+        </div>
+        <div class="instruction-step">
+          <div class="instr-num">3</div>
+          <div class="instruction-text">Corregir errores <em>sin</em> parar el cronómetro. Anotar número de correcciones.</div>
+        </div>
+        <div class="instruction-step">
+          <div class="instr-num">4</div>
+          <div class="instruction-text">Registrar tiempo total al completar la última conexión.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<script>
+let timerInterval = null;
+let timerSeconds = 0;
+
+function setMode(mode) {
+  const live = mode === 'live';
+  document.getElementById('btnLive').classList.toggle('active', live);
+  document.getElementById('btnPaper').classList.toggle('active', !live);
+  document.getElementById('timerEl').style.display = live ? 'flex' : 'none';
+  document.getElementById('paperBanner').style.display = live ? 'none' : 'flex';
+  document.getElementById('saveLabel').textContent = live ? 'Guardar y continuar' : 'Guardar registro';
+  document.getElementById('exitLabel').textContent = live ? 'Pausar sesión' : 'Salir';
+  document.getElementById('sessionModeLabel').textContent = live
+    ? 'Sesión en vivo — PKT-0042'
+    : 'Entrada desde papel — PKT-0042';
+
+  if (live && !timerInterval) {
+    timerInterval = setInterval(() => {
+      timerSeconds++;
+      const m = String(Math.floor(timerSeconds / 60)).padStart(2,'0');
+      const s = String(timerSeconds % 60).padStart(2,'0');
+      document.getElementById('timerVal').textContent = m + ':' + s;
+    }, 1000);
+  } else if (!live && timerInterval) {
+    clearInterval(timerInterval);
+    timerInterval = null;
+  }
+}
+</script>
+</body>
+</html>

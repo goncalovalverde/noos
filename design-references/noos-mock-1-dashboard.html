@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Nóos — Pantalla 1: Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Work Sans', sans-serif; background: #F6F5F2; color: #270D38; display: flex; height: 100vh; overflow: hidden; }
+
+  /* ── Sidebar ── */
+  .sidebar {
+    width: 240px; min-width: 240px;
+    background: #4B164F; color: white;
+    display: flex; flex-direction: column;
+    height: 100vh;
+  }
+  .sidebar-logo {
+    padding: 28px 24px 24px;
+    border-bottom: 1px solid rgba(255,255,255,.12);
+  }
+  .logo-mark {
+    display: flex; align-items: center; gap: 10px;
+  }
+  .logo-icon {
+    width: 32px; height: 32px;
+    background: #B738F2; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 600; color: white;
+  }
+  .logo-text { font-size: 20px; font-weight: 600; color: white; letter-spacing: -.3px; }
+  .logo-sub  { font-size: 10px; font-weight: 500; color: rgba(255,255,255,.5); text-transform: uppercase; letter-spacing: 1px; margin-top: 1px; }
+
+  .sidebar-nav { flex: 1; padding: 16px 12px; display: flex; flex-direction: column; gap: 2px; }
+  .nav-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 11px 14px; border-radius: 10px;
+    font-size: 14px; font-weight: 500; color: rgba(255,255,255,.65);
+    cursor: pointer; transition: background .15s;
+  }
+  .nav-item:hover { background: rgba(255,255,255,.1); color: white; }
+  .nav-item.active { background: rgba(255,255,255,.15); color: white; }
+  .nav-icon { width: 18px; height: 18px; opacity: .9; }
+
+  .sidebar-user {
+    padding: 16px; border-top: 1px solid rgba(255,255,255,.12);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .user-avatar {
+    width: 34px; height: 34px; border-radius: 50%;
+    background: #9839D1; display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 600; color: white; flex-shrink: 0;
+  }
+  .user-name  { font-size: 13px; font-weight: 500; color: white; }
+  .user-role  { font-size: 11px; color: rgba(255,255,255,.5); }
+  .btn-logout {
+    margin-left: auto; padding: 6px;
+    background: transparent; border: none; cursor: pointer;
+    color: rgba(255,255,255,.5); border-radius: 8px;
+  }
+  .btn-logout:hover { color: white; background: rgba(255,255,255,.1); }
+
+  /* ── Main ── */
+  .main { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
+
+  .topbar {
+    padding: 20px 32px;
+    display: flex; align-items: center; justify-content: space-between;
+    background: #F6F5F2; border-bottom: 1px solid rgba(0,0,0,.07);
+    position: sticky; top: 0; z-index: 10;
+  }
+  .page-title { font-size: 22px; font-weight: 600; color: #270D38; }
+  .page-title span { color: #B738F2; }
+
+  .btn-primary {
+    background: #9839D1; color: white;
+    border: none; border-radius: 9999px;
+    padding: 10px 22px; font-size: 14px; font-weight: 500;
+    cursor: pointer; display: flex; align-items: center; gap: 7px;
+    font-family: 'Work Sans', sans-serif;
+  }
+  .btn-primary:hover { background: #4B164F; }
+
+  .content { padding: 28px 32px; flex: 1; }
+
+  /* ── Stats grid ── */
+  .stats-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; margin-bottom: 28px; }
+  .stat-card {
+    background: white; border-radius: 12px;
+    padding: 22px 24px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.09);
+    border: 1px solid rgba(0,0,0,.06);
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .stat-label { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: .8px; color: #7E7E7E; }
+  .stat-value { font-size: 36px; font-weight: 600; color: #270D38; line-height: 1; }
+  .stat-value.accent { color: #9839D1; }
+  .stat-sub   { font-size: 12px; color: #7E7E7E; }
+  .stat-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 11px; font-weight: 500;
+    background: #dcfce7; color: #15803d;
+    border-radius: 9999px; padding: 2px 8px; width: fit-content;
+  }
+
+  /* ── Two-col layout ── */
+  .two-col { display: grid; grid-template-columns: 1fr 380px; gap: 20px; }
+
+  .section-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .section-title { font-size: 16px; font-weight: 600; color: #270D38; }
+  .link-sm { font-size: 13px; color: #9839D1; cursor: pointer; font-weight: 500; }
+  .link-sm:hover { color: #4B164F; }
+
+  /* ── Recent Patients ── */
+  .card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 1px 4px rgba(0,0,0,.09); border: 1px solid rgba(0,0,0,.06); }
+
+  .patient-row {
+    display: flex; align-items: center; gap: 14px;
+    padding: 12px 0; border-bottom: 1px solid rgba(0,0,0,.05);
+  }
+  .patient-row:last-child { border-bottom: none; padding-bottom: 0; }
+  .patient-row:first-child { padding-top: 0; }
+
+  .patient-avatar {
+    width: 38px; height: 38px; border-radius: 50%;
+    background: #ede9fe; display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 600; color: #9839D1; flex-shrink: 0;
+  }
+  .patient-id   { font-size: 14px; font-weight: 600; color: #270D38; }
+  .patient-meta { font-size: 12px; color: #7E7E7E; margin-top: 1px; }
+  .patient-badge {
+    margin-left: auto; padding: 3px 10px; border-radius: 9999px;
+    font-size: 11px; font-weight: 500;
+  }
+  .badge-green  { background: #dcfce7; color: #15803d; }
+  .badge-blue   { background: #dbeafe; color: #1d4ed8; }
+  .badge-yellow { background: #fef9c3; color: #a16207; }
+  .badge-red    { background: #fee2e2; color: #b91c1c; }
+  .badge-gray   { background: #f3f4f6; color: #6b7280; }
+
+  /* ── Quick actions ── */
+  .action-card {
+    background: white; border-radius: 12px; padding: 18px 20px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.09); border: 1px solid rgba(0,0,0,.06);
+    display: flex; align-items: center; gap: 14px;
+    cursor: pointer; transition: box-shadow .15s;
+    margin-bottom: 10px;
+  }
+  .action-card:hover { box-shadow: 0 4px 16px rgba(75,22,79,.12); }
+  .action-icon {
+    width: 42px; height: 42px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .icon-purple { background: #ede9fe; }
+  .icon-violet { background: #f3e8ff; }
+  .icon-green  { background: #dcfce7; }
+  .action-label { font-size: 14px; font-weight: 600; color: #270D38; }
+  .action-desc  { font-size: 12px; color: #7E7E7E; margin-top: 1px; }
+  .action-arrow { margin-left: auto; color: #7E7E7E; font-size: 18px; }
+
+  /* ── Calendar mini ── */
+  .mini-cal { margin-top: 12px; }
+  .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 13px; font-weight: 600; color: #270D38; }
+  .cal-days   { display: grid; grid-template-columns: repeat(7,1fr); gap: 3px; }
+  .cal-day {
+    aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
+    font-size: 11px; border-radius: 6px; color: #7E7E7E;
+  }
+  .cal-day.has-event { background: #ede9fe; color: #9839D1; font-weight: 600; cursor: pointer; }
+  .cal-day.today     { background: #9839D1; color: white; font-weight: 600; }
+  .cal-day.hdr       { font-weight: 600; font-size: 10px; text-transform: uppercase; color: #9ca3af; }
+
+  /* SVG icons */
+  .svg-icon { width: 18px; height: 18px; }
+  .svg-icon-sm { width: 14px; height: 14px; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════ SIDEBAR ═══════════════════════════════ -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-mark">
+      <div class="logo-icon">N</div>
+      <div>
+        <div class="logo-text">Nóos</div>
+        <div class="logo-sub">Neuropsicología</div>
+      </div>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-item active">
+      <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Inicio
+    </div>
+    <div class="nav-item">
+      <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Pacientes
+    </div>
+    <div class="nav-item">
+      <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="m9 12 2 2 4-4"/></svg>
+      Protocolos
+    </div>
+    <div class="nav-item">
+      <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+      Historial
+    </div>
+    <div class="nav-item" style="margin-top:auto;">
+      <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+      Ajustes
+    </div>
+  </nav>
+
+  <div class="sidebar-user">
+    <div class="user-avatar">DG</div>
+    <div>
+      <div class="user-name">Dra. García</div>
+      <div class="user-role">Neuropsicóloga</div>
+    </div>
+    <button class="btn-logout">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16,17 21,12 16,7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    </button>
+  </div>
+</aside>
+
+<!-- ═══════════════════════════════ MAIN ═══════════════════════════════ -->
+<div class="main">
+  <header class="topbar">
+    <div>
+      <div class="page-title">Buenos días, <span>Dra. García</span> 👋</div>
+      <div style="font-size:13px;color:#7E7E7E;margin-top:3px;">Lunes, 7 de abril de 2026</div>
+    </div>
+    <button class="btn-primary">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+      Nuevo paciente
+    </button>
+  </header>
+
+  <div class="content">
+
+    <!-- Stats -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Pacientes activos</div>
+        <div class="stat-value">47</div>
+        <div class="stat-badge">↑ 3 este mes</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Tests esta semana</div>
+        <div class="stat-value accent">12</div>
+        <div class="stat-sub">Última eval. hoy 09:14</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Protocolos activos</div>
+        <div class="stat-value">5</div>
+        <div class="stat-sub">2 pendientes de completar</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Informes PDF</div>
+        <div class="stat-value">8</div>
+        <div class="stat-sub">Generados este mes</div>
+      </div>
+    </div>
+
+    <!-- Two-column layout -->
+    <div class="two-col">
+
+      <!-- Left: Recent evaluations -->
+      <div>
+        <div class="section-header">
+          <div class="section-title">Evaluaciones recientes</div>
+          <span class="link-sm">Ver todas →</span>
+        </div>
+        <div class="card">
+          <!-- Row 1 -->
+          <div class="patient-row">
+            <div class="patient-avatar">P</div>
+            <div>
+              <div class="patient-id">PKT-0042</div>
+              <div class="patient-meta">68 años · 12 años educación · TMT-A, TMT-B, TAVEC</div>
+            </div>
+            <div style="text-align:right;">
+              <span class="patient-badge badge-green">Superior</span>
+              <div style="font-size:11px;color:#7E7E7E;margin-top:4px;">Hace 2h</div>
+            </div>
+          </div>
+          <!-- Row 2 -->
+          <div class="patient-row">
+            <div class="patient-avatar" style="background:#fce7f3;color:#9d174d;">P</div>
+            <div>
+              <div class="patient-id">PKT-0039</div>
+              <div class="patient-meta">72 años · 8 años educación · Fluidez-FAS, Rey-Copia</div>
+            </div>
+            <div style="text-align:right;">
+              <span class="patient-badge badge-yellow">Limítrofe</span>
+              <div style="font-size:11px;color:#7E7E7E;margin-top:4px;">Ayer</div>
+            </div>
+          </div>
+          <!-- Row 3 -->
+          <div class="patient-row">
+            <div class="patient-avatar" style="background:#d1fae5;color:#065f46;">P</div>
+            <div>
+              <div class="patient-id">PKT-0037</div>
+              <div class="patient-meta">65 años · 16 años educación · Protocolo Memoria</div>
+            </div>
+            <div style="text-align:right;">
+              <span class="patient-badge badge-blue">Normal</span>
+              <div style="font-size:11px;color:#7E7E7E;margin-top:4px;">Ayer</div>
+            </div>
+          </div>
+          <!-- Row 4 -->
+          <div class="patient-row">
+            <div class="patient-avatar" style="background:#fef3c7;color:#92400e;">P</div>
+            <div>
+              <div class="patient-id">PKT-0035</div>
+              <div class="patient-meta">78 años · 4 años educación · TMT-A, Rey-Copia</div>
+            </div>
+            <div style="text-align:right;">
+              <span class="patient-badge badge-red">Deficitario</span>
+              <div style="font-size:11px;color:#7E7E7E;margin-top:4px;">Hace 3 días</div>
+            </div>
+          </div>
+          <!-- Row 5 -->
+          <div class="patient-row">
+            <div class="patient-avatar" style="background:#ede9fe;color:#5b21b6;">P</div>
+            <div>
+              <div class="patient-id">PKT-0031</div>
+              <div class="patient-meta">70 años · 12 años educación · TAVEC completo</div>
+            </div>
+            <div style="text-align:right;">
+              <span class="patient-badge badge-green">Superior</span>
+              <div style="font-size:11px;color:#7E7E7E;margin-top:4px;">Hace 4 días</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Alert banner -->
+        <div style="margin-top:16px;background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:14px 16px;display:flex;align-items:center;gap:10px;">
+          <svg width="18" height="18" fill="none" stroke="#d97706" stroke-width="2" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <div>
+            <div style="font-size:13px;font-weight:600;color:#92400e;">2 pacientes con protocolo incompleto</div>
+            <div style="font-size:12px;color:#a16207;margin-top:2px;">PKT-0039 y PKT-0035 tienen evaluaciones pendientes</div>
+          </div>
+          <span class="link-sm" style="margin-left:auto;">Ver →</span>
+        </div>
+      </div>
+
+      <!-- Right: Quick actions + mini calendar -->
+      <div>
+        <div class="section-header">
+          <div class="section-title">Acciones rápidas</div>
+        </div>
+
+        <div class="action-card">
+          <div class="action-icon icon-purple">
+            <svg width="20" height="20" fill="none" stroke="#9839D1" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="m9 12 2 2 4-4"/></svg>
+          </div>
+          <div>
+            <div class="action-label">Nueva evaluación</div>
+            <div class="action-desc">Seleccionar paciente y protocolo</div>
+          </div>
+          <span class="action-arrow">›</span>
+        </div>
+
+        <div class="action-card">
+          <div class="action-icon icon-violet">
+            <svg width="20" height="20" fill="none" stroke="#B738F2" stroke-width="2" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+          </div>
+          <div>
+            <div class="action-label">Registrar paciente</div>
+            <div class="action-desc">Añadir nuevo paciente al sistema</div>
+          </div>
+          <span class="action-arrow">›</span>
+        </div>
+
+        <div class="action-card">
+          <div class="action-icon icon-green">
+            <svg width="20" height="20" fill="none" stroke="#16a34a" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          </div>
+          <div>
+            <div class="action-label">Generar informe PDF</div>
+            <div class="action-desc">Exportar resultados de un paciente</div>
+          </div>
+          <span class="action-arrow">›</span>
+        </div>
+
+        <!-- Mini calendar -->
+        <div class="card mini-cal" style="margin-top:6px;">
+          <div class="cal-header">
+            <span>Abril 2026</span>
+            <div style="display:flex;gap:6px;">
+              <span style="cursor:pointer;color:#7E7E7E;padding:0 6px;">‹</span>
+              <span style="cursor:pointer;color:#7E7E7E;padding:0 6px;">›</span>
+            </div>
+          </div>
+          <div class="cal-days">
+            <div class="cal-day hdr">L</div><div class="cal-day hdr">M</div><div class="cal-day hdr">X</div><div class="cal-day hdr">J</div><div class="cal-day hdr">V</div><div class="cal-day hdr">S</div><div class="cal-day hdr">D</div>
+            <div class="cal-day"></div><div class="cal-day"></div><div class="cal-day">1</div><div class="cal-day">2</div><div class="cal-day has-event">3</div><div class="cal-day">4</div><div class="cal-day">5</div>
+            <div class="cal-day today">7</div><div class="cal-day has-event">8</div><div class="cal-day">9</div><div class="cal-day">10</div><div class="cal-day has-event">11</div><div class="cal-day">12</div><div class="cal-day">13</div>
+            <div class="cal-day">14</div><div class="cal-day">15</div><div class="cal-day has-event">16</div><div class="cal-day">17</div><div class="cal-day">18</div><div class="cal-day">19</div><div class="cal-day">20</div>
+            <div class="cal-day">21</div><div class="cal-day">22</div><div class="cal-day">23</div><div class="cal-day has-event">24</div><div class="cal-day">25</div><div class="cal-day">26</div><div class="cal-day">27</div>
+            <div class="cal-day">28</div><div class="cal-day">29</div><div class="cal-day">30</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

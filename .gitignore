@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.env
+venv/
+.venv/
+*.db
+*.db-shm
+*.db-wal
+alembic/versions/
+
+# Node
+node_modules/
+dist/
+.DS_Store
+
+# Reports output
+reports/*.pdf
+reports/*.docx
+
+# IDE
+.vscode/settings.json
+.idea/
