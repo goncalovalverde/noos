@@ -1,4 +1,5 @@
-from pydantic import BaseModel
+import json
+from pydantic import BaseModel, field_validator
 from typing import Optional, List, Dict, Any
 from datetime import datetime
 
@@ -33,6 +34,13 @@ class ExecutionPlanOut(BaseModel):
     variant_name: Optional[str]
     created_at: datetime
     updated_at: datetime
+
+    @field_validator('test_customizations', mode='before')
+    @classmethod
+    def parse_customizations(cls, v):
+        if isinstance(v, str):
+            return json.loads(v) if v else []
+        return v
 
     class Config:
         from_attributes = True

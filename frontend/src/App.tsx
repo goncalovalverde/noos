@@ -7,6 +7,8 @@ import PatientList from '@/pages/PatientList'
 import PatientHub from '@/pages/PatientHub'
 import ProtocolLibrary from '@/pages/ProtocolLibrary'
 import Settings from '@/pages/Settings'
+import EvaluationSetup from '@/pages/EvaluationSetup'
+import EvaluationSession from '@/pages/EvaluationSession'
 
 export default function App() {
   return (
@@ -21,6 +23,8 @@ export default function App() {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/patients" element={<PatientList />} />
           <Route path="/patients/:id" element={<PatientHub />} />
+          <Route path="/patients/:id/evaluate" element={<EvaluationSetup />} />
+          <Route path="/patients/:id/evaluate/:planId" element={<EvaluationSession />} />
           <Route path="/protocols" element={<ProtocolLibrary />} />
           <Route
             path="/settings"
@@ -37,4 +41,5 @@ export default function App() {
     </Routes>
   )
 }
+
 

@@ -88,3 +88,32 @@ def sample_patient(db):
     db.commit()
     db.refresh(p)
     return p
+
+@pytest.fixture
+def sample_protocol(db):
+    from app.models.protocol import Protocol, ProtocolTest
+    p = Protocol(name="Rastreio Cognitivo", category="Rastreio")
+    db.add(p); db.flush()
+    for i, tt in enumerate(["TMT-A", "Fluidez-FAS", "TAVEC"], 1):
+        db.add(ProtocolTest(protocol_id=p.id, test_type=tt, order=i))
+    db.commit(); db.refresh(p)
+    return p
+
+@pytest.fixture
+def sample_plan(db, sample_patient, sample_protocol):
+    from app.models.execution_plan import ExecutionPlan
+    import json
+    customizations = [
+        {"test_type": "TMT-A", "order": 1, "skip": False, "added": False, "repeat_later": False, "notes": ""},
+        {"test_type": "Fluidez-FAS", "order": 2, "skip": False, "added": False, "repeat_later": False, "notes": ""},
+        {"test_type": "TAVEC", "order": 3, "skip": False, "added": False, "repeat_later": False, "notes": ""},
+    ]
+    plan = ExecutionPlan(
+        patient_id=sample_patient.id,
+        protocol_id=sample_protocol.id,
+        test_customizations=json.dumps(customizations),
+        status="active",
+        mode="live",
+    )
+    db.add(plan); db.commit(); db.refresh(plan)
+    return plan
