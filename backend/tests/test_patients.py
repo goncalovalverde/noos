@@ -89,3 +89,19 @@ class TestDeletePatient:
     def test_neuropsicólogo_cannot_delete(self, client, neuro_headers, sample_patient):
         res = client.delete(f"/api/patients/{sample_patient.id}", headers=neuro_headers)
         assert res.status_code == 403
+
+class TestPatientSessions:
+    def test_get_sessions_for_patient(self, client, neuro_headers, sample_patient, db):
+        from app.models.test_session import TestSession
+        s = TestSession(patient_id=sample_patient.id, test_type="TMT-A")
+        s.set_raw_data({"tiempo_segundos": 45})
+        db.add(s); db.commit()
+        res = client.get(f"/api/patients/{sample_patient.id}/sessions", headers=neuro_headers)
+        assert res.status_code == 200
+        assert len(res.json()) == 1
+        assert res.json()[0]["test_type"] == "TMT-A"
+
+    def test_sessions_empty_for_new_patient(self, client, neuro_headers, sample_patient):
+        res = client.get(f"/api/patients/{sample_patient.id}/sessions", headers=neuro_headers)
+        assert res.status_code == 200
+        assert res.json() == []

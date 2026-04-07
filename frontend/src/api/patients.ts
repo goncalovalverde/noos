@@ -28,4 +28,8 @@ export const patientsApi = {
   delete: async (id: string): Promise<void> => {
     await apiClient.delete(`/patients/${id}`)
   },
+  getSessions: async (id: string) => {
+    const { data } = await apiClient.get(`/patients/${id}/sessions`)
+    return data as any[]
+  },
 }

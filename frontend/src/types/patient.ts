@@ -7,3 +7,20 @@ export interface Patient {
   display_id: string
   created_at: string
 }
+
+export interface TestSessionOut {
+  id: string
+  patient_id: string
+  test_type: string
+  date: string
+  raw_data: Record<string, unknown>
+  calculated_scores: {
+    puntuacion_escalar?: number
+    percentil?: number
+    clasificacion?: string
+    norma_aplicada?: Record<string, unknown>
+  } | null
+  qualitative_data: Record<string, unknown> | null
+  protocol_id: string | null
+  execution_plan_id: string | null
+}

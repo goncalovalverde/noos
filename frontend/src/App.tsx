@@ -4,6 +4,7 @@ import AppShell from '@/components/layout/AppShell'
 import Login from '@/pages/Login'
 import Dashboard from '@/pages/Dashboard'
 import PatientList from '@/pages/PatientList'
+import PatientHub from '@/pages/PatientHub'
 import ProtocolLibrary from '@/pages/ProtocolLibrary'
 import Settings from '@/pages/Settings'
 
@@ -19,6 +20,7 @@ export default function App() {
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/patients" element={<PatientList />} />
+          <Route path="/patients/:id" element={<PatientHub />} />
           <Route path="/protocols" element={<ProtocolLibrary />} />
           <Route
             path="/settings"
