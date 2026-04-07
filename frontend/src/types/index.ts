@@ -1,1 +1,2 @@
-// Type definitions — add shared types here as the project grows
+export * from './auth'
+export * from './patient'

@@ -1,24 +1,34 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import ProtectedRoute from '@/components/layout/ProtectedRoute'
+import AppShell from '@/components/layout/AppShell'
 import Login from '@/pages/Login'
-
-// Placeholder pages until implemented
-const Dashboard = () => (
-  <div className="p-8">
-    <h1 className="text-2xl font-semibold text-brand-dark">Dashboard</h1>
-    <p className="text-brand-muted mt-2">En construcción…</p>
-  </div>
-)
+import Dashboard from '@/pages/Dashboard'
+import PatientList from '@/pages/PatientList'
+import ProtocolLibrary from '@/pages/ProtocolLibrary'
+import Settings from '@/pages/Settings'
 
 export default function App() {
   return (
     <Routes>
+      {/* Public */}
       <Route path="/login" element={<Login />} />
 
-      {/* Protected routes */}
+      {/* Protected — wrapped in AppShell */}
       <Route element={<ProtectedRoute />}>
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        <Route element={<AppShell />}>
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/patients" element={<PatientList />} />
+          <Route path="/protocols" element={<ProtocolLibrary />} />
+          <Route
+            path="/settings"
+            element={
+              <ProtectedRoute allowedRoles={['Administrador']}>
+                <Settings />
+              </ProtectedRoute>
+            }
+          />
+        </Route>
       </Route>
 
       <Route path="*" element={<Navigate to="/dashboard" replace />} />

@@ -1,11 +1,13 @@
 import { Navigate, Outlet } from 'react-router-dom'
 import { useAuthStore } from '@/store/auth'
+import type { ReactNode } from 'react'
 
 interface Props {
   allowedRoles?: string[]
+  children?: ReactNode
 }
 
-export default function ProtectedRoute({ allowedRoles }: Props) {
+export default function ProtectedRoute({ allowedRoles, children }: Props) {
   const { isAuthenticated, user } = useAuthStore()
 
   if (!isAuthenticated) return <Navigate to="/login" replace />
@@ -14,5 +16,5 @@ export default function ProtectedRoute({ allowedRoles }: Props) {
     return <Navigate to="/dashboard" replace />
   }
 
-  return <Outlet />
+  return children ? <>{children}</> : <Outlet />
 }
