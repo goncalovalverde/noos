@@ -1,5 +1,13 @@
 import { useState, useEffect } from 'react'
 import { ClipboardList, Plus, X, Trash2, GripVertical, ChevronRight, Loader2 } from 'lucide-react'
+import {
+  DndContext, closestCenter, PointerSensor, useSensor, useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core'
+import {
+  SortableContext, useSortable, verticalListSortingStrategy, arrayMove,
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import { useAuthStore } from '@/store/auth'
 import { protocolsApi, type Protocol, type ProtocolTestIn } from '@/api/protocols'
 
@@ -31,6 +39,44 @@ function CategoryBadge({ category }: { category: string | null }) {
   )
 }
 
+// ─── Sortable Test Item ─────────────────────────────────────────────────────
+
+function SortableTestItem({ id, test, onRemove }: { id: string; test: ProtocolTestIn; onRemove: () => void }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id })
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  }
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="flex items-center gap-2 py-1.5 border-b border-gray-50 last:border-0 bg-white"
+    >
+      <button
+        type="button"
+        {...attributes}
+        {...listeners}
+        className="cursor-grab active:cursor-grabbing text-gray-300 hover:text-gray-500 flex-shrink-0 touch-none"
+      >
+        <GripVertical className="w-4 h-4" />
+      </button>
+      <span className="w-6 h-6 rounded flex items-center justify-center bg-purple-100 text-purple-700 text-[10px] font-bold flex-shrink-0">
+        {test.order}
+      </span>
+      <span className="flex-1 text-sm font-medium text-brand-ink">{test.test_type}</span>
+      <button
+        type="button"
+        onClick={onRemove}
+        className="w-6 h-6 flex items-center justify-center rounded border border-gray-200 text-gray-300 hover:bg-red-50 hover:border-red-300 hover:text-red-500 transition-colors"
+      >
+        <X className="w-3 h-3" />
+      </button>
+    </div>
+  )
+}
+
 // ─── Create / Edit Modal ────────────────────────────────────────────────────
 
 interface ModalProps {
@@ -50,6 +96,8 @@ function ProtocolModal({ initial, onSave, onClose }: ModalProps) {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }))
+
   const addTest = () => {
     if (!newTestType) return
     setTests(prev => [...prev, { test_type: newTestType, order: prev.length + 1, default_notes: null }])
@@ -58,6 +106,16 @@ function ProtocolModal({ initial, onSave, onClose }: ModalProps) {
 
   const removeTest = (idx: number) => {
     setTests(prev => prev.filter((_, i) => i !== idx).map((t, i) => ({ ...t, order: i + 1 })))
+  }
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+    setTests(prev => {
+      const oldIdx = prev.findIndex((_, i) => `test-${i}` === active.id)
+      const newIdx = prev.findIndex((_, i) => `test-${i}` === over.id)
+      return arrayMove(prev, oldIdx, newIdx).map((t, i) => ({ ...t, order: i + 1 }))
+    })
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -149,26 +207,24 @@ function ProtocolModal({ initial, onSave, onClose }: ModalProps) {
 
             {/* Tests */}
             <div>
-              <label className="block text-xs font-semibold text-brand-ink mb-2">Tests</label>
+              <label className="block text-xs font-semibold text-brand-ink mb-2">
+                Tests <span className="text-gray-400 font-normal">(arrasta para reordenar)</span>
+              </label>
               {tests.length > 0 && (
-                <div className="space-y-1 mb-3">
-                  {tests.map((t, i) => (
-                    <div key={i} className="flex items-center gap-2 py-1.5 border-b border-gray-50 last:border-0">
-                      <GripVertical className="w-4 h-4 text-gray-300 flex-shrink-0" />
-                      <span className="w-6 h-6 rounded flex items-center justify-center bg-purple-100 text-purple-700 text-[10px] font-bold flex-shrink-0">
-                        {t.order}
-                      </span>
-                      <span className="flex-1 text-sm font-medium text-brand-ink">{t.test_type}</span>
-                      <button
-                        type="button"
-                        onClick={() => removeTest(i)}
-                        className="w-6 h-6 flex items-center justify-center rounded border border-gray-200 text-gray-300 hover:bg-red-50 hover:border-red-300 hover:text-red-500 transition-colors"
-                      >
-                        <X className="w-3 h-3" />
-                      </button>
+                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                  <SortableContext items={tests.map((_, i) => `test-${i}`)} strategy={verticalListSortingStrategy}>
+                    <div className="space-y-1 mb-3">
+                      {tests.map((t, i) => (
+                        <SortableTestItem
+                          key={`test-${i}`}
+                          id={`test-${i}`}
+                          test={t}
+                          onRemove={() => removeTest(i)}
+                        />
+                      ))}
                     </div>
-                  ))}
-                </div>
+                  </SortableContext>
+                </DndContext>
               )}
               <div className="flex gap-2 pt-2 border-t border-dashed border-purple-200">
                 <select
