@@ -1,0 +1,38 @@
+from pydantic import BaseModel
+from typing import Optional, List, Dict, Any
+from datetime import datetime
+
+class TestCustomization(BaseModel):
+    test_type: str
+    order: int = 1
+    skip: bool = False
+    added: bool = False
+    repeat_later: bool = False
+    notes: str = ""
+
+class ExecutionPlanCreate(BaseModel):
+    patient_id: str
+    protocol_id: str
+    mode: str = "live"   # live | paper
+
+class ExecutionPlanUpdate(BaseModel):
+    status: Optional[str] = None
+    mode: Optional[str] = None
+    test_customizations: Optional[List[Dict[str, Any]]] = None
+    variant_name: Optional[str] = None
+    is_saved_variant: Optional[bool] = None
+
+class ExecutionPlanOut(BaseModel):
+    id: str
+    patient_id: str
+    protocol_id: Optional[str]
+    status: str
+    mode: str
+    test_customizations: Optional[List[Dict[str, Any]]] = None
+    is_saved_variant: bool
+    variant_name: Optional[str]
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True

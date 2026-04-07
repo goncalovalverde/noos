@@ -5,9 +5,13 @@ from app.core.config import settings
 from app.db.base import Base, engine, SessionLocal
 from app.api.routes import auth as auth_router
 from app.api.routes import users as users_router
+from app.api.routes import patients as patients_router
+from app.api.routes import protocols as protocols_router
+from app.api.routes import tests as tests_router
+from app.api.routes import execution_plans as execution_plans_router
 
 # Import models so SQLAlchemy registers them before create_all
-from app.models import User, AuditLog  # noqa: F401
+from app.models import User, AuditLog, Patient, TestSession, Protocol, ProtocolTest, PatientProtocol, ExecutionPlan  # noqa: F401
 
 def _seed_admin():
     """Create initial Administrador if none exists."""
@@ -61,6 +65,10 @@ app.add_middleware(
 
 app.include_router(auth_router.router)
 app.include_router(users_router.router)
+app.include_router(patients_router.router)
+app.include_router(protocols_router.router)
+app.include_router(tests_router.router)
+app.include_router(execution_plans_router.router)
 
 @app.get("/api/health")
 def health():
