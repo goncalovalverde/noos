@@ -90,7 +90,8 @@ async def get_incomplete_plans(
             "protocol_name": protocol.name if protocol else "Sin protocolo",
             "updated_at": plan.updated_at.isoformat() if plan.updated_at else None,
         })
-    return {"count": len(result), "plans": result}
+    unique_patients = len({p["patient_id"] for p in result})
+    return {"count": unique_patients, "plans": result}
 
 
 @router.get("/classification-distribution")
