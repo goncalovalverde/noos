@@ -118,7 +118,7 @@ export default function Dashboard() {
               {incompletePlans.count} {incompletePlans.count === 1 ? 'paciente con protocolo incompleto' : 'pacientes con protocolo incompleto'}
             </p>
             <p className="text-[12px] text-[#a16207] mt-0.5 truncate">
-              {incompletePlans.plans.slice(0, 3).map(p => p.patient_display_id).join(' y ')} tienen evaluaciones pendientes
+              {[...new Map(incompletePlans.plans.map(p => [p.patient_id, p.patient_display_id])).values()].slice(0, 3).join(' y ')} tienen evaluaciones pendientes
             </p>
           </div>
           <Link
