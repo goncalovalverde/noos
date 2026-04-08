@@ -1,8 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 from sqlalchemy import or_
 from typing import List
-from datetime import datetime
+from datetime import datetime, timezone
 from app.db.base import get_db
 from app.models.execution_plan import ExecutionPlan
 from app.models.protocol import Protocol
@@ -12,6 +12,7 @@ from app.schemas.execution_plan import ExecutionPlanCreate, ExecutionPlanUpdate,
 from app.auth.dependencies import get_current_active_user, require_role
 from app.models.user import User
 from app.api.utils.access import can_access_patient, get_accessible_patient_ids
+from app.api.utils.audit import audit
 import json
 
 router = APIRouter(prefix="/api/execution-plans", tags=["execution-plans"])
@@ -19,6 +20,7 @@ router = APIRouter(prefix="/api/execution-plans", tags=["execution-plans"])
 @router.post("/", response_model=ExecutionPlanOut, status_code=201)
 async def create_execution_plan(
     body: ExecutionPlanCreate,
+    request: Request,
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("Administrador", "Neuropsicólogo")),
 ):
@@ -34,17 +36,21 @@ async def create_execution_plan(
         {"test_type": t.test_type, "order": t.order, "skip": False, "added": False, "repeat_later": False, "notes": t.default_notes or ""}
         for t in sorted(protocol.tests, key=lambda x: x.order)
     ]
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     plan = ExecutionPlan(
         patient_id=body.patient_id,
         protocol_id=body.protocol_id,
         mode=body.mode,
         test_customizations=json.dumps(customizations),
         status="draft",
-        # live: performed_at == created_at; paper: use provided date or None
         performed_at=body.performed_at if body.mode == "paper" else now,
     )
     db.add(plan)
+    db.flush()
+    audit(db, "execution_plan.create", user_id=current_user.id, resource_type="execution_plan",
+          resource_id=plan.id,
+          details={"patient_id": body.patient_id, "protocol_id": body.protocol_id, "mode": body.mode},
+          request=request)
     db.commit()
     db.refresh(plan)
     out = ExecutionPlanOut.model_validate(plan)
@@ -182,12 +188,14 @@ async def get_execution_plan(
 async def update_execution_plan(
     plan_id: str,
     body: ExecutionPlanUpdate,
+    request: Request,
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("Administrador", "Neuropsicólogo")),
 ):
     plan = db.query(ExecutionPlan).filter(ExecutionPlan.id == plan_id).first()
     if not plan:
         raise HTTPException(404, "Plan de evaluación no encontrado")
+    old_status = plan.status
     if body.status is not None:
         plan.status = body.status
     if body.mode is not None:
@@ -200,6 +208,10 @@ async def update_execution_plan(
         plan.is_saved_variant = body.is_saved_variant
     if body.performed_at is not None:
         plan.performed_at = body.performed_at
+    if body.status is not None and body.status != old_status:
+        audit(db, "execution_plan.status_change", user_id=current_user.id,
+              resource_type="execution_plan", resource_id=plan_id,
+              details={"from": old_status, "to": body.status}, request=request)
     db.commit()
     db.refresh(plan)
     out = ExecutionPlanOut.model_validate(plan)

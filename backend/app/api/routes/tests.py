@@ -1,9 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 import json
 from app.db.base import get_db
 from app.models.test_session import TestSession
-from app.models.audit_log import AuditLog
 from app.models.execution_plan import ExecutionPlan
 from app.schemas.test_session import TestSessionCreate, TestSessionUpdate, TestSessionOut
 from app.auth.dependencies import get_current_active_user, require_role
@@ -12,6 +11,7 @@ from app.models.patient import Patient
 from app.services.normatives.calculator import calculator
 from app.services.normatives.raw_score_extractor import extract_raw_score
 from app.api.utils.access import can_access_patient
+from app.api.utils.audit import audit
 
 router = APIRouter(prefix="/api/tests", tags=["tests"])
 
@@ -34,6 +34,7 @@ def _auto_complete_plan(plan_id: str, db: Session) -> None:
 @router.post("/", response_model=TestSessionOut, status_code=201)
 async def create_test(
     body: TestSessionCreate,
+    request: Request,
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("Administrador", "Neuropsicólogo")),
 ):
@@ -64,6 +65,10 @@ async def create_test(
             pass
 
     db.add(session)
+    db.flush()
+    audit(db, "test.create", user_id=current_user.id, resource_type="test_session", resource_id=session.id,
+          details={"test_type": body.test_type, "patient_id": body.patient_id,
+                   "execution_plan_id": body.execution_plan_id}, request=request)
     db.commit()
     db.refresh(session)
 
@@ -147,13 +152,8 @@ async def update_test(
         except Exception:
             pass
 
-    db.add(AuditLog(
-        user_id=current_user.id,
-        action="test.update",
-        resource_type="test_session",
-        resource_id=test_id,
-        details=json.dumps({"before": old_raw, "after": body.raw_data}),
-    ))
+    audit(db, "test.update", user_id=current_user.id, resource_type="test_session", resource_id=test_id,
+          details={"before": old_raw, "after": body.raw_data})
     db.commit()
     db.refresh(session)
     out = TestSessionOut.model_validate(session)
@@ -165,6 +165,7 @@ async def update_test(
 @router.delete("/{test_id}", status_code=204)
 async def delete_test(
     test_id: str,
+    request: Request,
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("Administrador")),
 ):
@@ -174,5 +175,7 @@ async def delete_test(
     patient = db.query(Patient).filter(Patient.id == session.patient_id).first()
     if patient and not can_access_patient(db, patient, current_user):
         raise HTTPException(403, "No tienes acceso a este paciente")
+    audit(db, "test.delete", user_id=current_user.id, resource_type="test_session", resource_id=test_id,
+          details={"test_type": session.test_type, "patient_id": session.patient_id}, request=request)
     db.delete(session)
     db.commit()

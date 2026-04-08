@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from pydantic import BaseModel
@@ -7,6 +7,7 @@ from app.models.user import User
 from app.schemas.user import UserCreate, UserUpdate, UserOut
 from app.auth.password import hash_password, validate_password_strength, verify_password
 from app.auth.dependencies import require_role, get_current_active_user
+from app.api.utils.audit import audit
 
 router = APIRouter(prefix="/api/users", tags=["users"])
 
@@ -58,8 +59,9 @@ async def list_users(
 @router.post("/", response_model=UserOut, status_code=201)
 async def create_user(
     body: UserCreate,
+    request: Request,
     db: Session = Depends(get_db),
-    _=Depends(require_role("Administrador")),
+    current_user: User = Depends(require_role("Administrador")),
 ):
     if not validate_password_strength(body.password):
         raise HTTPException(status_code=400, detail="La contraseña no cumple los requisitos de seguridad")
@@ -74,6 +76,9 @@ async def create_user(
         can_manage_protocols=body.can_manage_protocols,
     )
     db.add(user)
+    db.flush()
+    audit(db, "user.create", user_id=current_user.id, resource_type="user", resource_id=user.id,
+          details={"username": body.username, "role": body.role}, request=request)
     db.commit()
     db.refresh(user)
     return user
@@ -82,26 +87,34 @@ async def create_user(
 async def update_user(
     user_id: str,
     body: UserUpdate,
+    request: Request,
     db: Session = Depends(get_db),
-    _=Depends(require_role("Administrador")),
+    current_user: User = Depends(require_role("Administrador")),
 ):
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
-    for field, value in body.model_dump(exclude_unset=True).items():
+    changes = body.model_dump(exclude_unset=True)
+    for field, value in changes.items():
         setattr(user, field, value)
+    audit(db, "user.update", user_id=current_user.id, resource_type="user", resource_id=user_id,
+          details={"fields": list(changes.keys())}, request=request)
     db.commit()
     db.refresh(user)
     return user
 
+
 @router.delete("/{user_id}", status_code=204)
 async def delete_user(
     user_id: str,
+    request: Request,
     db: Session = Depends(get_db),
-    _=Depends(require_role("Administrador")),
+    current_user: User = Depends(require_role("Administrador")),
 ):
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    audit(db, "user.delete", user_id=current_user.id, resource_type="user", resource_id=user_id,
+          details={"username": user.username, "role": user.role}, request=request)
     db.delete(user)
     db.commit()

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
 from typing import List, Optional
@@ -7,6 +7,8 @@ from app.models.protocol import Protocol, ProtocolTest
 from app.models.execution_plan import ExecutionPlan
 from app.schemas.protocol import ProtocolCreate, ProtocolUpdate, ProtocolOut
 from app.auth.dependencies import get_current_active_user, require_protocol_management
+from app.models.user import User
+from app.api.utils.audit import audit
 
 router = APIRouter(prefix="/api/protocols", tags=["protocols"])
 
@@ -38,8 +40,9 @@ async def list_protocols(
 @router.post("/", response_model=ProtocolOut, status_code=201)
 async def create_protocol(
     body: ProtocolCreate,
+    request: Request,
     db: Session = Depends(get_db),
-    current_user=Depends(require_protocol_management()),
+    current_user: User = Depends(require_protocol_management()),
 ):
     if db.query(Protocol).filter(Protocol.name == body.name).first():
         raise HTTPException(409, "Ya existe un protocolo con ese nombre")
@@ -55,6 +58,8 @@ async def create_protocol(
     db.flush()
     for t in body.tests:
         db.add(ProtocolTest(protocol_id=protocol.id, **t.model_dump()))
+    audit(db, "protocol.create", user_id=current_user.id, resource_type="protocol", resource_id=protocol.id,
+          details={"name": body.name, "category": body.category}, request=request)
     db.commit()
     db.refresh(protocol)
     return protocol
@@ -76,30 +81,38 @@ async def get_protocol(
 async def update_protocol(
     protocol_id: str,
     body: ProtocolUpdate,
+    request: Request,
     db: Session = Depends(get_db),
-    current_user=Depends(require_protocol_management()),
+    current_user: User = Depends(require_protocol_management()),
 ):
     p = db.query(Protocol).filter(Protocol.id == protocol_id).first()
     if not p:
         raise HTTPException(404, "Protocolo no encontrado")
-    for field, value in body.model_dump(exclude_unset=True, exclude={"tests"}).items():
+    changes = body.model_dump(exclude_unset=True, exclude={"tests"})
+    for field, value in changes.items():
         setattr(p, field, value)
     if body.tests is not None:
         db.query(ProtocolTest).filter(ProtocolTest.protocol_id == protocol_id).delete()
         for t in body.tests:
             db.add(ProtocolTest(protocol_id=protocol_id, **t.model_dump()))
+    audit(db, "protocol.update", user_id=current_user.id, resource_type="protocol", resource_id=protocol_id,
+          details={"fields": list(changes.keys()), "tests_updated": body.tests is not None}, request=request)
     db.commit()
     db.refresh(p)
     return p
 
+
 @router.delete("/{protocol_id}", status_code=204)
 async def delete_protocol(
     protocol_id: str,
+    request: Request,
     db: Session = Depends(get_db),
-    current_user=Depends(require_protocol_management()),
+    current_user: User = Depends(require_protocol_management()),
 ):
     p = db.query(Protocol).filter(Protocol.id == protocol_id).first()
     if not p:
         raise HTTPException(404, "Protocolo no encontrado")
+    audit(db, "protocol.delete", user_id=current_user.id, resource_type="protocol", resource_id=protocol_id,
+          details={"name": p.name}, request=request)
     db.delete(p)
     db.commit()
