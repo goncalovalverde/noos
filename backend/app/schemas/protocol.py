@@ -35,6 +35,7 @@ class ProtocolOut(BaseModel):
     tests: List[ProtocolTestOut] = []
     created_at: datetime
     updated_at: datetime
+    active_plans_count: int = 0
 
     class Config:
         from_attributes = True

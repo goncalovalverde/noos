@@ -14,6 +14,7 @@ export interface Protocol {
   tests: Array<{ test_type: string; order: number; default_notes: string | null }>
   created_at: string
   updated_at: string
+  active_plans_count: number
 }
 
 export const protocolsApi = {

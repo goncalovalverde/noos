@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { ClipboardList, Plus, X, Trash2, GripVertical, ChevronRight, Loader2 } from 'lucide-react'
+import { ClipboardList, Plus, X, Trash2, GripVertical, ChevronRight, Loader2, AlertTriangle } from 'lucide-react'
 import {
   DndContext, closestCenter, PointerSensor, useSensor, useSensors,
   type DragEndEvent,
@@ -344,6 +344,16 @@ function DetailPanel({ protocol, canManage, onEdit, onDelete, onClose }: DetailP
 
       {/* Body */}
       <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
+        {/* Active plans warning banner */}
+        {protocol.active_plans_count > 0 && (
+          <div className="flex items-start gap-2.5 bg-[#fff7ed] border border-[#fed7aa] rounded-[10px] px-4 py-3 text-[12px] text-[#92400e] leading-relaxed">
+            <AlertTriangle className="w-[15px] h-[15px] text-[#d97706] shrink-0 mt-0.5" />
+            <span>
+              <strong>Este protocolo está en uso en {protocol.active_plans_count} evaluación{protocol.active_plans_count !== 1 ? 'es' : ''} activa{protocol.active_plans_count !== 1 ? 's' : ''}.</strong>{' '}
+              Los cambios aquí NO afectan a los planes de pacientes ya creados — solo a los nuevos que se creen a partir de ahora.
+            </span>
+          </div>
+        )}
         {protocol.description && (
           <p className="text-sm text-brand-muted leading-relaxed">{protocol.description}</p>
         )}
