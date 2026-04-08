@@ -4,9 +4,11 @@ import type { User } from '@/types/auth'
 
 interface AuthState {
   token: string | null
+  refreshToken: string | null
   user: User | null
   isAuthenticated: boolean
-  login: (token: string, user: User) => void
+  login: (token: string, refreshToken: string, user: User) => void
+  updateTokens: (token: string, refreshToken: string) => void
   logout: () => void
   setUser: (user: User) => void
 }
@@ -18,16 +20,23 @@ export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
       token: null,
+      refreshToken: null,
       user: null,
       isAuthenticated: false,
-      login: (token, user) => set({ token, user, isAuthenticated: true }),
-      logout: () => set({ token: null, user: null, isAuthenticated: false }),
+      login: (token, refreshToken, user) => set({ token, refreshToken, user, isAuthenticated: true }),
+      updateTokens: (token, refreshToken) => set({ token, refreshToken }),
+      logout: () => set({ token: null, refreshToken: null, user: null, isAuthenticated: false }),
       setUser: (user) => set({ user }),
     }),
     {
       name: 'noos-auth',
       storage: createJSONStorage(() => sessionStorage),
-      partialize: (state) => ({ token: state.token, user: state.user, isAuthenticated: state.isAuthenticated }),
+      partialize: (state) => ({
+        token: state.token,
+        refreshToken: state.refreshToken,
+        user: state.user,
+        isAuthenticated: state.isAuthenticated,
+      }),
     }
   )
 )

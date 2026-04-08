@@ -5,9 +5,9 @@ from sqlalchemy.orm import Session
 from app.db.base import get_db
 from app.models.user import User
 from app.models.audit_log import AuditLog
-from app.schemas.auth import LoginRequest, TokenResponse, UserOut, ChangePasswordRequest
+from app.schemas.auth import LoginRequest, TokenResponse, UserOut, ChangePasswordRequest, RefreshRequest
 from app.auth.password import verify_password, hash_password, validate_password_strength
-from app.auth.jwt import create_access_token
+from app.auth.jwt import create_access_token, create_refresh_token, decode_refresh_token
 from app.auth.dependencies import get_current_active_user
 from app.core.config import settings
 from app.core.limiter import limiter
@@ -39,13 +39,30 @@ async def login(body: LoginRequest, request: Request, db: Session = Depends(get_
         {"sub": user.id, "role": user.role},
         expires_delta=timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES),
     )
-    return TokenResponse(access_token=token, user=UserOut.model_validate(user))
+    refresh = create_refresh_token({"sub": user.id, "role": user.role})
+    return TokenResponse(access_token=token, refresh_token=refresh, user=UserOut.model_validate(user))
 
 @router.post("/logout")
 async def logout(request: Request, current_user: User = Depends(get_current_active_user), db: Session = Depends(get_db)):
     _log(db, "auth.logout", user_id=current_user.id, request=request)
     db.commit()
     return {"message": "Sesión cerrada"}
+
+@router.post("/refresh", response_model=TokenResponse)
+@limiter.limit("20/minute")
+async def refresh_token(body: RefreshRequest, request: Request, db: Session = Depends(get_db)):
+    """Exchange a valid refresh token for a new access + refresh token pair."""
+    payload = decode_refresh_token(body.refresh_token)
+    if not payload:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh token inválido o expirado")
+
+    user = db.query(User).filter(User.id == payload["sub"], User.is_active == True).first()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Usuario no encontrado o inactivo")
+
+    new_access = create_access_token({"sub": user.id, "role": user.role})
+    new_refresh = create_refresh_token({"sub": user.id, "role": user.role})
+    return TokenResponse(access_token=new_access, refresh_token=new_refresh, user=UserOut.model_validate(user))
 
 @router.get("/me", response_model=UserOut)
 async def me(current_user: User = Depends(get_current_active_user)):
