@@ -1,4 +1,16 @@
 version: '3.9'
+
+# ─────────────────────────────────────────────────────────────────────────────
+# SECRETS — never hard-code credentials here.
+#
+# Before running for the first time:
+#   cp backend/.env.example backend/.env
+#   # Edit backend/.env and set every value marked CHANGE_ME
+#
+# Generate a strong SECRET_KEY with:
+#   openssl rand -hex 32
+# ─────────────────────────────────────────────────────────────────────────────
+
 services:
   backend:
     build: ./backend
@@ -7,9 +19,8 @@ services:
     volumes:
       - ./backend:/app
       - ./reports:/reports
-    environment:
-      - DATABASE_URL=sqlite:///./noos.db
-      - ENVIRONMENT=development
+    env_file:
+      - ./backend/.env
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
   frontend:
