@@ -7,7 +7,7 @@ def extract_raw_score(test_type: str, raw_data: Dict[str, Any]) -> float:
         "TMT-B":             lambda d: d["tiempo_segundos"],
         "TAVEC":             lambda d: sum(d[f"ensayo_{i}"] for i in range(1, 6)),
         "Fluidez-FAS":       lambda d: d["letra_f"] + d["letra_a"] + d["letra_s"],
-        "Fluidez-Semantica": lambda d: d["animales"] + d["frutas"] + d["categoria_libre"],
+        "Fluidez-Semantica": lambda d: float(d.get("animales", 0)),
         "Rey-Copia":         lambda d: d["puntuacion_bruta"],
         "Rey-Memoria":       lambda d: d["puntuacion_bruta"],
         "Toulouse-Pieron":   lambda d: d["productividad_neta"],

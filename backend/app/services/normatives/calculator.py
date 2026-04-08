@@ -10,9 +10,16 @@ class NormativeCalculator:
         "TMT-A": "tmt_a.json",
         "TMT-B": "tmt_b.json",
         "Fluidez-FAS": "fluidez_fas.json",
+        "Fluidez-Semantica": "fluidez_semantica.json",
         "TAVEC": "tavec.json",
         "Rey-Copia": "rey_copia.json",
         "Rey-Memoria": "rey_memoria.json",
+    }
+
+    PE_TO_PERCENTILE: dict[int, float] = {
+        1: 0.1, 2: 0.5, 3: 2.0, 4: 4.5, 5: 8.0, 6: 12.0, 7: 17.0, 8: 25.0,
+        9: 37.0, 10: 50.0, 11: 63.0, 12: 75.0, 13: 84.0, 14: 91.0, 15: 95.0,
+        16: 97.0, 17: 98.5, 18: 99.5, 19: 99.9,
     }
 
     def __init__(self):
@@ -103,6 +110,19 @@ class NormativeCalculator:
         pe = round(pe_l + ratio * (pe_u - pe_l))
         percentil = round(p_l + ratio * (p_u - p_l), 1)
         return pe, percentil
+
+    def calculate_from_pe(self, test_type: str, pe: int) -> dict:
+        """Use when the clinician provides the PE directly (e.g. WAIS-IV subtests)."""
+        pe = max(1, min(19, int(pe)))
+        percentil = self.PE_TO_PERCENTILE.get(pe, 50.0)
+        z_score = round(stats.norm.ppf(max(0.001, min(0.999, percentil / 100))), 2)
+        return {
+            "puntuacion_escalar": pe,
+            "percentil": percentil,
+            "z_score": z_score,
+            "clasificacion": self._classify(percentil),
+            "norma_aplicada": {"fuente": "WAIS-IV", "test": test_type},
+        }
 
     def _calculate_simulated(self, test_type: str, raw_score: float, age: int, education_years: int) -> dict:
         """No validated normative table available for this test."""

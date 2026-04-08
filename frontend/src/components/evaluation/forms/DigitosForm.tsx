@@ -31,6 +31,7 @@ function maxPossibleAciertos(spanMaximo: number, minSpan = 2): number {
 }
 
 export default function DigitosForm({ testType, mode: _mode, onSave, onSkip, saving }: Props) {
+  const [pe, setPe] = useState('')
   const [spanMaximo, setSpanMaximo] = useState('')
   const [totalAciertos, setTotalAciertos] = useState('')
 
@@ -40,17 +41,15 @@ export default function DigitosForm({ testType, mode: _mode, onSave, onSkip, sav
   const possibleMax = spanMaximo !== '' ? maxPossibleAciertos(spanNum) : null
 
   const raw = {
+    puntuacion_escalar_wais: pe !== '' ? Number(pe) : null,
     span_maximo: spanMaximo !== '' ? spanNum : null,
     total_aciertos: totalAciertos !== '' ? aciertosNum : null,
   }
 
   const isValid =
-    spanMaximo !== '' &&
-    totalAciertos !== '' &&
-    spanNum >= 2 &&
-    spanNum <= maxSpan &&
-    aciertosNum >= 0 &&
-    aciertosNum <= 16
+    pe !== '' &&
+    Number(pe) >= 1 &&
+    Number(pe) <= 19
 
   return (
     <FormBase
@@ -62,11 +61,31 @@ export default function DigitosForm({ testType, mode: _mode, onSave, onSkip, sav
       rawData={raw}
       isValid={isValid}
     >
+      {/* WAIS-IV scaled score (PE) — primary normative field */}
+      <div>
+        <label htmlFor="digitos-pe" className="block text-sm font-medium text-brand-ink mb-1">
+          Puntuación Escalar WAIS-IV (1–19) <span className="text-clinical-impaired">*</span>
+        </label>
+        <p className="text-xs text-brand-muted mb-2">
+          Introduce la Puntuación Escalar (PE) de 1–19 obtenida de la tabla normativa del manual WAIS-IV, según la edad del paciente.
+        </p>
+        <input
+          id="digitos-pe"
+          type="number"
+          min={1}
+          max={19}
+          value={pe}
+          onChange={e => setPe(e.target.value)}
+          placeholder="1–19"
+          className="w-full text-2xl font-semibold px-4 py-3 border border-gray-200 rounded-input focus:outline-none focus:ring-2 focus:ring-brand-mid"
+        />
+      </div>
+
       <div className="grid grid-cols-2 gap-4">
         {/* Span máximo */}
         <div>
           <label htmlFor="digitos-span" className="block text-sm font-medium text-brand-ink mb-1">
-            Span máximo alcanzado <span className="text-clinical-impaired">*</span>
+            Span máximo alcanzado <span className="text-brand-muted font-normal">(opcional)</span>
           </label>
           <input
             id="digitos-span"
@@ -76,7 +95,7 @@ export default function DigitosForm({ testType, mode: _mode, onSave, onSkip, sav
             value={spanMaximo}
             onChange={e => setSpanMaximo(e.target.value)}
             placeholder={`2–${maxSpan}`}
-            className="w-full text-2xl font-semibold px-4 py-3 border border-gray-200 rounded-input focus:outline-none focus:ring-2 focus:ring-brand-mid"
+            className="w-full px-3 py-2 border border-gray-200 rounded-input text-sm focus:outline-none focus:ring-2 focus:ring-brand-mid"
           />
           <p className="text-xs text-brand-muted mt-1">Rango: 2–{maxSpan}</p>
         </div>
@@ -84,7 +103,7 @@ export default function DigitosForm({ testType, mode: _mode, onSave, onSkip, sav
         {/* Total aciertos */}
         <div>
           <label htmlFor="digitos-aciertos" className="block text-sm font-medium text-brand-ink mb-1">
-            Total aciertos (ensayos correctos) <span className="text-clinical-impaired">*</span>
+            Total aciertos (ensayos correctos) <span className="text-brand-muted font-normal">(opcional)</span>
           </label>
           <input
             id="digitos-aciertos"
@@ -94,7 +113,7 @@ export default function DigitosForm({ testType, mode: _mode, onSave, onSkip, sav
             value={totalAciertos}
             onChange={e => setTotalAciertos(e.target.value)}
             placeholder="0–16"
-            className="w-full text-2xl font-semibold px-4 py-3 border border-gray-200 rounded-input focus:outline-none focus:ring-2 focus:ring-brand-mid"
+            className="w-full px-3 py-2 border border-gray-200 rounded-input text-sm focus:outline-none focus:ring-2 focus:ring-brand-mid"
           />
           <p className="text-xs text-brand-muted mt-1">Máx. total posible: 16</p>
         </div>

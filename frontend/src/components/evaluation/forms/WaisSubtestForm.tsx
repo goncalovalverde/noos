@@ -79,6 +79,7 @@ const SUBTEST_CONFIG: Record<WaisTestType, SubtestConfig> = {
 export default function WaisSubtestForm({ testType, mode: _mode, onSave, onSkip, saving }: Props) {
   const config = SUBTEST_CONFIG[testType]
 
+  const [pe, setPe] = useState('')
   const [puntuacion, setPuntuacion] = useState('')
   const [extras, setExtras] = useState<Record<string, string>>({})
 
@@ -86,6 +87,7 @@ export default function WaisSubtestForm({ testType, mode: _mode, onSave, onSkip,
     setExtras(prev => ({ ...prev, [key]: e.target.value }))
 
   const raw: Record<string, unknown> = {
+    puntuacion_escalar_wais: pe !== '' ? Number(pe) : null,
     puntuacion_bruta: puntuacion !== '' ? Number(puntuacion) : null,
     ...Object.fromEntries(
       config.extraFields.map(f => [f.key, extras[f.key] !== undefined && extras[f.key] !== '' ? Number(extras[f.key]) : null])
@@ -93,9 +95,9 @@ export default function WaisSubtestForm({ testType, mode: _mode, onSave, onSkip,
   }
 
   const isValid =
-    puntuacion !== '' &&
-    Number(puntuacion) >= 0 &&
-    Number(puntuacion) <= config.max
+    pe !== '' &&
+    Number(pe) >= 1 &&
+    Number(pe) <= 19
 
   return (
     <FormBase
@@ -107,10 +109,30 @@ export default function WaisSubtestForm({ testType, mode: _mode, onSave, onSkip,
       rawData={raw}
       isValid={isValid}
     >
-      {/* Primary score */}
+      {/* WAIS-IV scaled score (PE) — primary normative field */}
+      <div>
+        <label htmlFor="wais-pe" className="block text-sm font-medium text-brand-ink mb-1">
+          Puntuación Escalar WAIS-IV (1–19) <span className="text-clinical-impaired">*</span>
+        </label>
+        <p className="text-xs text-brand-muted mb-2">
+          Introduce la Puntuación Escalar (PE) de 1–19 obtenida de la tabla normativa del manual WAIS-IV, según la edad del paciente.
+        </p>
+        <input
+          id="wais-pe"
+          type="number"
+          min={1}
+          max={19}
+          value={pe}
+          onChange={e => setPe(e.target.value)}
+          placeholder="1–19"
+          className="w-full text-2xl font-semibold px-4 py-3 border border-gray-200 rounded-input focus:outline-none focus:ring-2 focus:ring-brand-mid"
+        />
+      </div>
+
+      {/* Raw score — optional/secondary */}
       <div>
         <label htmlFor="wais-puntuacion" className="block text-sm font-medium text-brand-ink mb-1">
-          {config.label} <span className="text-clinical-impaired">*</span>
+          {config.label} <span className="text-brand-muted font-normal">(opcional)</span>
         </label>
         <input
           id="wais-puntuacion"
@@ -120,7 +142,7 @@ export default function WaisSubtestForm({ testType, mode: _mode, onSave, onSkip,
           value={puntuacion}
           onChange={e => setPuntuacion(e.target.value)}
           placeholder={`0–${config.max}`}
-          className="w-full text-2xl font-semibold px-4 py-3 border border-gray-200 rounded-input focus:outline-none focus:ring-2 focus:ring-brand-mid"
+          className="w-full px-3 py-2 border border-gray-200 rounded-input text-sm focus:outline-none focus:ring-2 focus:ring-brand-mid"
         />
       </div>
 

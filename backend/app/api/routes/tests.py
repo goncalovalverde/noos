@@ -49,8 +49,11 @@ async def create_test(
     patient = db.query(Patient).filter(Patient.id == body.patient_id).first()
     if patient:
         try:
-            raw_score = extract_raw_score(body.test_type, body.raw_data)
-            scores = calculator.calculate(body.test_type, raw_score, patient.age, patient.education_years)
+            if body.raw_data.get("puntuacion_escalar_wais"):
+                scores = calculator.calculate_from_pe(body.test_type, int(body.raw_data["puntuacion_escalar_wais"]))
+            else:
+                raw_score = extract_raw_score(body.test_type, body.raw_data)
+                scores = calculator.calculate(body.test_type, raw_score, patient.age, patient.education_years)
             session.set_calculated_scores(scores)
         except Exception:
             pass
@@ -119,8 +122,11 @@ async def update_test(
     patient = db.query(Patient).filter(Patient.id == session.patient_id).first()
     if patient:
         try:
-            raw_score = extract_raw_score(session.test_type, body.raw_data)
-            scores = calculator.calculate(session.test_type, raw_score, patient.age, patient.education_years)
+            if body.raw_data.get("puntuacion_escalar_wais"):
+                scores = calculator.calculate_from_pe(session.test_type, int(body.raw_data["puntuacion_escalar_wais"]))
+            else:
+                raw_score = extract_raw_score(session.test_type, body.raw_data)
+                scores = calculator.calculate(session.test_type, raw_score, patient.age, patient.education_years)
             session.set_calculated_scores(scores)
         except Exception:
             pass

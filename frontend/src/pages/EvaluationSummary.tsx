@@ -40,6 +40,9 @@ const CLASSIFICATION_CLASSES: Record<string, string> = {
 }
 
 function ClassificationBadge({ value }: { value: string }) {
+  if (value === 'Sin norma validada') {
+    return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-500 border border-gray-200">Sin norma</span>
+  }
   const cls = CLASSIFICATION_CLASSES[value] ?? 'bg-gray-100 text-gray-700 border border-gray-200'
   return (
     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${cls}`}>
