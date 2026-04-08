@@ -88,6 +88,14 @@ export default function Settings() {
       .finally(() => setLoading(false))
   }, [])
 
+  // Dismiss delete confirmation on Escape key
+  useEffect(() => {
+    if (!deleteConfirm) return
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') setDeleteConfirm(null) }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [deleteConfirm])
+
   function openCreate() {
     setEditingUser(null)
     setForm(EMPTY_FORM)
@@ -222,7 +230,7 @@ export default function Settings() {
       {/* Users table */}
       <div className="bg-white rounded-card shadow-card overflow-hidden">
         {/* Table head */}
-        <div className="grid grid-cols-[2fr_1fr_1.4fr_1.4fr_1fr_80px] bg-brand-dark text-white">
+        <div className="grid grid-cols-[2fr_1fr_1.4fr_1.4fr_1fr_120px] bg-brand-dark text-white">
           {['Usuario', 'Rol', 'Gestión Protocolos', 'Estado', 'Último acceso', ''].map((h) => (
             <div key={h} className="px-4 py-3 text-xs font-semibold uppercase tracking-wide">
               {h}
@@ -234,7 +242,7 @@ export default function Settings() {
         {users.map((user) => (
           <div
             key={user.id}
-            className="grid grid-cols-[2fr_1fr_1.4fr_1.4fr_1fr_80px] border-b border-gray-100 last:border-b-0 hover:bg-gray-50 transition-colors"
+            className="grid grid-cols-[2fr_1fr_1.4fr_1.4fr_1fr_120px] border-b border-gray-100 last:border-b-0 hover:bg-gray-50 transition-colors"
           >
             {/* User info */}
             <div className="px-4 py-3 flex items-center gap-3">
@@ -304,38 +312,46 @@ export default function Settings() {
             </div>
 
             {/* Actions */}
-            <div className="px-4 py-3 flex items-center gap-1">
-              <button
-                aria-label="Editar"
-                onClick={() => openEdit(user)}
-                className="w-7 h-7 rounded-md border border-gray-200 flex items-center justify-center text-gray-400 hover:border-purple-300 hover:text-brand-mid transition-colors"
-              >
-                <Pencil className="w-3.5 h-3.5" />
-              </button>
-
-              {/* No delete for own account */}
-              {currentUser?.id !== user.id && (
-                <>
-                  {deleteConfirm === user.id ? (
+              <div className="px-4 py-3 flex items-center gap-1 justify-end">
+                {deleteConfirm === user.id ? (
+                  /* Confirmation row — spans both action slots */
+                  <div className="flex items-center gap-1">
+                    <button
+                      aria-label="Cancelar eliminación"
+                      onClick={() => setDeleteConfirm(null)}
+                      className="h-7 px-2 rounded-md border border-gray-200 text-xs text-gray-400 hover:bg-gray-50 transition-colors"
+                    >
+                      No
+                    </button>
                     <button
                       aria-label="Confirmar eliminación"
                       onClick={() => handleDelete(user.id)}
-                      className="w-7 h-7 rounded-md border border-red-300 bg-red-50 flex items-center justify-center text-red-500 hover:bg-red-100 transition-colors"
+                      className="h-7 px-2 rounded-md bg-red-500 text-white text-xs font-semibold hover:bg-red-600 transition-colors"
                     >
-                      <Trash2 className="w-3.5 h-3.5" />
+                      Eliminar
                     </button>
-                  ) : (
+                  </div>
+                ) : (
+                  <>
                     <button
-                      aria-label="Eliminar"
-                      onClick={() => setDeleteConfirm(user.id)}
-                      className="w-7 h-7 rounded-md border border-gray-200 flex items-center justify-center text-gray-400 hover:border-red-300 hover:text-red-400 transition-colors"
+                      aria-label="Editar"
+                      onClick={() => openEdit(user)}
+                      className="w-7 h-7 rounded-md border border-gray-200 flex items-center justify-center text-gray-400 hover:border-purple-300 hover:text-brand-mid transition-colors"
                     >
-                      <Trash2 className="w-3.5 h-3.5" />
+                      <Pencil className="w-3.5 h-3.5" />
                     </button>
-                  )}
-                </>
-              )}
-            </div>
+                    {currentUser?.id !== user.id && (
+                      <button
+                        aria-label="Eliminar"
+                        onClick={() => setDeleteConfirm(user.id)}
+                        className="w-7 h-7 rounded-md border border-gray-200 flex items-center justify-center text-gray-400 hover:border-red-300 hover:text-red-400 transition-colors"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </>
+                )}
+              </div>
           </div>
         ))}
 
