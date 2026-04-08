@@ -6,6 +6,7 @@ from docx.oxml import OxmlElement
 import io
 from datetime import datetime
 from typing import List, Dict, Any
+from app.services.reports.raw_data_labels import format_raw_data
 
 BRAND_PURPLE = RGBColor(0x4B, 0x16, 0x4F)
 COLOR_SUPERIOR = RGBColor(0x16, 0xa3, 0x4a)
@@ -121,6 +122,35 @@ def generate_word_report(
                 r = p.add_run(f"{s.get('test_type')}: ")
                 r.bold = True
                 p.add_run(obs)
+
+    # Raw data per test
+    doc.add_paragraph()
+    h4 = doc.add_heading('Datos Introducidos por Prueba', level=1)
+    h4.runs[0].font.color.rgb = BRAND_PURPLE
+
+    for s in sessions:
+        test_type = s.get('test_type', '—')
+        raw = s.get('raw_data') or {}
+        rows_data = format_raw_data(test_type, raw)
+        if not rows_data:
+            continue
+
+        p = doc.add_paragraph()
+        r = p.add_run(test_type)
+        r.bold = True
+        r.font.color.rgb = BRAND_PURPLE
+
+        rt2 = doc.add_table(rows=len(rows_data), cols=2)
+        rt2.style = 'Table Grid'
+        for row_i, (lbl, val) in enumerate(rows_data):
+            rt2.rows[row_i].cells[0].text = lbl
+            if rt2.rows[row_i].cells[0].paragraphs[0].runs:
+                rt2.rows[row_i].cells[0].paragraphs[0].runs[0].bold = True
+                rt2.rows[row_i].cells[0].paragraphs[0].runs[0].font.size = Pt(9)
+            rt2.rows[row_i].cells[1].text = val
+            if rt2.rows[row_i].cells[1].paragraphs[0].runs:
+                rt2.rows[row_i].cells[1].paragraphs[0].runs[0].font.size = Pt(9)
+        doc.add_paragraph()
 
     # Footer
     doc.add_paragraph()

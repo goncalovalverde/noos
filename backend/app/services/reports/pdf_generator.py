@@ -7,6 +7,7 @@ from reportlab.lib.enums import TA_CENTER, TA_LEFT
 import io
 from datetime import datetime
 from typing import List, Dict, Any
+from app.services.reports.raw_data_labels import format_raw_data
 
 BRAND_PURPLE = colors.HexColor('#4B164F')
 BRAND_MID = colors.HexColor('#9839D1')
@@ -129,6 +130,30 @@ def generate_pdf_report(
             obs = qd.get('observaciones', '').strip()
             if obs:
                 story.append(Paragraph(f"<b>{s.get('test_type')}:</b> {obs}", normal_style))
+
+    # Raw data per test
+    story.append(Spacer(1, 12))
+    story.append(Paragraph("Datos Introducidos por Prueba", section_style))
+    small_style = ParagraphStyle('Small', fontSize=9, textColor=colors.gray, spaceBefore=0, spaceAfter=2)
+    for s in sessions:
+        test_type = s.get('test_type', '—')
+        raw = s.get('raw_data') or {}
+        rows_data = format_raw_data(test_type, raw)
+        if not rows_data:
+            continue
+        story.append(Paragraph(f"<b>{test_type}</b>", normal_style))
+        tbl_data = [[lbl, val] for lbl, val in rows_data]
+        raw_tbl = Table(tbl_data, colWidths=[6*cm, 10*cm])
+        raw_tbl.setStyle(TableStyle([
+            ('FONTSIZE', (0, 0), (-1, -1), 9),
+            ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+            ('TEXTCOLOR', (0, 0), (0, -1), colors.HexColor('#4B164F')),
+            ('ROWBACKGROUNDS', (0, 0), (-1, -1), [colors.HexColor('#faf5ff'), colors.white]),
+            ('GRID', (0, 0), (-1, -1), 0.3, colors.lightgrey),
+            ('PADDING', (0, 0), (-1, -1), 4),
+        ]))
+        story.append(raw_tbl)
+        story.append(Spacer(1, 6))
 
     # Footer
     story.append(Spacer(1, 24))
