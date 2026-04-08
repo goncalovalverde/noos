@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { ArrowLeft, Loader2, Plus, Zap, ChevronDown, ChevronRight, ClipboardList, Calendar, FileText, FileDown } from 'lucide-react'
+import { ArrowLeft, Loader2, Plus, Zap, ChevronDown, ChevronRight, ClipboardList, Calendar, FileText, FileDown, PlayCircle } from 'lucide-react'
 import { useAuthStore } from '@/store/auth'
 import { patientsApi } from '@/api/patients'
 import { evaluationsApi, type ExecutionPlanSummary, type ExecutionPlanWithResults } from '@/api/evaluations'
@@ -33,7 +33,7 @@ function fmtDate(d: string | null | undefined) {
 }
 
 // Expandable row: loads full results on first open
-function EvaluationRow({ plan }: { plan: ExecutionPlanSummary }) {
+function EvaluationRow({ plan, patientId }: { plan: ExecutionPlanSummary; patientId: string }) {
   const [open, setOpen] = useState(false)
   const [details, setDetails] = useState<ExecutionPlanWithResults | null>(null)
   const [loading, setLoading] = useState(false)
@@ -117,8 +117,18 @@ function EvaluationRow({ plan }: { plan: ExecutionPlanSummary }) {
       </button>
       <div className="absolute right-5 top-1/2 -translate-y-1/2 flex gap-1.5 pointer-events-none opacity-0 group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity" />
 
-      {/* Export buttons row */}
-      <div className="flex gap-1.5 px-5 pb-3 -mt-1">
+      {/* Action buttons row */}
+      <div className="flex items-center gap-1.5 px-5 pb-3 -mt-1">
+        {plan.status === 'active' && (
+          <Link
+            to={`/patients/${patientId}/evaluate/${plan.id}`}
+            className="flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded border border-brand-mid text-brand-mid hover:bg-brand-mid hover:text-white transition-colors"
+            title="Continuar evaluación en curso"
+          >
+            <PlayCircle className="w-3 h-3" />
+            Continuar evaluación
+          </Link>
+        )}
         <button
           onClick={e => handleDownload(e, 'pdf')}
           disabled={downloading !== null}
@@ -308,7 +318,7 @@ export default function PatientHub() {
           ) : (
             <div className="rounded-card shadow-card bg-white overflow-hidden divide-y divide-gray-100">
               {plans.map(plan => (
-                <EvaluationRow key={plan.id} plan={plan} />
+                <EvaluationRow key={plan.id} plan={plan} patientId={id!} />
               ))}
             </div>
           )}

@@ -12,7 +12,7 @@ export default function EvaluationSession() {
   const { id: patientId, planId } = useParams<{ id: string; planId: string }>()
   const navigate = useNavigate()
 
-  const [patient, setPatient] = useState<Patient | null>(null)
+  const [_patient, setPatient] = useState<Patient | null>(null)
   const [tests, setTests] = useState<TestCustomization[]>([])
   const [currentIdx, setCurrentIdx] = useState(0)
   const [mode, setMode] = useState<string>('live')
@@ -27,10 +27,16 @@ export default function EvaluationSession() {
     Promise.all([
       patientsApi.get(patientId),
       evaluationsApi.get(planId),
-    ]).then(([p, plan]) => {
-      setPatient(p)
+      evaluationsApi.getWithResults(planId),
+    ]).then(([_p, plan, results]) => {
+      setPatient(_p)
       setMode(plan.mode)
-      setTests(plan.test_customizations.filter(t => !t.skip))
+      const activTests = plan.test_customizations.filter(t => !t.skip)
+      setTests(activTests)
+      // Resume: start at first test not yet saved
+      const doneTypes = new Set(results.test_results.map(r => r.test_type))
+      const firstPending = activTests.findIndex(t => !doneTypes.has(t.test_type))
+      setCurrentIdx(firstPending >= 0 ? firstPending : 0)
     }).finally(() => setLoading(false))
   }, [patientId, planId])
 
