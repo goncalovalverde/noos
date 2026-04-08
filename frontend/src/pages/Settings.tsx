@@ -7,6 +7,21 @@ import { useAuthStore } from '@/store/auth'
 
 const ROLES = ['Administrador', 'Neuropsicólogo', 'Observador'] as const
 
+function formatLastLogin(dateStr: string): string {
+  const date = new Date(dateStr)
+  const now = new Date()
+  const diffMs = now.getTime() - date.getTime()
+  const diffDays = Math.floor(diffMs / 86400000)
+  const timeStr = date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })
+
+  if (diffDays === 0) return `Hoy, ${timeStr}`
+  if (diffDays === 1) return `Ayer, ${timeStr}`
+  if (diffDays < 7) return `Hace ${diffDays} días`
+  const diffMonths = Math.floor(diffDays / 30)
+  if (diffMonths < 2) return 'Hace 1 mes'
+  return `Hace ${diffMonths} meses`
+}
+
 function RoleBadge({ role }: { role: string }) {
   const cls =
     role === 'Administrador'
@@ -270,13 +285,7 @@ export default function Settings() {
 
             {/* Last login */}
             <div className="px-4 py-3 flex items-center text-xs text-brand-muted">
-              {user.last_login
-                ? new Date(user.last_login).toLocaleDateString('es-ES', {
-                    day: '2-digit',
-                    month: 'short',
-                    year: 'numeric',
-                  })
-                : '—'}
+              {user.last_login ? formatLastLogin(user.last_login) : '—'}
             </div>
 
             {/* Actions */}
