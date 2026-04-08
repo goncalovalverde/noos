@@ -18,13 +18,47 @@ export interface ExecutionPlan {
   test_customizations: TestCustomization[]
   is_saved_variant: boolean
   variant_name: string | null
+  performed_at: string | null
   created_at: string
   updated_at: string
 }
 
+export interface ExecutionPlanSummary {
+  id: string
+  patient_id: string
+  protocol_id: string | null
+  protocol_name: string | null
+  protocol_category: string | null
+  status: string
+  mode: string
+  performed_at: string | null
+  created_at: string
+  test_count: number
+  total_tests: number
+}
+
+export interface TestResultItem {
+  id: string
+  test_type: string
+  date: string
+  raw_data: Record<string, unknown>
+  calculated_scores: {
+    puntuacion_escalar?: number
+    percentil?: number
+    z_score?: number
+    clasificacion?: string
+    norma_aplicada?: Record<string, unknown>
+  } | null
+  qualitative_data: Record<string, unknown> | null
+}
+
+export interface ExecutionPlanWithResults extends ExecutionPlanSummary {
+  test_results: TestResultItem[]
+}
+
 export const evaluationsApi = {
-  create: async (patient_id: string, protocol_id: string, mode: string): Promise<ExecutionPlan> => {
-    const { data } = await apiClient.post<ExecutionPlan>('/execution-plans/', { patient_id, protocol_id, mode })
+  create: async (patient_id: string, protocol_id: string, mode: string, performed_at?: string): Promise<ExecutionPlan> => {
+    const { data } = await apiClient.post<ExecutionPlan>('/execution-plans/', { patient_id, protocol_id, mode, performed_at })
     return data
   },
   get: async (planId: string): Promise<ExecutionPlan> => {
@@ -33,6 +67,14 @@ export const evaluationsApi = {
   },
   update: async (planId: string, body: Partial<ExecutionPlan>): Promise<ExecutionPlan> => {
     const { data } = await apiClient.patch<ExecutionPlan>(`/execution-plans/${planId}`, body)
+    return data
+  },
+  listForPatient: async (patientId: string): Promise<ExecutionPlanSummary[]> => {
+    const { data } = await apiClient.get<ExecutionPlanSummary[]>(`/execution-plans/patient/${patientId}`)
+    return data
+  },
+  getWithResults: async (planId: string): Promise<ExecutionPlanWithResults> => {
+    const { data } = await apiClient.get<ExecutionPlanWithResults>(`/execution-plans/${planId}/results`)
     return data
   },
 }

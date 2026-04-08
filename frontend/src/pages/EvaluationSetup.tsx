@@ -11,6 +11,7 @@ export default function EvaluationSetup() {
   const [protocols, setProtocols] = useState<Protocol[]>([])
   const [selectedProtocol, setSelectedProtocol] = useState<Protocol | null>(null)
   const [mode, setMode] = useState<'live' | 'paper'>('live')
+  const [performedDate, setPerformedDate] = useState<string>('')
   const [loading, setLoading] = useState(true)
   const [starting, setStarting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -24,7 +25,8 @@ export default function EvaluationSetup() {
     setStarting(true)
     setError(null)
     try {
-      const plan = await evaluationsApi.create(patientId, selectedProtocol.id, mode)
+      const performed_at = mode === 'paper' && performedDate ? new Date(performedDate).toISOString() : undefined
+      const plan = await evaluationsApi.create(patientId, selectedProtocol.id, mode, performed_at)
       await evaluationsApi.update(plan.id, { status: 'active' })
       navigate(`/patients/${patientId}/evaluate/${plan.id}`)
     } catch (err: unknown) {
@@ -109,6 +111,22 @@ export default function EvaluationSetup() {
               </button>
             ))}
           </div>
+          {/* Paper mode: date picker for when evaluation was done */}
+          {mode === 'paper' && (
+            <div className="mt-4 pt-4 border-t border-dashed border-gray-200">
+              <label className="block text-sm font-medium text-brand-ink mb-1">
+                📅 Fecha de realización <span className="text-brand-muted font-normal">(cuándo se hizo el test)</span>
+              </label>
+              <input
+                type="date"
+                value={performedDate}
+                max={new Date().toISOString().split('T')[0]}
+                onChange={e => setPerformedDate(e.target.value)}
+                className="w-48 px-3 py-2 border border-gray-200 rounded-input text-sm focus:outline-none focus:ring-2 focus:ring-brand-mid"
+              />
+              <p className="text-xs text-brand-muted mt-1">Si se deja vacío, se usará la fecha de hoy.</p>
+            </div>
+          )}
         </div>
 
         {/* Error banner */}

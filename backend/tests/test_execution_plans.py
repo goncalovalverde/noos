@@ -76,8 +76,11 @@ class TestGetExecutionPlansByPatient:
     def test_plans_contain_customizations(self, client, neuro_headers, sample_plan, sample_patient):
         res = client.get(f"/api/execution-plans/patient/{sample_patient.id}", headers=neuro_headers)
         plan = res.json()[0]
-        assert plan["test_customizations"] is not None
-        assert len(plan["test_customizations"]) == 3
+        # New summary endpoint returns protocol_name and test counts instead of full customizations
+        assert "protocol_name" in plan
+        assert "test_count" in plan
+        assert "total_tests" in plan
+        assert plan["total_tests"] == 3
 
 class TestFullEvaluationFlow:
     def test_complete_evaluation_flow(self, client, neuro_headers, sample_patient, sample_protocol):

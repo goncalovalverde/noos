@@ -15,6 +15,7 @@ class ExecutionPlanCreate(BaseModel):
     patient_id: str
     protocol_id: str
     mode: str = "live"   # live | paper
+    performed_at: Optional[datetime] = None  # if paper/deferred, date evaluation was done
 
 class ExecutionPlanUpdate(BaseModel):
     status: Optional[str] = None
@@ -22,6 +23,7 @@ class ExecutionPlanUpdate(BaseModel):
     test_customizations: Optional[List[Dict[str, Any]]] = None
     variant_name: Optional[str] = None
     is_saved_variant: Optional[bool] = None
+    performed_at: Optional[datetime] = None
 
 class ExecutionPlanOut(BaseModel):
     id: str
@@ -32,6 +34,7 @@ class ExecutionPlanOut(BaseModel):
     test_customizations: Optional[List[Dict[str, Any]]] = None
     is_saved_variant: bool
     variant_name: Optional[str]
+    performed_at: Optional[datetime]
     created_at: datetime
     updated_at: datetime
 

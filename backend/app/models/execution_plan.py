@@ -17,6 +17,7 @@ class ExecutionPlan(Base):
     mode = Column(String, default="live")                # live | paper
     is_saved_variant = Column(Boolean, default=False)
     variant_name = Column(String, nullable=True)
+    performed_at = Column(DateTime, nullable=True)  # when evaluation was actually done (paper: may differ from created_at)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
