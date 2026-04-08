@@ -313,7 +313,7 @@ export default function PatientHub() {
   const initials = patient.initials ?? patient.display_id.slice(0, 2).toUpperCase()
 
   const TABS = [
-    { id: 'historial', label: 'Historial', icon: History },
+    { id: 'historial', label: 'Historial de evaluaciones', icon: History },
     { id: 'datos', label: 'Datos del paciente', icon: ClipboardEdit },
   ] as const
 
@@ -397,7 +397,6 @@ export default function PatientHub() {
         {/* ── Tab 1: Historial ── */}
         {activeTab === 'historial' && (
           <section>
-            <h2 className="text-base font-semibold text-[#270D38] mb-4">Historial de Evaluaciones</h2>
             {plans.length === 0 ? (
               <div className="rounded-card shadow-card bg-white p-10 text-center">
                 <p className="text-gray-400 text-sm">Sin evaluaciones aún</p>
