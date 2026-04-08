@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
+import { persist, createJSONStorage } from 'zustand/middleware'
 import type { User } from '@/types/auth'
 
 interface AuthState {
@@ -11,6 +11,9 @@ interface AuthState {
   setUser: (user: User) => void
 }
 
+// Use sessionStorage instead of localStorage so the JWT token is never
+// persisted to disk. The session clears automatically when the browser tab
+// is closed, reducing the window of exposure for XSS-based token theft.
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
@@ -23,6 +26,7 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: 'noos-auth',
+      storage: createJSONStorage(() => sessionStorage),
       partialize: (state) => ({ token: state.token, user: state.user, isAuthenticated: state.isAuthenticated }),
     }
   )
