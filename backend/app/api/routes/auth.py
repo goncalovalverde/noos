@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 from app.db.base import get_db
 from app.models.user import User
+from app.models.used_refresh_token import UsedRefreshToken
 from app.schemas.auth import LoginRequest, TokenResponse, UserOut, ChangePasswordRequest, RefreshRequest
 from app.auth.password import verify_password, hash_password, validate_password_strength
 from app.auth.jwt import create_access_token, create_refresh_token, decode_refresh_token
@@ -42,17 +43,36 @@ async def logout(request: Request, current_user: User = Depends(get_current_acti
 @router.post("/refresh", response_model=TokenResponse)
 @limiter.limit("20/minute")
 async def refresh_token(body: RefreshRequest, request: Request, db: Session = Depends(get_db)):
-    """Exchange a valid refresh token for a new access + refresh token pair."""
+    """Exchange a valid refresh token for a new access + refresh token pair.
+
+    Each refresh token is single-use. The JTI is stored in `used_refresh_tokens`
+    on first use; any replay attempt returns 401 immediately.
+    """
     payload = decode_refresh_token(body.refresh_token)
     if not payload:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh token inválido o expirado")
+
+    jti = payload.get("jti")
+    if not jti:
+        # Tokens issued before the denylist feature lack a jti — reject them to
+        # force re-login and ensure all active tokens are jti-bearing going forward.
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh token inválido (sin jti)")
+
+    # Replay check — reject if this JTI has already been consumed
+    if db.query(UsedRefreshToken).filter(UsedRefreshToken.jti == jti).first():
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh token ya utilizado")
 
     user = db.query(User).filter(User.id == payload["sub"], User.is_active == True).first()
     if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Usuario no encontrado o inactivo")
 
+    # Consume this JTI before issuing new tokens (same transaction)
+    exp_dt = datetime.fromtimestamp(payload["exp"], tz=timezone.utc)
+    db.add(UsedRefreshToken(jti=jti, expires_at=exp_dt))
+
     new_access = create_access_token({"sub": user.id, "role": user.role})
     new_refresh = create_refresh_token({"sub": user.id, "role": user.role})
+    db.commit()
     return TokenResponse(access_token=new_access, refresh_token=new_refresh, user=UserOut.model_validate(user))
 
 @router.get("/me", response_model=UserOut)

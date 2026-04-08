@@ -195,6 +195,9 @@ async def update_execution_plan(
     plan = db.query(ExecutionPlan).filter(ExecutionPlan.id == plan_id).first()
     if not plan:
         raise HTTPException(404, "Plan de evaluación no encontrado")
+    patient = db.query(Patient).filter(Patient.id == plan.patient_id).first()
+    if not patient or not can_access_patient(db, patient, current_user):
+        raise HTTPException(403, "No tienes acceso a este paciente")
     old_status = plan.status
     if body.status is not None:
         plan.status = body.status

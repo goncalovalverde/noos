@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta, timezone
 from typing import Optional
+import uuid
 import jwt
 from app.core.config import settings
 
@@ -14,10 +15,14 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
 
 
 def create_refresh_token(data: dict) -> str:
-    """Long-lived token used only to obtain a new access token."""
+    """Long-lived token used only to obtain a new access token.
+
+    Each token carries a unique `jti` (JWT ID) so it can be added to the
+    denylist when consumed, preventing token replay attacks.
+    """
     to_encode = data.copy()
     expire = datetime.now(timezone.utc) + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
-    to_encode.update({"exp": expire, "type": "refresh"})
+    to_encode.update({"exp": expire, "type": "refresh", "jti": str(uuid.uuid4())})
     return jwt.encode(to_encode, settings.SECRET_KEY, algorithm="HS256")
 
 

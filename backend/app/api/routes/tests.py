@@ -126,6 +126,7 @@ async def get_test(
 async def update_test(
     test_id: str,
     body: TestSessionUpdate,
+    request: Request,
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("Administrador", "Neuropsicólogo")),
 ):
@@ -135,7 +136,6 @@ async def update_test(
     patient = db.query(Patient).filter(Patient.id == session.patient_id).first()
     if patient and not can_access_patient(db, patient, current_user):
         raise HTTPException(403, "No tienes acceso a este paciente")
-    old_raw = session.get_raw_data()
     session.set_raw_data(body.raw_data)
     if body.qualitative_data is not None:
         session.set_qualitative_data(body.qualitative_data)
@@ -153,7 +153,8 @@ async def update_test(
             pass
 
     audit(db, "test.update", user_id=current_user.id, resource_type="test_session", resource_id=test_id,
-          details={"before": old_raw, "after": body.raw_data})
+          details={"fields_changed": sorted(body.raw_data.keys()), "test_type": session.test_type},
+          request=request)
     db.commit()
     db.refresh(session)
     out = TestSessionOut.model_validate(session)
