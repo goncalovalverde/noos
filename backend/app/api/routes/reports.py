@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import Response
 from sqlalchemy.orm import Session
 from app.db.base import get_db
@@ -9,6 +9,7 @@ from app.models.protocol import Protocol
 from app.models.user import User
 from app.auth.dependencies import get_current_active_user
 from app.api.utils.access import can_access_patient
+from app.api.utils.audit import audit
 from app.services.reports.pdf_generator import generate_pdf_report
 from app.services.reports.word_generator import generate_word_report
 
@@ -53,10 +54,14 @@ def _build_report_data(plan_id: str, db: Session, current_user: User):
 @router.get("/{plan_id}/pdf")
 async def download_pdf(
     plan_id: str,
+    request: Request,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
     patient_dict, sessions_list, plan_dict, protocol_name = _build_report_data(plan_id, db, current_user)
+    audit(db, "report.download.pdf", user_id=current_user.id, resource_type="execution_plan", resource_id=plan_id,
+          details={"patient_id": patient_dict["id"], "sessions": len(sessions_list)}, request=request)
+    db.commit()
     pdf_bytes = generate_pdf_report(patient_dict, sessions_list, plan_dict, protocol_name)
     return Response(
         content=pdf_bytes,
@@ -68,10 +73,14 @@ async def download_pdf(
 @router.get("/{plan_id}/word")
 async def download_word(
     plan_id: str,
+    request: Request,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
     patient_dict, sessions_list, plan_dict, protocol_name = _build_report_data(plan_id, db, current_user)
+    audit(db, "report.download.word", user_id=current_user.id, resource_type="execution_plan", resource_id=plan_id,
+          details={"patient_id": patient_dict["id"], "sessions": len(sessions_list)}, request=request)
+    db.commit()
     word_bytes = generate_word_report(patient_dict, sessions_list, plan_dict, protocol_name)
     return Response(
         content=word_bytes,

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy.orm import Session
 from sqlalchemy import or_
 from typing import List
@@ -11,6 +11,7 @@ from app.schemas.patient import PatientCreate, PatientUpdate, PatientOut
 from app.auth.dependencies import get_current_active_user, require_role
 from app.models.user import User
 from app.api.utils.access import can_access_patient
+from app.api.utils.audit import audit
 
 router = APIRouter(prefix="/api/patients", tags=["patients"])
 
@@ -51,6 +52,7 @@ async def list_patients(
 @router.post("/", response_model=PatientOut, status_code=201)
 async def create_patient(
     body: PatientCreate,
+    request: Request,
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("Administrador", "Neuropsicólogo")),
 ):
@@ -58,6 +60,7 @@ async def create_patient(
     db.add(patient)
     db.flush()
     db.add(PatientAccess(patient_id=patient.id, user_id=current_user.id, granted_by_id=current_user.id))
+    audit(db, "patient.create", user_id=current_user.id, resource_type="patient", resource_id=patient.id, request=request)
     db.commit()
     db.refresh(patient)
     out = PatientOut.model_validate(patient)
@@ -95,6 +98,7 @@ async def get_patient_access(
 async def grant_patient_access(
     patient_id: str,
     body: GrantAccessBody,
+    request: Request,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
@@ -112,6 +116,8 @@ async def grant_patient_access(
     ).first()
     if not existing:
         db.add(PatientAccess(patient_id=patient_id, user_id=body.user_id, granted_by_id=current_user.id))
+        audit(db, "patient.access.grant", user_id=current_user.id, resource_type="patient", resource_id=patient_id,
+              details={"granted_to": body.user_id}, request=request)
         db.commit()
     return {"ok": True}
 
@@ -120,6 +126,7 @@ async def grant_patient_access(
 async def revoke_patient_access(
     patient_id: str,
     user_id: str,
+    request: Request,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
@@ -134,6 +141,8 @@ async def revoke_patient_access(
         PatientAccess.patient_id == patient_id,
         PatientAccess.user_id == user_id
     ).delete()
+    audit(db, "patient.access.revoke", user_id=current_user.id, resource_type="patient", resource_id=patient_id,
+          details={"revoked_from": user_id}, request=request)
     db.commit()
 
 
@@ -157,6 +166,7 @@ async def get_patient(
 async def update_patient(
     patient_id: str,
     body: PatientUpdate,
+    request: Request,
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("Administrador", "Neuropsicólogo")),
 ):
@@ -165,8 +175,11 @@ async def update_patient(
         raise HTTPException(404, "Paciente no encontrado")
     if not _can_access_patient(db, patient, current_user):
         raise HTTPException(403, "No tienes acceso a este paciente")
-    for field, value in body.model_dump(exclude_unset=True).items():
+    changes = body.model_dump(exclude_unset=True)
+    for field, value in changes.items():
         setattr(patient, field, value)
+    audit(db, "patient.update", user_id=current_user.id, resource_type="patient", resource_id=patient_id,
+          details={"fields": list(changes.keys())}, request=request)
     db.commit()
     db.refresh(patient)
     out = PatientOut.model_validate(patient)
@@ -177,6 +190,7 @@ async def update_patient(
 @router.delete("/{patient_id}", status_code=204)
 async def delete_patient(
     patient_id: str,
+    request: Request,
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("Administrador")),
 ):
@@ -185,6 +199,8 @@ async def delete_patient(
         raise HTTPException(404, "Paciente no encontrado")
     if not _can_access_patient(db, patient, current_user):
         raise HTTPException(403, "No tienes acceso a este paciente")
+    audit(db, "patient.delete", user_id=current_user.id, resource_type="patient", resource_id=patient_id,
+          details={"display_id": patient.get_display_id()}, request=request)
     db.delete(patient)
     db.commit()
 
