@@ -1,14 +1,17 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from sqlalchemy import or_
 from typing import List
 from datetime import datetime
 from app.db.base import get_db
 from app.models.execution_plan import ExecutionPlan
 from app.models.protocol import Protocol
+from app.models.patient import Patient
 from app.models.test_session import TestSession
 from app.schemas.execution_plan import ExecutionPlanCreate, ExecutionPlanUpdate, ExecutionPlanOut
 from app.auth.dependencies import get_current_active_user, require_role
 from app.models.user import User
+from app.api.utils.access import can_access_patient, get_accessible_patient_ids
 import json
 
 router = APIRouter(prefix="/api/execution-plans", tags=["execution-plans"])
@@ -22,6 +25,11 @@ async def create_execution_plan(
     protocol = db.query(Protocol).filter(Protocol.id == body.protocol_id).first()
     if not protocol:
         raise HTTPException(404, "Protocolo no encontrado")
+    patient = db.query(Patient).filter(Patient.id == body.patient_id).first()
+    if not patient:
+        raise HTTPException(404, "Paciente no encontrado")
+    if not can_access_patient(db, patient, current_user):
+        raise HTTPException(403, "No tienes acceso a este paciente")
     customizations = [
         {"test_type": t.test_type, "order": t.order, "skip": False, "added": False, "repeat_later": False, "notes": t.default_notes or ""}
         for t in sorted(protocol.tests, key=lambda x: x.order)
@@ -50,6 +58,11 @@ async def get_plans_for_patient(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
+    patient = db.query(Patient).filter(Patient.id == patient_id).first()
+    if not patient:
+        raise HTTPException(404, "Paciente no encontrado")
+    if not can_access_patient(db, patient, current_user):
+        raise HTTPException(403, "No tienes acceso a este paciente")
     plans = db.query(ExecutionPlan).filter(
         ExecutionPlan.patient_id == patient_id
     ).order_by(ExecutionPlan.created_at.desc()).all()
@@ -78,10 +91,14 @@ async def get_incomplete_plans(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
-    """Returns all active/draft execution plans ordered by updated_at desc."""
-    plans = db.query(ExecutionPlan).filter(
+    """Returns active/draft execution plans the user can access."""
+    q = db.query(ExecutionPlan).filter(
         ExecutionPlan.status.in_(["active", "draft"])
-    ).order_by(ExecutionPlan.updated_at.desc()).all()
+    )
+    if current_user.role != "Administrador":
+        accessible_ids = get_accessible_patient_ids(db, current_user)
+        q = q.filter(ExecutionPlan.patient_id.in_(accessible_ids))
+    plans = q.order_by(ExecutionPlan.updated_at.desc()).all()
 
     result = []
     for plan in plans:
@@ -114,6 +131,9 @@ async def get_plan_results(
     plan = db.query(ExecutionPlan).filter(ExecutionPlan.id == plan_id).first()
     if not plan:
         raise HTTPException(404, "Plan de evaluación no encontrado")
+    patient = db.query(Patient).filter(Patient.id == plan.patient_id).first()
+    if patient and not can_access_patient(db, patient, current_user):
+        raise HTTPException(403, "No tienes acceso a este paciente")
 
     protocol = db.query(Protocol).filter(Protocol.id == plan.protocol_id).first() if plan.protocol_id else None
 

@@ -10,6 +10,7 @@ from app.models.test_session import TestSession
 from app.schemas.patient import PatientCreate, PatientUpdate, PatientOut
 from app.auth.dependencies import get_current_active_user, require_role
 from app.models.user import User
+from app.api.utils.access import can_access_patient
 
 router = APIRouter(prefix="/api/patients", tags=["patients"])
 
@@ -18,19 +19,8 @@ class GrantAccessBody(BaseModel):
     user_id: str
 
 
-def _can_access_patient(db: Session, patient: Patient, current_user: User) -> bool:
-    """Check if user can access this patient."""
-    if current_user.role == "Administrador":
-        return True
-    if patient.created_by_id is None:  # legacy patient
-        return True
-    if patient.created_by_id == current_user.id:
-        return True
-    grant = db.query(PatientAccess).filter(
-        PatientAccess.patient_id == patient.id,
-        PatientAccess.user_id == current_user.id
-    ).first()
-    return grant is not None
+# Keep local alias for backward compatibility with existing callers in this file
+_can_access_patient = can_access_patient
 
 
 @router.get("/", response_model=List[PatientOut])

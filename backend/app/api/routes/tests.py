@@ -11,6 +11,7 @@ from app.models.user import User
 from app.models.patient import Patient
 from app.services.normatives.calculator import calculator
 from app.services.normatives.raw_score_extractor import extract_raw_score
+from app.api.utils.access import can_access_patient
 
 router = APIRouter(prefix="/api/tests", tags=["tests"])
 
@@ -47,6 +48,10 @@ async def create_test(
         session.set_qualitative_data(body.qualitative_data)
 
     patient = db.query(Patient).filter(Patient.id == body.patient_id).first()
+    if not patient:
+        raise HTTPException(404, "Paciente no encontrado")
+    if not can_access_patient(db, patient, current_user):
+        raise HTTPException(403, "No tienes acceso a este paciente")
     if patient:
         try:
             if body.raw_data.get("puntuacion_escalar_wais"):
@@ -78,6 +83,11 @@ async def get_tests_by_patient(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
+    patient = db.query(Patient).filter(Patient.id == patient_id).first()
+    if not patient:
+        raise HTTPException(404, "Paciente no encontrado")
+    if not can_access_patient(db, patient, current_user):
+        raise HTTPException(403, "No tienes acceso a este paciente")
     sessions = db.query(TestSession).filter(
         TestSession.patient_id == patient_id
     ).order_by(TestSession.date.desc()).all()
@@ -98,6 +108,9 @@ async def get_test(
     session = db.query(TestSession).filter(TestSession.id == test_id).first()
     if not session:
         raise HTTPException(404, "Test no encontrado")
+    patient = db.query(Patient).filter(Patient.id == session.patient_id).first()
+    if patient and not can_access_patient(db, patient, current_user):
+        raise HTTPException(403, "No tienes acceso a este paciente")
     out = TestSessionOut.model_validate(session)
     out.raw_data = session.get_raw_data()
     out.calculated_scores = session.get_calculated_scores()
@@ -114,6 +127,9 @@ async def update_test(
     session = db.query(TestSession).filter(TestSession.id == test_id).first()
     if not session:
         raise HTTPException(404, "Test no encontrado")
+    patient = db.query(Patient).filter(Patient.id == session.patient_id).first()
+    if patient and not can_access_patient(db, patient, current_user):
+        raise HTTPException(403, "No tienes acceso a este paciente")
     old_raw = session.get_raw_data()
     session.set_raw_data(body.raw_data)
     if body.qualitative_data is not None:
@@ -155,5 +171,8 @@ async def delete_test(
     session = db.query(TestSession).filter(TestSession.id == test_id).first()
     if not session:
         raise HTTPException(404, "Test no encontrado")
+    patient = db.query(Patient).filter(Patient.id == session.patient_id).first()
+    if patient and not can_access_patient(db, patient, current_user):
+        raise HTTPException(403, "No tienes acceso a este paciente")
     db.delete(session)
     db.commit()

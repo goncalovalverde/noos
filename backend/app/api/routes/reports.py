@@ -6,20 +6,24 @@ from app.models.patient import Patient
 from app.models.test_session import TestSession
 from app.models.execution_plan import ExecutionPlan
 from app.models.protocol import Protocol
+from app.models.user import User
 from app.auth.dependencies import get_current_active_user
+from app.api.utils.access import can_access_patient
 from app.services.reports.pdf_generator import generate_pdf_report
 from app.services.reports.word_generator import generate_word_report
 
 router = APIRouter(prefix="/api/reports", tags=["reports"])
 
 
-def _build_report_data(plan_id: str, db: Session):
+def _build_report_data(plan_id: str, db: Session, current_user: User):
     plan = db.query(ExecutionPlan).filter(ExecutionPlan.id == plan_id).first()
     if not plan:
         raise HTTPException(404, "Plan no encontrado")
     patient = db.query(Patient).filter(Patient.id == plan.patient_id).first()
     if not patient:
         raise HTTPException(404, "Paciente no encontrado")
+    if not can_access_patient(db, patient, current_user):
+        raise HTTPException(403, "No tienes acceso a este paciente")
     sessions = db.query(TestSession).filter(
         TestSession.execution_plan_id == plan_id
     ).order_by(TestSession.date).all()
@@ -50,9 +54,9 @@ def _build_report_data(plan_id: str, db: Session):
 async def download_pdf(
     plan_id: str,
     db: Session = Depends(get_db),
-    _=Depends(get_current_active_user),
+    current_user: User = Depends(get_current_active_user),
 ):
-    patient_dict, sessions_list, plan_dict, protocol_name = _build_report_data(plan_id, db)
+    patient_dict, sessions_list, plan_dict, protocol_name = _build_report_data(plan_id, db, current_user)
     pdf_bytes = generate_pdf_report(patient_dict, sessions_list, plan_dict, protocol_name)
     return Response(
         content=pdf_bytes,
@@ -65,9 +69,9 @@ async def download_pdf(
 async def download_word(
     plan_id: str,
     db: Session = Depends(get_db),
-    _=Depends(get_current_active_user),
+    current_user: User = Depends(get_current_active_user),
 ):
-    patient_dict, sessions_list, plan_dict, protocol_name = _build_report_data(plan_id, db)
+    patient_dict, sessions_list, plan_dict, protocol_name = _build_report_data(plan_id, db, current_user)
     word_bytes = generate_word_report(patient_dict, sessions_list, plan_dict, protocol_name)
     return Response(
         content=word_bytes,

@@ -1,4 +1,7 @@
 from contextlib import asynccontextmanager
+import os
+import stat
+from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
@@ -43,8 +46,31 @@ def _seed_admin():
     finally:
         db.close()
 
+def _secure_db_files():
+    """Restrict SQLite DB file permissions to owner-only (chmod 600)."""
+    db_url = settings.DATABASE_URL
+    # Extract path from sqlite:///./noos.db or sqlite:////absolute/path
+    if db_url.startswith("sqlite:///"):
+        db_path = Path(db_url.replace("sqlite:///", ""))
+        if db_path.exists():
+            current = stat.S_IMODE(os.stat(db_path).st_mode)
+            if current & (stat.S_IRGRP | stat.S_IWGRP | stat.S_IROTH | stat.S_IWOTH):
+                os.chmod(db_path, stat.S_IRUSR | stat.S_IWUSR)
+                print(f"🔒 DB file permissions restricted to 600: {db_path}")
+
+def _validate_secrets():
+    """Refuse to start in production with default/weak secret key."""
+    weak_keys = {"changeme", "changeme-use-openssl-rand-hex-32", "dev-secret-key-change-in-production-32chars"}
+    if settings.ENVIRONMENT == "production" and settings.SECRET_KEY in weak_keys:
+        raise RuntimeError(
+            "SECRET_KEY must be changed for production. "
+            "Generate one with: openssl rand -hex 32"
+        )
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    _validate_secrets()
+    _secure_db_files()
     Base.metadata.create_all(bind=engine)
     _seed_admin()
     yield
