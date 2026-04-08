@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { ArrowLeft, Loader2, Plus, Zap, ChevronDown, ChevronRight, ClipboardList, Calendar } from 'lucide-react'
+import { ArrowLeft, Loader2, Plus, Zap, ChevronDown, ChevronRight, ClipboardList, Calendar, FileText, FileDown } from 'lucide-react'
 import { useAuthStore } from '@/store/auth'
 import { patientsApi } from '@/api/patients'
 import { evaluationsApi, type ExecutionPlanSummary, type ExecutionPlanWithResults } from '@/api/evaluations'
@@ -37,6 +37,7 @@ function EvaluationRow({ plan }: { plan: ExecutionPlanSummary }) {
   const [open, setOpen] = useState(false)
   const [details, setDetails] = useState<ExecutionPlanWithResults | null>(null)
   const [loading, setLoading] = useState(false)
+  const [downloading, setDownloading] = useState<'pdf' | 'word' | null>(null)
 
   const toggle = async () => {
     if (!open && !details) {
@@ -49,6 +50,18 @@ function EvaluationRow({ plan }: { plan: ExecutionPlanSummary }) {
       }
     }
     setOpen(o => !o)
+  }
+
+  const handleDownload = async (e: React.MouseEvent, format: 'pdf' | 'word') => {
+    e.stopPropagation()
+    setDownloading(format)
+    const slug = (plan.protocol_name ?? 'informe').replace(/\s+/g, '_').toLowerCase()
+    const ext = format === 'pdf' ? 'pdf' : 'docx'
+    try {
+      await evaluationsApi.downloadReport(plan.id, format, `${slug}_${plan.id.slice(0, 6)}.${ext}`)
+    } finally {
+      setDownloading(null)
+    }
   }
 
   const datesAreSame = plan.performed_at && plan.created_at &&
@@ -99,7 +112,32 @@ function EvaluationRow({ plan }: { plan: ExecutionPlanSummary }) {
             <span>{plan.test_count}/{plan.total_tests} tests</span>
           </div>
         </div>
+
+        {/* Export buttons — outside the toggle button to avoid nested buttons */}
       </button>
+      <div className="absolute right-5 top-1/2 -translate-y-1/2 flex gap-1.5 pointer-events-none opacity-0 group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity" />
+
+      {/* Export buttons row */}
+      <div className="flex gap-1.5 px-5 pb-3 -mt-1">
+        <button
+          onClick={e => handleDownload(e, 'pdf')}
+          disabled={downloading !== null}
+          className="flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded border border-gray-200 text-gray-500 hover:border-red-300 hover:text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50"
+          title="Exportar PDF"
+        >
+          {downloading === 'pdf' ? <Loader2 className="w-3 h-3 animate-spin" /> : <FileText className="w-3 h-3" />}
+          PDF
+        </button>
+        <button
+          onClick={e => handleDownload(e, 'word')}
+          disabled={downloading !== null}
+          className="flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded border border-gray-200 text-gray-500 hover:border-blue-300 hover:text-blue-600 hover:bg-blue-50 transition-colors disabled:opacity-50"
+          title="Exportar Word"
+        >
+          {downloading === 'word' ? <Loader2 className="w-3 h-3 animate-spin" /> : <FileDown className="w-3 h-3" />}
+          Word
+        </button>
+      </div>
 
       {/* Expanded: test results */}
       {open && (

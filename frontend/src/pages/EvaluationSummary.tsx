@@ -83,8 +83,17 @@ export default function EvaluationSummary() {
       .finally(() => setLoading(false))
   }, [id, planId])
 
-  const downloadReport = (format: 'pdf' | 'word') => {
-    window.open(`/api/reports/${planId}/${format}`, '_blank')
+  const [downloading, setDownloading] = useState<'pdf' | 'word' | null>(null)
+
+  const downloadReport = async (format: 'pdf' | 'word') => {
+    if (!planId) return
+    setDownloading(format)
+    const ext = format === 'pdf' ? 'pdf' : 'docx'
+    try {
+      await evaluationsApi.downloadReport(planId, format, `informe_${planId.slice(0, 6)}.${ext}`)
+    } finally {
+      setDownloading(null)
+    }
   }
 
   const radarData = sessions.map((s) => ({
@@ -130,16 +139,18 @@ export default function EvaluationSummary() {
           <div className="flex gap-2.5 ml-auto">
             <button
               onClick={() => downloadReport('pdf')}
-              className="inline-flex items-center gap-1.5 border border-[#9839D1] text-[#9839D1] hover:bg-purple-50 rounded-btn px-4 py-2 text-sm font-medium transition-colors"
+              disabled={downloading !== null}
+              className="inline-flex items-center gap-1.5 border border-[#9839D1] text-[#9839D1] hover:bg-purple-50 rounded-btn px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50"
             >
-              <FileDown size={14} />
+              {downloading === 'pdf' ? <Loader2 size={14} className="animate-spin" /> : <FileDown size={14} />}
               Descargar PDF
             </button>
             <button
               onClick={() => downloadReport('word')}
-              className="inline-flex items-center gap-1.5 border border-[#9839D1] text-[#9839D1] hover:bg-purple-50 rounded-btn px-4 py-2 text-sm font-medium transition-colors"
+              disabled={downloading !== null}
+              className="inline-flex items-center gap-1.5 border border-[#9839D1] text-[#9839D1] hover:bg-purple-50 rounded-btn px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50"
             >
-              <FileText size={14} />
+              {downloading === 'word' ? <Loader2 size={14} className="animate-spin" /> : <FileText size={14} />}
               Descargar Word
             </button>
           </div>

@@ -77,4 +77,13 @@ export const evaluationsApi = {
     const { data } = await apiClient.get<ExecutionPlanWithResults>(`/execution-plans/${planId}/results`)
     return data
   },
+  downloadReport: async (planId: string, format: 'pdf' | 'word', filename: string): Promise<void> => {
+    const { data } = await apiClient.get(`/reports/${planId}/${format}`, { responseType: 'blob' })
+    const url = URL.createObjectURL(new Blob([data]))
+    const a = document.createElement('a')
+    a.href = url
+    a.download = filename
+    a.click()
+    URL.revokeObjectURL(url)
+  },
 }
