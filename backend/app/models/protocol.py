@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-from sqlalchemy import Column, String, Integer, DateTime, ForeignKey
+from sqlalchemy import Column, String, Integer, DateTime, ForeignKey, Boolean
 from sqlalchemy.orm import relationship
 from app.db.base import Base
 
@@ -11,12 +11,16 @@ class Protocol(Base):
     name = Column(String, unique=True, nullable=False)
     description = Column(String, nullable=True)
     category = Column(String, nullable=True)
+    is_public = Column(Boolean, default=True, nullable=False, server_default='1')
+    allow_customization = Column(Boolean, default=True, nullable=False, server_default='1')
+    created_by_id = Column(String, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     tests = relationship("ProtocolTest", back_populates="protocol", cascade="all, delete-orphan", order_by="ProtocolTest.order")
     patient_assignments = relationship("PatientProtocol", back_populates="protocol")
     execution_plans = relationship("ExecutionPlan", back_populates="protocol")
+    created_by = relationship("User", foreign_keys=[created_by_id])
 
 
 class ProtocolTest(Base):

@@ -11,6 +11,8 @@ export interface Protocol {
   name: string
   description: string | null
   category: string | null
+  is_public: boolean
+  allow_customization: boolean
   tests: Array<{ test_type: string; order: number; default_notes: string | null }>
   created_at: string
   updated_at: string
@@ -27,11 +29,11 @@ export const protocolsApi = {
     const { data } = await apiClient.get<Protocol>(`/protocols/${id}`)
     return data
   },
-  create: async (payload: { name: string; description?: string; category?: string; tests: ProtocolTestIn[] }): Promise<Protocol> => {
+  create: async (payload: { name: string; description?: string; category?: string; tests: ProtocolTestIn[]; is_public?: boolean; allow_customization?: boolean }): Promise<Protocol> => {
     const { data } = await apiClient.post<Protocol>('/protocols/', payload)
     return data
   },
-  update: async (id: string, payload: { name?: string; description?: string; category?: string; tests?: ProtocolTestIn[] }): Promise<Protocol> => {
+  update: async (id: string, payload: { name?: string; description?: string; category?: string; tests?: ProtocolTestIn[]; is_public?: boolean; allow_customization?: boolean }): Promise<Protocol> => {
     const { data } = await apiClient.put<Protocol>(`/protocols/${id}`, payload)
     return data
   },

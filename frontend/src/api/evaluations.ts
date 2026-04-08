@@ -21,6 +21,7 @@ export interface ExecutionPlan {
   performed_at: string | null
   created_at: string
   updated_at: string
+  allow_customization?: boolean
 }
 
 export interface ExecutionPlanSummary {

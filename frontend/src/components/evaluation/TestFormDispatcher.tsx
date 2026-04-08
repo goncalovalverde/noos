@@ -12,7 +12,7 @@ interface Props {
   testType: string
   mode: 'live' | 'paper'
   onSave: (raw: Record<string, unknown>, qual?: Record<string, unknown>) => Promise<void>
-  onSkip: () => void
+  onSkip?: () => void
   saving: boolean
 }
 

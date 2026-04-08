@@ -81,7 +81,7 @@ function SortableTestItem({ id, test, onRemove }: { id: string; test: ProtocolTe
 
 interface ModalProps {
   initial?: Protocol | null
-  onSave: (data: { name: string; description: string; category: string; tests: ProtocolTestIn[] }) => Promise<void>
+  onSave: (data: { name: string; description: string; category: string; tests: ProtocolTestIn[]; is_public: boolean; allow_customization: boolean }) => Promise<void>
   onClose: () => void
 }
 
@@ -92,6 +92,8 @@ function ProtocolModal({ initial, onSave, onClose }: ModalProps) {
   const [tests, setTests] = useState<ProtocolTestIn[]>(
     initial?.tests.map(t => ({ test_type: t.test_type, order: t.order, default_notes: t.default_notes ?? null })) ?? []
   )
+  const [isPublic, setIsPublic] = useState(initial?.is_public ?? true)
+  const [allowCustomization, setAllowCustomization] = useState(initial?.allow_customization ?? true)
   const [newTestType, setNewTestType] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -124,7 +126,7 @@ function ProtocolModal({ initial, onSave, onClose }: ModalProps) {
     setSaving(true)
     setError(null)
     try {
-      await onSave({ name: name.trim(), description: description.trim(), category: category.trim(), tests })
+      await onSave({ name: name.trim(), description: description.trim(), category: category.trim(), tests, is_public: isPublic, allow_customization: allowCustomization })
       onClose()
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail
@@ -203,6 +205,45 @@ function ProtocolModal({ initial, onSave, onClose }: ModalProps) {
                 placeholder="Descripción breve del protocolo…"
                 className="w-full bg-brand-bg border border-gray-200 rounded-input px-3 py-2 text-sm text-brand-ink focus:outline-none focus:ring-2 focus:ring-brand-mid resize-none"
               />
+            </div>
+
+            {/* Protocol settings */}
+            <div>
+              <label className="block text-xs font-semibold text-brand-ink mb-3">Ajustes del protocolo</label>
+              <div className="space-y-3">
+                {/* Toggle row: is_public */}
+                <div className="flex items-center justify-between gap-3 py-2.5 border-b border-gray-100">
+                  <div>
+                    <p className="text-sm font-medium text-brand-ink">Visible para todos los clínicos</p>
+                    <p className="text-xs text-brand-muted mt-0.5">Si está desactivado, solo tú puedes usarlo</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsPublic(v => !v)}
+                    className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors ${isPublic ? 'bg-brand-mid' : 'bg-gray-200'}`}
+                    role="switch"
+                    aria-checked={isPublic}
+                  >
+                    <span className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow transition-transform ${isPublic ? 'translate-x-5' : 'translate-x-0'}`} />
+                  </button>
+                </div>
+                {/* Toggle row: allow_customization */}
+                <div className="flex items-center justify-between gap-3 py-2.5">
+                  <div>
+                    <p className="text-sm font-medium text-brand-ink">Permitir personalización por paciente</p>
+                    <p className="text-xs text-brand-muted mt-0.5">Los clínicos pueden añadir o excluir tests al asignarlo</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setAllowCustomization(v => !v)}
+                    className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors ${allowCustomization ? 'bg-brand-mid' : 'bg-gray-200'}`}
+                    role="switch"
+                    aria-checked={allowCustomization}
+                  >
+                    <span className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow transition-transform ${allowCustomization ? 'translate-x-5' : 'translate-x-0'}`} />
+                  </button>
+                </div>
+              </div>
             </div>
 
             {/* Tests */}
@@ -354,6 +395,17 @@ function DetailPanel({ protocol, canManage, onEdit, onDelete, onClose }: DetailP
             </span>
           </div>
         )}
+        {/* Settings summary */}
+        <div className="flex gap-2 flex-wrap">
+          <span className={`inline-flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1 rounded-full ${protocol.is_public ? 'bg-[#dbeafe] text-[#1d4ed8]' : 'bg-[#f3f4f6] text-[#6b7280]'}`}>
+            <span className={`w-1.5 h-1.5 rounded-full ${protocol.is_public ? 'bg-[#1d4ed8]' : 'bg-[#6b7280]'}`} />
+            {protocol.is_public ? 'Visible para todos' : 'Solo para ti'}
+          </span>
+          <span className={`inline-flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1 rounded-full ${protocol.allow_customization ? 'bg-[#dcfce7] text-[#15803d]' : 'bg-[#f3f4f6] text-[#6b7280]'}`}>
+            <span className={`w-1.5 h-1.5 rounded-full ${protocol.allow_customization ? 'bg-[#15803d]' : 'bg-[#6b7280]'}`} />
+            {protocol.allow_customization ? 'Personalización permitida' : 'Sin personalización'}
+          </span>
+        </div>
         {protocol.description && (
           <p className="text-sm text-brand-muted leading-relaxed">{protocol.description}</p>
         )}
@@ -411,12 +463,12 @@ export default function ProtocolLibrary() {
     ? protocols.filter(p => p.category === selectedCategory)
     : protocols
 
-  const handleCreate = async (data: { name: string; description: string; category: string; tests: ProtocolTestIn[] }) => {
+  const handleCreate = async (data: { name: string; description: string; category: string; tests: ProtocolTestIn[]; is_public: boolean; allow_customization: boolean }) => {
     const created = await protocolsApi.create(data)
     setProtocols(prev => [...prev, created])
   }
 
-  const handleUpdate = async (data: { name: string; description: string; category: string; tests: ProtocolTestIn[] }) => {
+  const handleUpdate = async (data: { name: string; description: string; category: string; tests: ProtocolTestIn[]; is_public: boolean; allow_customization: boolean }) => {
     if (!selectedProtocol) return
     const updated = await protocolsApi.update(selectedProtocol.id, data)
     setProtocols(prev => prev.map(p => p.id === updated.id ? updated : p))

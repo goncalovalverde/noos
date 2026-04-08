@@ -37,6 +37,7 @@ class ExecutionPlanOut(BaseModel):
     performed_at: Optional[datetime]
     created_at: datetime
     updated_at: datetime
+    allow_customization: bool = True
 
     @field_validator('test_customizations', mode='before')
     @classmethod

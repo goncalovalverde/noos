@@ -20,18 +20,24 @@ class ProtocolCreate(BaseModel):
     description: Optional[str] = None
     category: Optional[str] = None
     tests: List[ProtocolTestIn] = []
+    is_public: bool = True
+    allow_customization: bool = True
 
 class ProtocolUpdate(BaseModel):
     name: Optional[str] = None
     description: Optional[str] = None
     category: Optional[str] = None
     tests: Optional[List[ProtocolTestIn]] = None
+    is_public: Optional[bool] = None
+    allow_customization: Optional[bool] = None
 
 class ProtocolOut(BaseModel):
     id: str
     name: str
     description: Optional[str]
     category: Optional[str]
+    is_public: bool = True
+    allow_customization: bool = True
     tests: List[ProtocolTestOut] = []
     created_at: datetime
     updated_at: datetime

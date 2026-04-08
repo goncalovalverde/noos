@@ -23,6 +23,7 @@ export default function EvaluationSession() {
   const [tests, setTests] = useState<TestCustomization[]>([])
   const [currentIdx, setCurrentIdx] = useState(0)
   const [mode, setMode] = useState<string>('live')
+  const [allowCustomization, setAllowCustomization] = useState(true)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [savedScore, setSavedScore] = useState<{
@@ -38,6 +39,7 @@ export default function EvaluationSession() {
     ]).then(([_p, plan, results]) => {
       setPatient(_p)
       setMode(plan.mode)
+      setAllowCustomization(plan.allow_customization ?? true)
       const activTests = plan.test_customizations.filter(t => !t.skip)
       setTests(activTests)
       // Resume: start at first test not yet saved
@@ -145,7 +147,7 @@ export default function EvaluationSession() {
           testType={currentTest.test_type}
           mode={mode as 'live' | 'paper'}
           onSave={handleSave}
-          onSkip={handleSkip}
+          onSkip={allowCustomization ? handleSkip : undefined}
           saving={saving}
         />
       </main>

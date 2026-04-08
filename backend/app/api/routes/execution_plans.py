@@ -41,6 +41,7 @@ async def create_execution_plan(
     db.refresh(plan)
     out = ExecutionPlanOut.model_validate(plan)
     out.test_customizations = plan._get_customizations()
+    out.allow_customization = protocol.allow_customization
     return out
 
 @router.get("/patient/{patient_id}")
@@ -153,6 +154,8 @@ async def get_execution_plan(
         raise HTTPException(404, "Plan de evaluación no encontrado")
     out = ExecutionPlanOut.model_validate(plan)
     out.test_customizations = plan._get_customizations()
+    if plan.protocol:
+        out.allow_customization = plan.protocol.allow_customization
     return out
 
 @router.patch("/{plan_id}", response_model=ExecutionPlanOut)

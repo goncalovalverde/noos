@@ -11,7 +11,7 @@ interface Props {
   description?: string
   children: React.ReactNode
   onSave: (raw: Record<string, unknown>, qual?: Record<string, unknown>) => Promise<void>
-  onSkip: () => void
+  onSkip?: () => void
   saving: boolean
   rawData: Record<string, unknown>
   isValid?: boolean
@@ -74,13 +74,17 @@ export default function FormBase({ testType, description, children, onSave, onSk
 
       {/* Footer actions */}
       <div className="flex items-center justify-between px-6 py-4 border-t border-gray-100 bg-brand-bg">
-        <button
-          onClick={onSkip}
-          className="flex items-center gap-2 text-sm text-brand-muted hover:text-brand-ink border border-gray-200 bg-white px-4 py-2 rounded-btn transition-colors"
-        >
-          <SkipForward className="w-4 h-4" />
-          Omitir este test
-        </button>
+        {onSkip ? (
+          <button
+            onClick={onSkip}
+            className="flex items-center gap-2 text-sm text-brand-muted hover:text-brand-ink border border-gray-200 bg-white px-4 py-2 rounded-btn transition-colors"
+          >
+            <SkipForward className="w-4 h-4" />
+            Omitir este test
+          </button>
+        ) : (
+          <span />
+        )}
         <button
           onClick={handleSave}
           disabled={saving || !isValid}

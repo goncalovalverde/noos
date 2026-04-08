@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from app.db.base import get_db
@@ -24,6 +25,8 @@ async def list_protocols(
     q = db.query(Protocol)
     if category:
         q = q.filter(Protocol.category == category)
+    if current_user.role != 'Administrador':
+        q = q.filter(or_(Protocol.is_public == True, Protocol.created_by_id == current_user.id))
     protocols = q.order_by(Protocol.name).all()
     result = []
     for p in protocols:
@@ -40,7 +43,14 @@ async def create_protocol(
 ):
     if db.query(Protocol).filter(Protocol.name == body.name).first():
         raise HTTPException(409, "Ya existe un protocolo con ese nombre")
-    protocol = Protocol(name=body.name, description=body.description, category=body.category)
+    protocol = Protocol(
+        name=body.name,
+        description=body.description,
+        category=body.category,
+        is_public=body.is_public,
+        allow_customization=body.allow_customization,
+        created_by_id=current_user.id,
+    )
     db.add(protocol)
     db.flush()
     for t in body.tests:
