@@ -72,6 +72,37 @@ async def get_plans_for_patient(
         })
     return result
 
+@router.get("/incomplete")
+async def get_incomplete_plans(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    """Returns all active/draft execution plans ordered by updated_at desc."""
+    plans = db.query(ExecutionPlan).filter(
+        ExecutionPlan.status.in_(["active", "draft"])
+    ).order_by(ExecutionPlan.updated_at.desc()).all()
+
+    result = []
+    for plan in plans:
+        protocol = db.query(Protocol).filter(Protocol.id == plan.protocol_id).first() if plan.protocol_id else None
+        test_count = db.query(TestSession).filter(TestSession.execution_plan_id == plan.id).count()
+        patient_display_id = plan.patient.get_display_id() if plan.patient else "—"
+        result.append({
+            "id": plan.id,
+            "patient_id": plan.patient_id,
+            "patient_display_id": patient_display_id,
+            "protocol_id": plan.protocol_id,
+            "protocol_name": protocol.name if protocol else None,
+            "status": plan.status,
+            "mode": plan.mode,
+            "performed_at": plan.performed_at,
+            "created_at": plan.created_at,
+            "test_count": test_count,
+            "total_tests": len(plan.get_tests_to_execute()),
+        })
+    return result
+
+
 @router.get("/{plan_id}/results")
 async def get_plan_results(
     plan_id: str,

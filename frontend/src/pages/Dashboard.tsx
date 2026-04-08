@@ -4,9 +4,10 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   Cell, ResponsiveContainer,
 } from 'recharts'
+import { AlertTriangle } from 'lucide-react'
 import {
-  getOverviewStats, getRecentPlans, getClassificationDistribution,
-  type OverviewStats, type RecentPlan, type ClassificationCount,
+  getOverviewStats, getRecentPlans, getClassificationDistribution, getIncompletePlans,
+  type OverviewStats, type RecentPlan, type ClassificationCount, type IncompletePlansInfo,
 } from '@/api/stats'
 import { useAuthStore } from '@/store/auth'
 
@@ -42,14 +43,16 @@ export default function Dashboard() {
   const [overview, setOverview] = useState<OverviewStats | null>(null)
   const [recentPlans, setRecentPlans] = useState<RecentPlan[]>([])
   const [distribution, setDistribution] = useState<ClassificationCount[]>([])
+  const [incompletePlans, setIncompletePlans] = useState<IncompletePlansInfo | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    Promise.all([getOverviewStats(), getRecentPlans(), getClassificationDistribution()])
-      .then(([o, p, d]) => {
+    Promise.all([getOverviewStats(), getRecentPlans(), getClassificationDistribution(), getIncompletePlans()])
+      .then(([o, p, d, inc]) => {
         setOverview(o)
         setRecentPlans(p)
         setDistribution(d)
+        setIncompletePlans(inc)
       })
       .finally(() => setLoading(false))
   }, [])
@@ -105,6 +108,27 @@ export default function Dashboard() {
           </div>
         ))}
       </div>
+
+      {/* Incomplete protocols alert */}
+      {incompletePlans && incompletePlans.count > 0 && (
+        <div className="flex items-center gap-3 bg-[#fffbeb] border border-[#fde68a] rounded-[10px] px-4 py-3.5">
+          <AlertTriangle className="w-[18px] h-[18px] text-[#d97706] shrink-0" />
+          <div className="flex-1 min-w-0">
+            <p className="text-[13px] font-semibold text-[#92400e]">
+              {incompletePlans.count} {incompletePlans.count === 1 ? 'paciente con protocolo incompleto' : 'pacientes con protocolo incompleto'}
+            </p>
+            <p className="text-[12px] text-[#a16207] mt-0.5 truncate">
+              {incompletePlans.plans.slice(0, 3).map(p => p.patient_display_id).join(' y ')} tienen evaluaciones pendientes
+            </p>
+          </div>
+          <Link
+            to="/evaluaciones/incompletas"
+            className="text-[13px] font-medium text-brand-mid hover:text-brand-dark whitespace-nowrap ml-auto"
+          >
+            Ver →
+          </Link>
+        </div>
+      )}
 
       {/* Two-column section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

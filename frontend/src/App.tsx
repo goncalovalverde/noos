@@ -11,6 +11,7 @@ import Profile from '@/pages/Profile'
 import EvaluationSetup from '@/pages/EvaluationSetup'
 import EvaluationSession from '@/pages/EvaluationSession'
 import EvaluationSummary from '@/pages/EvaluationSummary'
+import IncompleteEvaluations from '@/pages/IncompleteEvaluations'
 
 export default function App() {
   return (
@@ -28,6 +29,7 @@ export default function App() {
           <Route path="/patients/:id/evaluate" element={<EvaluationSetup />} />
           <Route path="/patients/:id/evaluate/:planId" element={<EvaluationSession />} />
           <Route path="/patients/:id/evaluate/:planId/summary" element={<EvaluationSummary />} />
+          <Route path="/evaluaciones/incompletas" element={<IncompleteEvaluations />} />
           <Route path="/protocols" element={<ProtocolLibrary />} />
           <Route path="/profile" element={<Profile />} />
           <Route

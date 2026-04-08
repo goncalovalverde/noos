@@ -30,3 +30,17 @@ export const getRecentPlans = () =>
 
 export const getClassificationDistribution = () =>
   apiClient.get<ClassificationCount[]>('/stats/classification-distribution').then(r => r.data)
+
+export interface IncompletePlansInfo {
+  count: number
+  plans: Array<{
+    id: string
+    patient_id: string
+    patient_display_id: string
+    protocol_name: string
+    updated_at: string | null
+  }>
+}
+
+export const getIncompletePlans = () =>
+  apiClient.get<IncompletePlansInfo>('/stats/incomplete-plans').then(r => r.data)

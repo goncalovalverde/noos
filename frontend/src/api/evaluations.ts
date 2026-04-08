@@ -56,6 +56,23 @@ export interface ExecutionPlanWithResults extends ExecutionPlanSummary {
   test_results: TestResultItem[]
 }
 
+export interface IncompletePlan {
+  id: string
+  patient_id: string
+  patient_display_id?: string
+  protocol_id: string | null
+  protocol_name: string | null
+  status: string
+  mode: string
+  test_count: number
+  total_tests: number
+  performed_at: string | null
+  created_at: string
+}
+
+export const listIncomplete = () =>
+  apiClient.get<IncompletePlan[]>('/execution-plans/incomplete').then(r => r.data)
+
 export const evaluationsApi = {
   create: async (patient_id: string, protocol_id: string, mode: string, performed_at?: string): Promise<ExecutionPlan> => {
     const { data } = await apiClient.post<ExecutionPlan>('/execution-plans/', { patient_id, protocol_id, mode, performed_at })

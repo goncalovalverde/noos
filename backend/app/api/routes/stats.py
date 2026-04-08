@@ -69,6 +69,30 @@ async def get_recent_plans(
     return result
 
 
+@router.get("/incomplete-plans")
+async def get_incomplete_plans(
+    db: Session = Depends(get_db),
+    _=Depends(get_current_active_user),
+):
+    """Returns all active/draft execution plans ordered by updated_at desc."""
+    plans = db.query(ExecutionPlan).filter(
+        ExecutionPlan.status.in_(["active", "draft"])
+    ).order_by(ExecutionPlan.updated_at.desc()).all()
+
+    result = []
+    for plan in plans:
+        patient = plan.patient
+        protocol = plan.protocol
+        result.append({
+            "id": plan.id,
+            "patient_id": plan.patient_id,
+            "patient_display_id": patient.get_display_id() if patient else "—",
+            "protocol_name": protocol.name if protocol else "Sin protocolo",
+            "updated_at": plan.updated_at.isoformat() if plan.updated_at else None,
+        })
+    return {"count": len(result), "plans": result}
+
+
 @router.get("/classification-distribution")
 async def get_classification_distribution(
     db: Session = Depends(get_db),
