@@ -10,6 +10,7 @@ from app.auth.password import verify_password, hash_password, validate_password_
 from app.auth.jwt import create_access_token
 from app.auth.dependencies import get_current_active_user
 from app.core.config import settings
+from app.core.limiter import limiter
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
@@ -23,6 +24,7 @@ def _log(db: Session, action: str, user_id: str = None, details: dict = None, re
     ))
 
 @router.post("/login", response_model=TokenResponse)
+@limiter.limit("10/minute")
 async def login(body: LoginRequest, request: Request, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.username == body.username, User.is_active == True).first()
     if not user or not verify_password(body.password, user.hashed_password):
@@ -50,8 +52,10 @@ async def me(current_user: User = Depends(get_current_active_user)):
     return UserOut.model_validate(current_user)
 
 @router.post("/change-password")
+@limiter.limit("5/minute")
 async def change_password(
     body: ChangePasswordRequest,
+    request: Request,
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db),
 ):

@@ -2,8 +2,12 @@ from contextlib import asynccontextmanager
 import os
 import stat
 from pathlib import Path
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from app.core.limiter import limiter
 from app.core.config import settings
 from app.db.base import Base, engine, SessionLocal
 from app.api.routes import auth as auth_router
@@ -82,6 +86,11 @@ app = FastAPI(
     redoc_url="/api/redoc",
     lifespan=lifespan,
 )
+
+# Rate limiter — keyed by client IP. Login endpoint is limited to 10/minute.
+# The limiter singleton is defined in app/core/limiter.py and shared with route modules.
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 app.add_middleware(
     CORSMiddleware,
