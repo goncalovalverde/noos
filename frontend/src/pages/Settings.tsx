@@ -157,16 +157,25 @@ export default function Settings() {
   }
 
   async function handleToggleProtocols(user: UserOut) {
-    const updated = await usersApi.update(user.id, {
-      can_manage_protocols: !user.can_manage_protocols,
-    })
-    setUsers((prev) => prev.map((u) => (u.id === updated.id ? updated : u)))
+    try {
+      const updated = await usersApi.update(user.id, {
+        can_manage_protocols: !user.can_manage_protocols,
+      })
+      setUsers((prev) => prev.map((u) => (u.id === updated.id ? updated : u)))
+    } catch (err: unknown) {
+      setError(extractApiError(err, 'Error al actualizar permisos'))
+    }
   }
 
   async function handleDelete(id: string) {
-    await usersApi.delete(id)
-    setUsers((prev) => prev.filter((u) => u.id !== id))
-    setDeleteConfirm(null)
+    try {
+      await usersApi.delete(id)
+      setUsers((prev) => prev.filter((u) => u.id !== id))
+      setDeleteConfirm(null)
+    } catch (err: unknown) {
+      setDeleteConfirm(null)
+      setError(extractApiError(err, 'Error al eliminar el usuario'))
+    }
   }
 
   if (loading) {
@@ -201,6 +210,14 @@ export default function Settings() {
           de forma inmediata a los accesos de los usuarios.
         </span>
       </div>
+
+      {/* Inline error banner (delete / toggle failures, shown outside modal) */}
+      {error && !showModal && (
+        <div className="mb-4 text-xs text-red-500 bg-red-50 border border-red-200 rounded-input px-3 py-2 flex justify-between items-center">
+          <span>{error}</span>
+          <button onClick={() => setError(null)} className="ml-3 text-red-400 hover:text-red-600">✕</button>
+        </div>
+      )}
 
       {/* Users table */}
       <div className="bg-white rounded-card shadow-card overflow-hidden">
