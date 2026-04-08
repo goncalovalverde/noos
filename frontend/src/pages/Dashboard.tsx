@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { Users, Activity, ClipboardList, CheckCircle } from 'lucide-react'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   Cell, ResponsiveContainer,
@@ -19,10 +18,10 @@ const CLASSIFICATION_COLORS: Record<string, string> = {
 }
 
 const STATUS_LABELS: Record<string, { label: string; cls: string }> = {
-  completed:  { label: 'Completado', cls: 'bg-green-100 text-green-700' },
-  active:     { label: 'En curso',   cls: 'bg-blue-100 text-blue-700' },
-  draft:      { label: 'Borrador',   cls: 'bg-gray-100 text-gray-600' },
-  abandoned:  { label: 'Abandonado', cls: 'bg-red-100 text-red-600' },
+  completed:  { label: 'Completado', cls: 'bg-[#dcfce7] text-[#15803d]' },
+  active:     { label: 'En curso',   cls: 'bg-[#dbeafe] text-[#1d4ed8]' },
+  draft:      { label: 'Borrador',   cls: 'bg-[#f3f4f6] text-[#6b7280]' },
+  abandoned:  { label: 'Abandonado', cls: 'bg-[#fee2e2] text-[#b91c1c]' },
 }
 
 function timeAgo(dateStr: string | null): string {
@@ -63,10 +62,10 @@ export default function Dashboard() {
   })
 
   const stats = [
-    { label: 'Pacientes activos',          value: overview?.total_patients,      icon: Users,         color: 'text-brand-mid' },
-    { label: 'Tests esta semana',           value: overview?.tests_this_week,     icon: Activity,      color: 'text-clinical-normal' },
-    { label: 'Protocolos activos',          value: overview?.active_protocols,    icon: ClipboardList, color: 'text-clinical-superior' },
-    { label: 'Evaluaciones completadas',    value: overview?.completed_this_month, icon: CheckCircle,  color: 'text-brand-accent' },
+    { label: 'Pacientes activos',          value: overview?.total_patients,       accent: false },
+    { label: 'Tests esta semana',           value: overview?.tests_this_week,      accent: false },
+    { label: 'Protocolos activos',          value: overview?.active_protocols,     accent: false },
+    { label: 'Evaluaciones completadas',    value: overview?.completed_this_month, accent: true  },
   ]
 
   if (loading) {
@@ -89,7 +88,7 @@ export default function Dashboard() {
         </div>
         <button
           onClick={() => navigate('/patients')}
-          className="bg-brand-accent hover:bg-brand-mid text-white text-sm font-medium px-4 py-2 rounded-btn transition-colors"
+          className="bg-brand-mid hover:bg-brand-dark text-white text-sm font-medium px-5 py-2.5 rounded-btn transition-colors"
         >
           + Nuevo paciente
         </button>
@@ -97,13 +96,10 @@ export default function Dashboard() {
 
       {/* Stats grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {stats.map(({ label, value, icon: Icon, color }) => (
-          <div key={label} className="bg-white rounded-card shadow-card p-5">
-            <div className="flex items-center gap-2 mb-2">
-              <Icon className={`w-4 h-4 ${color}`} />
-              <p className="text-xs text-brand-muted font-medium">{label}</p>
-            </div>
-            <p className="text-3xl font-semibold text-brand-dark">
+        {stats.map(({ label, value, accent }) => (
+          <div key={label} className="bg-white rounded-card shadow-card border border-black/[0.06] p-6 flex flex-col gap-1.5">
+            <p className="text-[11px] font-medium uppercase tracking-[0.8px] text-brand-muted">{label}</p>
+            <p className={`text-[36px] font-semibold leading-none ${accent ? 'text-brand-mid' : 'text-brand-ink'}`}>
               {value ?? '—'}
             </p>
           </div>
@@ -113,8 +109,10 @@ export default function Dashboard() {
       {/* Two-column section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent evaluations */}
-        <div className="bg-white rounded-card shadow-card p-5">
-          <h2 className="text-sm font-semibold text-brand-ink mb-4">Evaluaciones recientes</h2>
+        <div className="bg-white rounded-card shadow-card border border-black/[0.06] p-5">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-base font-semibold text-brand-ink">Evaluaciones recientes</h2>
+          </div>
           {recentPlans.length === 0 ? (
             <p className="text-sm text-brand-muted">No hay evaluaciones recientes.</p>
           ) : (
@@ -122,18 +120,20 @@ export default function Dashboard() {
               {recentPlans.map((plan) => {
                 const badge = STATUS_LABELS[plan.status] ?? { label: plan.status, cls: 'bg-gray-100 text-gray-600' }
                 return (
-                  <li key={plan.id} className="flex items-center justify-between gap-3 border-b border-gray-50 pb-3 last:border-0 last:pb-0">
-                    <div className="min-w-0">
+                  <li key={plan.id} className="flex items-center gap-3 border-b border-black/[0.05] py-3 last:border-0 last:pb-0 first:pt-0">
+                    <div className="w-[38px] h-[38px] rounded-full bg-[#ede9fe] flex items-center justify-center text-[13px] font-semibold text-brand-mid shrink-0">
+                      {plan.patient_display_id.slice(0, 2).toUpperCase()}
+                    </div>
+                    <div className="min-w-0 flex-1">
                       <Link
                         to={`/patients/${plan.patient_id}`}
-                        className="font-medium text-sm text-brand-ink hover:text-brand-accent truncate block"
+                        className="font-semibold text-sm text-brand-ink hover:text-brand-mid truncate block"
                       >
                         {plan.patient_display_id}
                       </Link>
-                      <p className="text-xs text-brand-muted truncate">{plan.protocol_name}</p>
-                      <p className="text-xs text-brand-muted">{timeAgo(plan.updated_at)} · {plan.mode}</p>
+                      <p className="text-xs text-brand-muted truncate">{plan.protocol_name} · {timeAgo(plan.updated_at)}</p>
                     </div>
-                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full whitespace-nowrap ${badge.cls}`}>
+                    <span className={`text-[11px] font-medium px-2.5 py-0.5 rounded-full whitespace-nowrap ${badge.cls}`}>
                       {badge.label}
                     </span>
                   </li>
@@ -144,8 +144,8 @@ export default function Dashboard() {
         </div>
 
         {/* Classification distribution chart */}
-        <div className="bg-white rounded-card shadow-card p-5">
-          <h2 className="text-sm font-semibold text-brand-ink mb-4">Distribución por clasificación</h2>
+        <div className="bg-white rounded-card shadow-card border border-black/[0.06] p-5">
+          <h2 className="text-base font-semibold text-brand-ink mb-4">Distribución por clasificación</h2>
           <div data-testid="classification-chart">
             <ResponsiveContainer width="100%" height={220}>
               <BarChart data={distribution} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
