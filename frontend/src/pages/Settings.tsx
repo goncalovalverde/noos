@@ -4,6 +4,7 @@ import {
 } from 'lucide-react'
 import { usersApi, type UserOut, type UserCreate, type UserUpdate } from '@/api/users'
 import { useAuthStore } from '@/store/auth'
+import { extractApiError } from '@/utils/apiError'
 
 const ROLES = ['Administrador', 'Neuropsicólogo', 'Observador'] as const
 
@@ -149,10 +150,7 @@ export default function Settings() {
       }
       closeModal()
     } catch (err: unknown) {
-      const msg =
-        (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ??
-        'Error al guardar usuario'
-      setError(msg)
+      setError(extractApiError(err, 'Error al guardar usuario'))
     } finally {
       setSaving(false)
     }

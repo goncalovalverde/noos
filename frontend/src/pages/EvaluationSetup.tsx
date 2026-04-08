@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import { ChevronLeft, ClipboardList, PlayCircle, Radio, ListChecks, Plus, X } from 'lucide-react'
 import { protocolsApi, type Protocol } from '@/api/protocols'
 import { evaluationsApi, type TestCustomization } from '@/api/evaluations'
+import { extractApiError } from '@/utils/apiError'
 
 const ALL_TEST_TYPES = [
   'TMT-A', 'TMT-B', 'TAVEC', 'Fluidez-FAS', 'Rey-Copia', 'Rey-Memoria',
@@ -70,8 +71,7 @@ export default function EvaluationSetup() {
       await evaluationsApi.update(plan.id, { status: 'active' })
       navigate(`/patients/${patientId}/evaluate/${plan.id}`)
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail
-      setError(msg || 'Error al iniciar la evaluación. Inténtalo de nuevo.')
+      setError(extractApiError(err, 'Error al iniciar la evaluación. Inténtalo de nuevo.'))
     } finally {
       setStarting(false)
     }

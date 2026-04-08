@@ -10,6 +10,7 @@ import {
 import { CSS } from '@dnd-kit/utilities'
 import { useAuthStore } from '@/store/auth'
 import { protocolsApi, type Protocol, type ProtocolTestIn } from '@/api/protocols'
+import { extractApiError } from '@/utils/apiError'
 
 const ALL_TEST_TYPES = [
   'TMT-A', 'TMT-B', 'TAVEC', 'Fluidez-FAS', 'Rey-Copia', 'Rey-Memoria',
@@ -129,8 +130,7 @@ function ProtocolModal({ initial, onSave, onClose }: ModalProps) {
       await onSave({ name: name.trim(), description: description.trim(), category: category.trim(), tests, is_public: isPublic, allow_customization: allowCustomization })
       onClose()
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail
-      setError(msg ?? 'Error al guardar el protocolo')
+      setError(extractApiError(err, 'Error al guardar el protocolo'))
     } finally {
       setSaving(false)
     }

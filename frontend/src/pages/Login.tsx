@@ -6,6 +6,7 @@ import { z } from 'zod'
 import { Brain, Eye, EyeOff } from 'lucide-react'
 import { authApi } from '@/api/auth'
 import { useAuthStore } from '@/store/auth'
+import { extractApiError } from '@/utils/apiError'
 
 const schema = z.object({
   username: z.string().min(1, 'El usuario es obligatorio'),
@@ -29,8 +30,8 @@ export default function Login() {
       const res = await authApi.login(values.username, values.password)
       login(res.access_token, res.refresh_token, res.user)
       navigate('/dashboard')
-    } catch (err: any) {
-      setServerError(err.response?.data?.detail ?? 'Error al iniciar sesión')
+    } catch (err: unknown) {
+      setServerError(extractApiError(err, 'Error al iniciar sesión'))
     }
   }
 

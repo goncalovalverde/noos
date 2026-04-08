@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { User, Mail, Lock, Eye, EyeOff, CheckCircle, AlertCircle, Loader2 } from 'lucide-react'
 import { useAuthStore } from '@/store/auth'
 import { usersApi } from '@/api/users'
+import { extractApiError } from '@/utils/apiError'
 
 const ROLE_COLORS: Record<string, string> = {
   Administrador: 'bg-purple-100 text-purple-700',
@@ -37,8 +38,7 @@ export default function Profile() {
       setUser({ ...user!, email: updated.email ?? null })
       setEmailMsg({ type: 'ok', text: 'Email actualizado correctamente.' })
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail
-      setEmailMsg({ type: 'err', text: msg ?? 'Error al actualizar el email.' })
+      setEmailMsg({ type: 'err', text: extractApiError(err, 'Error al actualizar el email.') })
     } finally {
       setSavingEmail(false)
     }
@@ -59,8 +59,7 @@ export default function Profile() {
       setConfirmPassword('')
       setPasswordMsg({ type: 'ok', text: 'Contraseña cambiada correctamente.' })
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail
-      setPasswordMsg({ type: 'err', text: msg ?? 'Error al cambiar la contraseña.' })
+      setPasswordMsg({ type: 'err', text: extractApiError(err, 'Error al cambiar la contraseña.') })
     } finally {
       setSavingPassword(false)
     }
