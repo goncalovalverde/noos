@@ -46,7 +46,7 @@ def test_duplicate_username_409(client, admin_headers):
 def test_weak_password_400(client, admin_headers):
     resp = client.post(
         "/api/users/",
-        json={"username": "weakpw", "password": "abc"},
+        json={"username": "weakpw", "password": "abcdefghijkl"},  # 12 chars but no upper/digit/symbol
         headers=admin_headers,
     )
     assert resp.status_code == 400

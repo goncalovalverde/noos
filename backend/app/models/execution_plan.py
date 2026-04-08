@@ -1,10 +1,12 @@
 import uuid
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Dict, Any
 from sqlalchemy import Column, String, Boolean, DateTime, Text, ForeignKey
 from sqlalchemy.orm import relationship
 from app.db.base import Base
+
+_now = lambda: datetime.now(timezone.utc)  # noqa: E731
 
 class ExecutionPlan(Base):
     __tablename__ = "execution_plans"
@@ -17,9 +19,9 @@ class ExecutionPlan(Base):
     mode = Column(String, default="live")                # live | paper
     is_saved_variant = Column(Boolean, default=False)
     variant_name = Column(String, nullable=True)
-    performed_at = Column(DateTime, nullable=True)  # when evaluation was actually done (paper: may differ from created_at)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    performed_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=_now)
+    updated_at = Column(DateTime, default=_now, onupdate=_now)
 
     patient = relationship("Patient", back_populates="execution_plans")
     protocol = relationship("Protocol", back_populates="execution_plans")

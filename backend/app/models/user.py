@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy import Column, String, Boolean, DateTime, Enum as SAEnum
 from app.db.base import Base
 
@@ -14,5 +14,5 @@ class User(Base):
     role = Column(SAEnum("Administrador", "Neuropsicólogo", "Observador", name="user_role"), nullable=False, default="Neuropsicólogo")
     can_manage_protocols = Column(Boolean, default=False, nullable=False)
     is_active = Column(Boolean, default=True, nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     last_login = Column(DateTime, nullable=True)

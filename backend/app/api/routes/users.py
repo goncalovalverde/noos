@@ -95,8 +95,12 @@ async def update_user(
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
     changes = body.model_dump(exclude_unset=True)
+    # Explicit allowlist — guards against future UserUpdate additions being
+    # silently applied (e.g. if hashed_password were ever added by mistake).
+    _allowed = {"email", "full_name", "role", "can_manage_protocols", "is_active"}
     for field, value in changes.items():
-        setattr(user, field, value)
+        if field in _allowed:
+            setattr(user, field, value)
     audit(db, "user.update", user_id=current_user.id, resource_type="user", resource_id=user_id,
           details={"fields": list(changes.keys())}, request=request)
     db.commit()

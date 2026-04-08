@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy import Column, String, Integer, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
 from app.db.base import Base
@@ -12,7 +12,7 @@ class Patient(Base):
     education_years = Column(Integer, nullable=False)
     laterality = Column(String, nullable=False)   # diestro | zurdo | ambidextro
     initials = Column(String(10), nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     encrypted_metadata = Column(String, nullable=True)
     created_by_id = Column(String, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
     created_by = relationship("User", foreign_keys=[created_by_id])

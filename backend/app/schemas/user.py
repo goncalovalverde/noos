@@ -1,19 +1,21 @@
-from pydantic import BaseModel, EmailStr
-from typing import Optional
+from pydantic import BaseModel, EmailStr, Field
+from typing import Optional, Literal
 from datetime import datetime
 
+VALID_ROLES = Literal["Administrador", "Neuropsicólogo", "Observador"]
+
 class UserCreate(BaseModel):
-    username: str
-    password: str
-    email: Optional[str] = None
-    full_name: Optional[str] = None
-    role: str = "Neuropsicólogo"
+    username: str = Field(min_length=3, max_length=50)
+    password: str = Field(min_length=12, max_length=256)
+    email: Optional[str] = Field(default=None, max_length=255)
+    full_name: Optional[str] = Field(default=None, max_length=100)
+    role: VALID_ROLES = "Neuropsicólogo"
     can_manage_protocols: bool = False
 
 class UserUpdate(BaseModel):
-    email: Optional[str] = None
-    full_name: Optional[str] = None
-    role: Optional[str] = None
+    email: Optional[str] = Field(default=None, max_length=255)
+    full_name: Optional[str] = Field(default=None, max_length=100)
+    role: Optional[VALID_ROLES] = None
     can_manage_protocols: Optional[bool] = None
     is_active: Optional[bool] = None
 

@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy import Column, String, DateTime, Text
 from app.db.base import Base
 
@@ -13,4 +13,4 @@ class AuditLog(Base):
     resource_id = Column(String, nullable=True)
     details = Column(Text, nullable=True)
     ip_address = Column(String, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))

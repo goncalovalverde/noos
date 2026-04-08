@@ -29,7 +29,7 @@ class TestCreateExecutionPlan:
     def test_invalid_protocol_returns_404(self, client, neuro_headers, sample_patient):
         res = client.post("/api/execution-plans/", json={
             "patient_id": sample_patient.id,
-            "protocol_id": "nonexistent",
+            "protocol_id": "00000000-0000-0000-0000-000000000000",
             "mode": "live"
         }, headers=neuro_headers)
         assert res.status_code == 404

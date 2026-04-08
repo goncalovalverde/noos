@@ -1,32 +1,20 @@
-from pydantic import BaseModel, field_validator
-from typing import Optional
+from pydantic import BaseModel, field_validator, Field
+from typing import Optional, Literal
 from datetime import datetime
 
+VALID_LATERALITY = Literal["diestro", "zurdo", "ambidextro"]
+
 class PatientCreate(BaseModel):
-    age: int
-    education_years: int
-    laterality: str   # diestro | zurdo | ambidextro
-    initials: Optional[str] = None
-
-    @field_validator("laterality")
-    @classmethod
-    def validate_laterality(cls, v):
-        if v not in ("diestro", "zurdo", "ambidextro"):
-            raise ValueError("laterality must be diestro, zurdo or ambidextro")
-        return v
-
-    @field_validator("age")
-    @classmethod
-    def validate_age(cls, v):
-        if not 0 < v < 120:
-            raise ValueError("age must be between 1 and 119")
-        return v
+    age: int = Field(ge=1, le=119)
+    education_years: int = Field(ge=0, le=30)
+    laterality: VALID_LATERALITY
+    initials: Optional[str] = Field(default=None, min_length=1, max_length=10)
 
 class PatientUpdate(BaseModel):
-    age: Optional[int] = None
-    education_years: Optional[int] = None
-    laterality: Optional[str] = None
-    initials: Optional[str] = None
+    age: Optional[int] = Field(default=None, ge=1, le=119)
+    education_years: Optional[int] = Field(default=None, ge=0, le=30)
+    laterality: Optional[VALID_LATERALITY] = None
+    initials: Optional[str] = Field(default=None, min_length=1, max_length=10)
 
 class PatientOut(BaseModel):
     id: str

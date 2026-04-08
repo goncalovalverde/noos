@@ -1,6 +1,6 @@
 import uuid
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy import Column, String, DateTime, Text, ForeignKey
 from sqlalchemy.orm import relationship
 from app.db.base import Base
@@ -13,7 +13,7 @@ class TestSession(Base):
     protocol_id = Column(String, ForeignKey("protocols.id", ondelete="SET NULL"), nullable=True)
     execution_plan_id = Column(String, ForeignKey("execution_plans.id", ondelete="SET NULL"), nullable=True)
     test_type = Column(String, nullable=False)
-    date = Column(DateTime, default=datetime.utcnow)
+    date = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     raw_data = Column(Text, nullable=True)
     calculated_scores = Column(Text, nullable=True)
     qualitative_data = Column(Text, nullable=True)
