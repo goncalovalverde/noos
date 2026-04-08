@@ -82,7 +82,7 @@ export default function Dashboard() {
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-2xl font-semibold text-brand-ink">
-            {greeting}, {displayName} 👋
+            {greeting}, <span className="text-brand-accent">{displayName}</span> 👋
           </h1>
           <p className="text-sm text-brand-muted mt-1 capitalize">{dateStr}</p>
         </div>
