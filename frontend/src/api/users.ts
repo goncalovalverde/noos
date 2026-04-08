@@ -29,6 +29,12 @@ export interface UserUpdate {
   is_active?: boolean
 }
 
+export interface ProfileUpdate {
+  email?: string
+  current_password?: string
+  new_password?: string
+}
+
 export const usersApi = {
   list: async (): Promise<UserOut[]> => {
     const { data } = await apiClient.get<UserOut[]>('/users/')
@@ -44,5 +50,13 @@ export const usersApi = {
   },
   delete: async (id: string): Promise<void> => {
     await apiClient.delete(`/users/${id}`)
+  },
+  getMe: async (): Promise<UserOut> => {
+    const { data } = await apiClient.get<UserOut>('/users/me')
+    return data
+  },
+  updateMe: async (body: ProfileUpdate): Promise<UserOut> => {
+    const { data } = await apiClient.patch<UserOut>('/users/me', body)
+    return data
   },
 }

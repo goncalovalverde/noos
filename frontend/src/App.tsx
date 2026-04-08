@@ -7,6 +7,7 @@ import PatientList from '@/pages/PatientList'
 import PatientHub from '@/pages/PatientHub'
 import ProtocolLibrary from '@/pages/ProtocolLibrary'
 import Settings from '@/pages/Settings'
+import Profile from '@/pages/Profile'
 import EvaluationSetup from '@/pages/EvaluationSetup'
 import EvaluationSession from '@/pages/EvaluationSession'
 import EvaluationSummary from '@/pages/EvaluationSummary'
@@ -28,6 +29,7 @@ export default function App() {
           <Route path="/patients/:id/evaluate/:planId" element={<EvaluationSession />} />
           <Route path="/patients/:id/evaluate/:planId/summary" element={<EvaluationSummary />} />
           <Route path="/protocols" element={<ProtocolLibrary />} />
+          <Route path="/profile" element={<Profile />} />
           <Route
             path="/settings"
             element={

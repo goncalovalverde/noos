@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom'
-import { Brain, LayoutDashboard, Users, ClipboardList, Settings, LogOut, Menu, X } from 'lucide-react'
+import { Brain, LayoutDashboard, Users, ClipboardList, Settings, LogOut, Menu, X, UserCircle } from 'lucide-react'
 import { useAuthStore } from '@/store/auth'
 import { authApi } from '@/api/auth'
 
@@ -104,20 +104,27 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
           </div>
           {!collapsed && (
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate">{user?.full_name || user?.username}</p>
-              <span className={`text-xs px-1.5 py-0.5 rounded-full ${roleColor[user?.role ?? ''] ?? 'bg-gray-500 text-white'}`}>
-                {user?.role}
-              </span>
+              <NavLink to="/profile" className="block hover:opacity-80 transition-opacity">
+                <p className="text-sm font-medium truncate">{user?.full_name || user?.username}</p>
+                <span className={`text-xs px-1.5 py-0.5 rounded-full ${roleColor[user?.role ?? ''] ?? 'bg-gray-500 text-white'}`}>
+                  {user?.role}
+                </span>
+              </NavLink>
             </div>
           )}
           {!collapsed && (
-            <button
-              onClick={handleLogout}
-              className="text-white/60 hover:text-white transition-colors"
-              title="Cerrar sesión"
-            >
-              <LogOut className="w-4 h-4" />
-            </button>
+            <div className="flex items-center gap-1">
+              <NavLink to="/profile" className="text-white/60 hover:text-white transition-colors" title="Mi perfil">
+                <UserCircle className="w-4 h-4" />
+              </NavLink>
+              <button
+                onClick={handleLogout}
+                className="text-white/60 hover:text-white transition-colors"
+                title="Cerrar sesión"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            </div>
           )}
         </div>
         {collapsed && (
