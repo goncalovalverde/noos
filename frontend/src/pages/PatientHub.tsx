@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { ArrowLeft, Loader2, Plus, Zap, ChevronDown, ChevronRight, ClipboardList, Calendar, FileText, FileDown, PlayCircle, Lock, UserPlus, X } from 'lucide-react'
+import { ArrowLeft, Loader2, Plus, Zap, ChevronDown, ChevronRight, ClipboardList, Calendar, FileText, FileDown, PlayCircle, Lock, UserPlus, X, History, ClipboardEdit, Save, CheckCircle2 } from 'lucide-react'
 import { useAuthStore } from '@/store/auth'
-import { patientsApi, type AccessGrant } from '@/api/patients'
+import { patientsApi, type AccessGrant, type PatientCreate } from '@/api/patients'
 import { evaluationsApi, type ExecutionPlanSummary, type ExecutionPlanWithResults } from '@/api/evaluations'
 import type { Patient } from '@/types/patient'
 import { usersApi, type UserOut } from '@/api/users'
@@ -202,11 +202,20 @@ export default function PatientHub() {
   const [plans, setPlans] = useState<ExecutionPlanSummary[]>([])
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
+  const [activeTab, setActiveTab] = useState<'historial' | 'datos'>('historial')
+
+  // Access panel state
   const [accessGrants, setAccessGrants] = useState<AccessGrant[]>([])
   const [allUsers, setAllUsers] = useState<UserOut[]>([])
   const [showAccessPanel, setShowAccessPanel] = useState(false)
   const [selectedUserId, setSelectedUserId] = useState('')
   const [accessLoading, setAccessLoading] = useState(false)
+
+  // Edit form state
+  const [editForm, setEditForm] = useState({ age: 0, education_years: 0, laterality: 'diestro', initials: '' })
+  const [saving, setSaving] = useState(false)
+  const [saveSuccess, setSaveSuccess] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
 
   const canEvaluate = user?.role === 'Administrador' || user?.role === 'Neuropsicólogo'
   const isCreator = patient?.created_by_id === user?.id || user?.role === 'Administrador'
@@ -220,6 +229,12 @@ export default function PatientHub() {
       .then(([p, ev]) => {
         setPatient(p as Patient)
         setPlans(ev as ExecutionPlanSummary[])
+        setEditForm({
+          age: (p as Patient).age,
+          education_years: (p as Patient).education_years,
+          laterality: (p as Patient).laterality,
+          initials: (p as Patient).initials ?? '',
+        })
       })
       .catch((err) => {
         if (err?.response?.status === 404) setNotFound(true)
@@ -249,14 +264,30 @@ export default function PatientHub() {
       setAccessGrants(grants)
       setSelectedUserId('')
     } finally {
-      setAccessLoading(false)
-    }
+      setAccessLoading(false) }
   }
 
   const handleRevokeAccess = async (userId: string) => {
     if (!id) return
     await patientsApi.revokeAccess(id, userId)
     setAccessGrants(prev => prev.filter(g => g.user_id !== userId))
+  }
+
+  const handleSavePatient = async () => {
+    if (!id) return
+    setSaving(true)
+    setSaveError(null)
+    setSaveSuccess(false)
+    try {
+      const updated = await patientsApi.update(id, editForm as Partial<PatientCreate>)
+      setPatient(updated)
+      setSaveSuccess(true)
+      setTimeout(() => setSaveSuccess(false), 3000)
+    } catch {
+      setSaveError('Error al guardar. Inténtalo de nuevo.')
+    } finally {
+      setSaving(false)
+    }
   }
 
   if (loading) {
@@ -280,6 +311,11 @@ export default function PatientHub() {
   }
 
   const initials = patient.initials ?? patient.display_id.slice(0, 2).toUpperCase()
+
+  const TABS = [
+    { id: 'historial', label: 'Historial', icon: History },
+    { id: 'datos', label: 'Datos del paciente', icon: ClipboardEdit },
+  ] as const
 
   return (
     <div className="flex flex-col min-h-full">
@@ -335,98 +371,210 @@ export default function PatientHub() {
             </button>
           </div>
         </div>
+
+        {/* Tabs */}
+        <div className="flex gap-1 -mb-px">
+          {TABS.map(({ id: tabId, label, icon: Icon }) => (
+            <button
+              key={tabId}
+              onClick={() => setActiveTab(tabId)}
+              className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
+                activeTab === tabId
+                  ? 'border-brand-mid text-brand-mid'
+                  : 'border-transparent text-brand-muted hover:text-brand-ink'
+              }`}
+            >
+              <Icon className="w-4 h-4" />
+              {label}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* Content */}
-      <div className="flex-1 p-8 space-y-8">
-        {/* Evaluation History */}
-        <section>
-          <h2 className="text-base font-semibold text-[#270D38] mb-4">Historial de Evaluaciones</h2>
-          {plans.length === 0 ? (
-            <div className="rounded-card shadow-card bg-white p-10 text-center">
-              <p className="text-gray-400 text-sm">Sin evaluaciones aún</p>
-              {canEvaluate && (
-                <Link
-                  to={`/patients/${id}/evaluate`}
-                  className="inline-flex items-center gap-1.5 mt-4 text-sm text-brand-mid hover:underline font-medium"
-                >
-                  <Plus size={14} /> Nueva Evaluación
-                </Link>
-              )}
-            </div>
-          ) : (
-            <div className="rounded-card shadow-card bg-white overflow-hidden divide-y divide-gray-100">
-              {plans.map(plan => (
-                <EvaluationRow key={plan.id} plan={plan} patientId={id!} />
-              ))}
-            </div>
-          )}
-        </section>
+      {/* Tab content */}
+      <div className="flex-1 p-8">
 
-        {/* Access management */}
-        {isCreator && (
-          <div className="bg-white rounded-card shadow-card border border-black/[0.06]">
-            <button
-              onClick={handleToggleAccessPanel}
-              className="w-full flex items-center justify-between px-5 py-4"
-            >
-              <div className="flex items-center gap-2">
-                <Lock className="w-4 h-4 text-brand-mid" />
-                <span className="text-sm font-semibold text-brand-ink">Acceso al paciente</span>
-                <span className="text-xs text-brand-muted ml-1">{accessGrants.length} usuario{accessGrants.length !== 1 ? 's' : ''}</span>
+        {/* ── Tab 1: Historial ── */}
+        {activeTab === 'historial' && (
+          <section>
+            <h2 className="text-base font-semibold text-[#270D38] mb-4">Historial de Evaluaciones</h2>
+            {plans.length === 0 ? (
+              <div className="rounded-card shadow-card bg-white p-10 text-center">
+                <p className="text-gray-400 text-sm">Sin evaluaciones aún</p>
+                {canEvaluate && (
+                  <Link
+                    to={`/patients/${id}/evaluate`}
+                    className="inline-flex items-center gap-1.5 mt-4 text-sm text-brand-mid hover:underline font-medium"
+                  >
+                    <Plus size={14} /> Nueva Evaluación
+                  </Link>
+                )}
               </div>
-              {showAccessPanel ? <ChevronDown className="w-4 h-4 text-brand-muted" /> : <ChevronRight className="w-4 h-4 text-brand-muted" />}
-            </button>
+            ) : (
+              <div className="rounded-card shadow-card bg-white overflow-hidden divide-y divide-gray-100">
+                {plans.map(plan => (
+                  <EvaluationRow key={plan.id} plan={plan} patientId={id!} />
+                ))}
+              </div>
+            )}
+          </section>
+        )}
 
-            {showAccessPanel && (
-              <div className="px-5 pb-5 space-y-3 border-t border-gray-100 pt-4">
-                <div className="space-y-2">
-                  {accessGrants.map(grant => (
-                    <div key={grant.user_id} className="flex items-center gap-3 py-2 border-b border-gray-50 last:border-0">
-                      <div className="w-8 h-8 rounded-full bg-[#ede9fe] flex items-center justify-center text-xs font-semibold text-brand-mid shrink-0">
-                        {(grant.full_name || grant.username).slice(0, 2).toUpperCase()}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-brand-ink truncate">{grant.full_name || grant.username}</p>
-                        <p className="text-xs text-brand-muted">@{grant.username}</p>
-                      </div>
-                      {grant.is_creator ? (
-                        <span className="text-[10px] font-semibold text-brand-mid bg-[#ede9fe] px-2 py-0.5 rounded-full">Creador</span>
-                      ) : (
-                        <button
-                          onClick={() => handleRevokeAccess(grant.user_id)}
-                          className="text-[#b91c1c] hover:bg-red-50 p-1.5 rounded transition-colors"
-                          title="Revocar acceso"
-                        >
-                          <X className="w-3.5 h-3.5" />
-                        </button>
-                      )}
+        {/* ── Tab 2: Datos del paciente ── */}
+        {activeTab === 'datos' && (
+          <div className="max-w-xl space-y-6">
+
+            {/* Edit form */}
+            <div className="bg-white rounded-card shadow-card border border-black/[0.06] p-6">
+              <h2 className="text-base font-semibold text-brand-ink mb-5">Datos demográficos</h2>
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-brand-ink mb-1">Edad (años)</label>
+                    <input
+                      type="number"
+                      min={1} max={119}
+                      value={editForm.age}
+                      onChange={e => setEditForm(f => ({ ...f, age: Number(e.target.value) }))}
+                      className="w-full bg-brand-bg border border-gray-200 rounded-input px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-mid"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-brand-ink mb-1">Años de educación</label>
+                    <input
+                      type="number"
+                      min={0} max={30}
+                      value={editForm.education_years}
+                      onChange={e => setEditForm(f => ({ ...f, education_years: Number(e.target.value) }))}
+                      className="w-full bg-brand-bg border border-gray-200 rounded-input px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-mid"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-brand-ink mb-1">Lateralidad</label>
+                  <div className="flex gap-2">
+                    {(['diestro', 'zurdo', 'ambidextro'] as const).map(lat => (
+                      <button
+                        key={lat}
+                        type="button"
+                        onClick={() => setEditForm(f => ({ ...f, laterality: lat }))}
+                        className={`flex-1 py-2 text-sm font-medium rounded-input border-2 transition-all capitalize ${
+                          editForm.laterality === lat
+                            ? 'border-brand-mid bg-brand-mid/5 text-brand-mid'
+                            : 'border-gray-200 text-brand-muted hover:border-brand-mid/40'
+                        }`}
+                      >
+                        {lat}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-brand-ink mb-1">
+                    Iniciales <span className="text-brand-muted font-normal">(opcional, máx. 4 caracteres)</span>
+                  </label>
+                  <input
+                    type="text"
+                    maxLength={4}
+                    value={editForm.initials}
+                    onChange={e => setEditForm(f => ({ ...f, initials: e.target.value.toUpperCase() }))}
+                    placeholder="Ej. JGM"
+                    className="w-full bg-brand-bg border border-gray-200 rounded-input px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-mid"
+                  />
+                </div>
+              </div>
+
+              {saveError && (
+                <p className="mt-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-input px-3 py-2">{saveError}</p>
+              )}
+
+              <div className="mt-5 flex items-center gap-3">
+                <button
+                  onClick={handleSavePatient}
+                  disabled={saving}
+                  className="flex items-center gap-2 bg-brand-mid hover:bg-brand-dark text-white text-sm font-semibold px-5 py-2.5 rounded-btn transition-colors disabled:opacity-60"
+                >
+                  {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                  Guardar cambios
+                </button>
+                {saveSuccess && (
+                  <span className="flex items-center gap-1.5 text-sm text-[#15803d]">
+                    <CheckCircle2 className="w-4 h-4" /> Guardado
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Access management */}
+            {isCreator && (
+              <div className="bg-white rounded-card shadow-card border border-black/[0.06]">
+                <button
+                  onClick={handleToggleAccessPanel}
+                  className="w-full flex items-center justify-between px-5 py-4"
+                >
+                  <div className="flex items-center gap-2">
+                    <Lock className="w-4 h-4 text-brand-mid" />
+                    <span className="text-sm font-semibold text-brand-ink">Acceso al paciente</span>
+                    {accessGrants.length > 0 && (
+                      <span className="text-xs text-brand-muted ml-1">{accessGrants.length} usuario{accessGrants.length !== 1 ? 's' : ''}</span>
+                    )}
+                  </div>
+                  {showAccessPanel ? <ChevronDown className="w-4 h-4 text-brand-muted" /> : <ChevronRight className="w-4 h-4 text-brand-muted" />}
+                </button>
+
+                {showAccessPanel && (
+                  <div className="px-5 pb-5 space-y-3 border-t border-gray-100 pt-4">
+                    <div className="space-y-2">
+                      {accessGrants.map(grant => (
+                        <div key={grant.user_id} className="flex items-center gap-3 py-2 border-b border-gray-50 last:border-0">
+                          <div className="w-8 h-8 rounded-full bg-[#ede9fe] flex items-center justify-center text-xs font-semibold text-brand-mid shrink-0">
+                            {(grant.full_name || grant.username).slice(0, 2).toUpperCase()}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-brand-ink truncate">{grant.full_name || grant.username}</p>
+                            <p className="text-xs text-brand-muted">@{grant.username}</p>
+                          </div>
+                          {grant.is_creator ? (
+                            <span className="text-[10px] font-semibold text-brand-mid bg-[#ede9fe] px-2 py-0.5 rounded-full">Creador</span>
+                          ) : (
+                            <button
+                              onClick={() => handleRevokeAccess(grant.user_id)}
+                              className="text-[#b91c1c] hover:bg-red-50 p-1.5 rounded transition-colors"
+                              title="Revocar acceso"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
 
-                <div className="flex gap-2 pt-2">
-                  <select
-                    value={selectedUserId}
-                    onChange={e => setSelectedUserId(e.target.value)}
-                    className="flex-1 bg-brand-bg border border-gray-200 rounded-input px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-mid"
-                  >
-                    <option value="">Añadir usuario…</option>
-                    {allUsers
-                      .filter(u => !accessGrants.find(g => g.user_id === u.id))
-                      .map(u => (
-                        <option key={u.id} value={u.id}>{u.full_name || u.username}</option>
-                      ))
-                    }
-                  </select>
-                  <button
-                    onClick={handleGrantAccess}
-                    disabled={!selectedUserId || accessLoading}
-                    className="flex items-center gap-1 bg-brand-mid text-white px-3 py-2 rounded-btn text-sm font-semibold disabled:opacity-40 hover:bg-brand-dark transition-colors whitespace-nowrap"
-                  >
-                    <UserPlus className="w-3.5 h-3.5" /> Añadir
-                  </button>
-                </div>
+                    <div className="flex gap-2 pt-2">
+                      <select
+                        value={selectedUserId}
+                        onChange={e => setSelectedUserId(e.target.value)}
+                        className="flex-1 bg-brand-bg border border-gray-200 rounded-input px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-mid"
+                      >
+                        <option value="">Añadir usuario…</option>
+                        {allUsers
+                          .filter(u => !accessGrants.find(g => g.user_id === u.id))
+                          .map(u => (
+                            <option key={u.id} value={u.id}>{u.full_name || u.username}</option>
+                          ))
+                        }
+                      </select>
+                      <button
+                        onClick={handleGrantAccess}
+                        disabled={!selectedUserId || accessLoading}
+                        className="flex items-center gap-1 bg-brand-mid text-white px-3 py-2 rounded-btn text-sm font-semibold disabled:opacity-40 hover:bg-brand-dark transition-colors whitespace-nowrap"
+                      >
+                        <UserPlus className="w-3.5 h-3.5" /> Añadir
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
