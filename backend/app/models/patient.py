@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-from sqlalchemy import Column, String, Integer, DateTime
+from sqlalchemy import Column, String, Integer, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
 from app.db.base import Base
 
@@ -14,6 +14,9 @@ class Patient(Base):
     initials = Column(String(10), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     encrypted_metadata = Column(String, nullable=True)
+    created_by_id = Column(String, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    created_by = relationship("User", foreign_keys=[created_by_id])
+    access_grants = relationship("PatientAccess", back_populates="patient", cascade="all, delete-orphan")
 
     test_sessions = relationship("TestSession", back_populates="patient", cascade="all, delete-orphan")
     protocol_assignments = relationship("PatientProtocol", back_populates="patient", cascade="all, delete-orphan")

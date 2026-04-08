@@ -6,6 +6,7 @@ export interface Patient {
   initials: string | null
   display_id: string
   created_at: string
+  created_by_id?: string | null
 }
 
 export interface TestSessionOut {

@@ -8,6 +8,14 @@ export interface PatientCreate {
   initials?: string
 }
 
+export interface AccessGrant {
+  user_id: string
+  username: string
+  full_name: string | null
+  granted_at: string
+  is_creator: boolean
+}
+
 export const patientsApi = {
   list: async (page = 1, size = 20): Promise<Patient[]> => {
     const { data } = await apiClient.get<Patient[]>('/patients/', { params: { page, size } })
@@ -31,5 +39,15 @@ export const patientsApi = {
   getSessions: async (id: string) => {
     const { data } = await apiClient.get(`/patients/${id}/sessions`)
     return data as any[]
+  },
+  getAccess: async (patientId: string): Promise<AccessGrant[]> => {
+    const { data } = await apiClient.get<AccessGrant[]>(`/patients/${patientId}/access`)
+    return data
+  },
+  grantAccess: async (patientId: string, userId: string): Promise<void> => {
+    await apiClient.post(`/patients/${patientId}/access`, { user_id: userId })
+  },
+  revokeAccess: async (patientId: string, userId: string): Promise<void> => {
+    await apiClient.delete(`/patients/${patientId}/access/${userId}`)
   },
 }

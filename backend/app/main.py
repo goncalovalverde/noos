@@ -13,7 +13,7 @@ from app.api.routes import reports as reports_router
 from app.api.routes import stats as stats_router
 
 # Import models so SQLAlchemy registers them before create_all
-from app.models import User, AuditLog, Patient, TestSession, Protocol, ProtocolTest, PatientProtocol, ExecutionPlan  # noqa: F401
+from app.models import User, AuditLog, Patient, PatientAccess, TestSession, Protocol, ProtocolTest, PatientProtocol, ExecutionPlan  # noqa: F401
 
 def _seed_admin():
     """Create initial Administrador if none exists."""

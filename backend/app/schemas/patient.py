@@ -36,6 +36,7 @@ class PatientOut(BaseModel):
     initials: Optional[str]
     display_id: Optional[str] = None
     created_at: datetime
+    created_by_id: Optional[str] = None
 
     class Config:
         from_attributes = True
