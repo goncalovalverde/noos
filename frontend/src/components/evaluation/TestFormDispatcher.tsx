@@ -2,6 +2,11 @@ import TmtForm from './forms/TmtForm'
 import TavecForm from './forms/TavecForm'
 import FluidezFasForm from './forms/FluidezFasForm'
 import GenericForm from './forms/GenericForm'
+import ReyForm from './forms/ReyForm'
+import DigitosForm from './forms/DigitosForm'
+import WaisSubtestForm from './forms/WaisSubtestForm'
+import TorreForm from './forms/TorreForm'
+import StroopForm from './forms/StroopForm'
 
 interface Props {
   testType: string
@@ -17,6 +22,46 @@ export default function TestFormDispatcher({ testType, mode, onSave, onSkip, sav
   if (testType === 'TMT-A' || testType === 'TMT-B')
     return <TmtForm testType={testType as 'TMT-A' | 'TMT-B'} {...commonProps} />
   if (testType === 'TAVEC') return <TavecForm {...commonProps} />
-  if (testType === 'Fluidez-FAS') return <FluidezFasForm {...commonProps} />
+  if (testType === 'Fluidez-FAS' || testType === 'FAS-Verbal')
+    return <FluidezFasForm {...commonProps} />
+  if (testType === 'Rey-Copia' || testType === 'Rey-Memoria')
+    return <ReyForm testType={testType as 'Rey-Copia' | 'Rey-Memoria'} {...commonProps} />
+  if (
+    testType === 'Dígitos-Directos' ||
+    testType === 'Dígitos-Inversos' ||
+    testType === 'Letras-Números'
+  )
+    return (
+      <DigitosForm
+        testType={testType as 'Dígitos-Directos' | 'Dígitos-Inversos' | 'Letras-Números'}
+        {...commonProps}
+      />
+    )
+  if (
+    testType === 'Aritmética' ||
+    testType === 'Semejanzas' ||
+    testType === 'Vocabulario' ||
+    testType === 'Matrices' ||
+    testType === 'Cubos' ||
+    testType === 'Clave-Números' ||
+    testType === 'Búsqueda-Símbolos'
+  )
+    return (
+      <WaisSubtestForm
+        testType={
+          testType as
+            | 'Aritmética'
+            | 'Semejanzas'
+            | 'Vocabulario'
+            | 'Matrices'
+            | 'Cubos'
+            | 'Clave-Números'
+            | 'Búsqueda-Símbolos'
+        }
+        {...commonProps}
+      />
+    )
+  if (testType === 'Torre-Londres') return <TorreForm {...commonProps} />
+  if (testType === 'Stroop') return <StroopForm {...commonProps} />
   return <GenericForm testType={testType} {...commonProps} />
 }

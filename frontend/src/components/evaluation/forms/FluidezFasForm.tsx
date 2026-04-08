@@ -8,13 +8,21 @@ interface Props {
   saving: boolean
 }
 
-export default function FluidezFasForm({ mode, onSave, onSkip, saving }: Props) {
+export default function FluidezFasForm({ mode: _mode, onSave, onSkip, saving }: Props) {
   const [f, setF] = useState('')
   const [a, setA] = useState('')
   const [s, setS] = useState('')
+  const [intrusiones, setIntrusiones] = useState('')
+  const [perseveraciones, setPerseveraciones] = useState('')
 
   const total = (Number(f) || 0) + (Number(a) || 0) + (Number(s) || 0)
-  const raw = { letra_f: Number(f) || 0, letra_a: Number(a) || 0, letra_s: Number(s) || 0 }
+  const raw = {
+    letra_f: Number(f) || 0,
+    letra_a: Number(a) || 0,
+    letra_s: Number(s) || 0,
+    intrusiones: intrusiones !== '' ? Number(intrusiones) : null,
+    perseveraciones: perseveraciones !== '' ? Number(perseveraciones) : null,
+  }
   const isValid = f !== '' && a !== '' && s !== ''
 
   return (
@@ -50,6 +58,39 @@ export default function FluidezFasForm({ mode, onSave, onSkip, saving }: Props) 
             />
           </div>
         ))}
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-brand-ink mb-1">
+            Intrusiones (palabras no válidas){' '}
+            <span className="text-brand-muted font-normal">(opcional)</span>
+          </label>
+          <input
+            type="number"
+            min={0}
+            max={20}
+            value={intrusiones}
+            onChange={e => setIntrusiones(e.target.value)}
+            placeholder="0"
+            className="w-full px-3 py-2 border border-gray-200 rounded-input text-sm focus:outline-none focus:ring-2 focus:ring-brand-mid"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-brand-ink mb-1">
+            Perseveraciones (repeticiones){' '}
+            <span className="text-brand-muted font-normal">(opcional)</span>
+          </label>
+          <input
+            type="number"
+            min={0}
+            max={20}
+            value={perseveraciones}
+            onChange={e => setPerseveraciones(e.target.value)}
+            placeholder="0"
+            className="w-full px-3 py-2 border border-gray-200 rounded-input text-sm focus:outline-none focus:ring-2 focus:ring-brand-mid"
+          />
+        </div>
       </div>
     </FormBase>
   )

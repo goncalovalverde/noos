@@ -18,13 +18,20 @@ const INITIAL: Record<TavecKey, string> = {
   reconocimiento_aciertos: '', reconocimiento_errores: '',
 }
 
-export default function TavecForm({ mode, onSave, onSkip, saving }: Props) {
+
+export default function TavecForm({ mode: _mode, onSave, onSkip, saving }: Props) {
   const [values, setValues] = useState(INITIAL)
+  const [intrusionesTotal, setIntrusionesTotal] = useState('')
+  const [perseveracionesTotal, setPerseveracionesTotal] = useState('')
 
   const set = (k: TavecKey) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setValues(prev => ({ ...prev, [k]: e.target.value }))
 
-  const raw = Object.fromEntries(Object.entries(values).map(([k, v]) => [k, Number(v) || 0]))
+  const raw = {
+    ...Object.fromEntries(Object.entries(values).map(([k, v]) => [k, Number(v) || 0])),
+    intrusiones_total: intrusionesTotal !== '' ? Number(intrusionesTotal) : null,
+    perseveraciones_total: perseveracionesTotal !== '' ? Number(perseveracionesTotal) : null,
+  }
   const total = ([1, 2, 3, 4, 5] as const).reduce(
     (s, i) => s + (Number(values[`ensayo_${i}` as TavecKey]) || 0), 0
   )
@@ -81,6 +88,39 @@ export default function TavecForm({ mode, onSave, onSkip, saving }: Props) {
             />
           </div>
         ))}
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="block text-xs font-medium text-brand-ink mb-1">
+            Intrusiones totales (ensayos A1–A5){' '}
+            <span className="text-brand-muted font-normal">(opcional)</span>
+          </label>
+          <input
+            type="number"
+            min={0}
+            max={30}
+            value={intrusionesTotal}
+            onChange={e => setIntrusionesTotal(e.target.value)}
+            placeholder="0"
+            className="w-full px-3 py-2 border border-gray-200 rounded-input text-sm focus:outline-none focus:ring-2 focus:ring-brand-mid"
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-brand-ink mb-1">
+            Perseveraciones totales{' '}
+            <span className="text-brand-muted font-normal">(opcional)</span>
+          </label>
+          <input
+            type="number"
+            min={0}
+            max={20}
+            value={perseveracionesTotal}
+            onChange={e => setPerseveracionesTotal(e.target.value)}
+            placeholder="0"
+            className="w-full px-3 py-2 border border-gray-200 rounded-input text-sm focus:outline-none focus:ring-2 focus:ring-brand-mid"
+          />
+        </div>
       </div>
     </FormBase>
   )
