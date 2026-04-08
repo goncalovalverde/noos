@@ -4,6 +4,7 @@ import json
 from app.db.base import get_db
 from app.models.test_session import TestSession
 from app.models.audit_log import AuditLog
+from app.models.execution_plan import ExecutionPlan
 from app.schemas.test_session import TestSessionCreate, TestSessionUpdate, TestSessionOut
 from app.auth.dependencies import get_current_active_user, require_role
 from app.models.user import User
@@ -12,6 +13,22 @@ from app.services.normatives.calculator import calculator
 from app.services.normatives.raw_score_extractor import extract_raw_score
 
 router = APIRouter(prefix="/api/tests", tags=["tests"])
+
+def _auto_complete_plan(plan_id: str, db: Session) -> None:
+    """Mark execution plan as completed if all non-skipped tests have been saved."""
+    plan = db.query(ExecutionPlan).filter(ExecutionPlan.id == plan_id).first()
+    if not plan or plan.status != 'active':
+        return
+    required = {t['test_type'] for t in plan.get_tests_to_execute()}
+    if not required:
+        return
+    done = {
+        s.test_type
+        for s in db.query(TestSession).filter(TestSession.execution_plan_id == plan_id).all()
+    }
+    if required.issubset(done):
+        plan.status = 'completed'
+        db.commit()
 
 @router.post("/", response_model=TestSessionOut, status_code=201)
 async def create_test(
@@ -41,6 +58,11 @@ async def create_test(
     db.add(session)
     db.commit()
     db.refresh(session)
+
+    # Auto-complete plan if all tests are now done
+    if body.execution_plan_id:
+        _auto_complete_plan(body.execution_plan_id, db)
+
     out = TestSessionOut.model_validate(session)
     out.raw_data = session.get_raw_data()
     out.calculated_scores = session.get_calculated_scores()
