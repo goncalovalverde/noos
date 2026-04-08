@@ -218,8 +218,10 @@ async def get_patient_sessions(
             "id": s.id,
             "test_type": s.test_type,
             "date": s.date,
+            "execution_plan_id": s.execution_plan_id,
             "calculated_scores": s.get_calculated_scores(),
             "raw_data": s.get_raw_data(),
+            "qualitative_data": s.get_qualitative_data(),
         }
         for s in sessions
     ]
