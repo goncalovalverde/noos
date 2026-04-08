@@ -8,9 +8,11 @@ TABLES_DIR = Path(__file__).parent / "tables"
 class NormativeCalculator:
     TEST_FILES = {
         "TMT-A": "tmt_a.json",
-        "TMT-B": "tmt_a.json",
+        "TMT-B": "tmt_b.json",
         "Fluidez-FAS": "fluidez_fas.json",
         "TAVEC": "tavec.json",
+        "Rey-Copia": "rey_copia.json",
+        "Rey-Memoria": "rey_memoria.json",
     }
 
     def __init__(self):
@@ -103,17 +105,13 @@ class NormativeCalculator:
         return pe, percentil
 
     def _calculate_simulated(self, test_type: str, raw_score: float, age: int, education_years: int) -> dict:
-        mean, std = 50.0, 10.0
-        z = (raw_score - mean) / std
-        percentil = float(stats.norm.cdf(z) * 100)
-        percentil = max(0.1, min(99.9, percentil))
-        pe = max(1, min(19, int(round(10 + z * 3))))
+        """No validated normative table available for this test."""
         return {
-            "puntuacion_escalar": pe,
-            "percentil": round(percentil, 1),
-            "z_score": round(z, 2),
-            "clasificacion": self._classify(percentil),
-            "norma_aplicada": {"fuente": "Simulado", "test": test_type},
+            "puntuacion_escalar": None,
+            "percentil": None,
+            "z_score": None,
+            "clasificacion": "Sin norma validada",
+            "norma_aplicada": {"fuente": "Sin tabla normativa", "test": test_type},
         }
 
     def _classify(self, percentil: float) -> str:

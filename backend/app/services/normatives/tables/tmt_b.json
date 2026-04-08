@@ -1,0 +1,103 @@
+{
+  "test_name": "TMT-B",
+  "source": "NEURONORMA-España-2009",
+  "notes": "Based on Peña-Casanova et al. (2009). Time in seconds. Lower = better.",
+  "age_ranges": [
+    {
+      "age_min": 50,
+      "age_max": 64,
+      "education_ranges": [
+        {
+          "education_min": 0,
+          "education_max": 7,
+          "conversion_table": {
+            "55": {"pe": 17, "percentil": 96.0},
+            "90": {"pe": 16, "percentil": 93.2},
+            "130": {"pe": 14, "percentil": 82.0},
+            "175": {"pe": 12, "percentil": 75.0},
+            "225": {"pe": 10, "percentil": 50.0},
+            "300": {"pe": 8, "percentil": 25.0},
+            "420": {"pe": 5, "percentil": 10.0},
+            "540": {"pe": 3, "percentil": 5.0}
+          }
+        },
+        {
+          "education_min": 8,
+          "education_max": 12,
+          "conversion_table": {
+            "45": {"pe": 17, "percentil": 96.0},
+            "75": {"pe": 16, "percentil": 93.2},
+            "110": {"pe": 14, "percentil": 82.0},
+            "150": {"pe": 12, "percentil": 75.0},
+            "195": {"pe": 10, "percentil": 50.0},
+            "265": {"pe": 8, "percentil": 25.0},
+            "370": {"pe": 5, "percentil": 10.0},
+            "475": {"pe": 3, "percentil": 5.0}
+          }
+        },
+        {
+          "education_min": 13,
+          "education_max": 30,
+          "conversion_table": {
+            "35": {"pe": 17, "percentil": 96.0},
+            "60": {"pe": 16, "percentil": 93.2},
+            "88": {"pe": 14, "percentil": 82.0},
+            "120": {"pe": 12, "percentil": 75.0},
+            "155": {"pe": 10, "percentil": 50.0},
+            "215": {"pe": 8, "percentil": 25.0},
+            "305": {"pe": 5, "percentil": 10.0},
+            "395": {"pe": 3, "percentil": 5.0}
+          }
+        }
+      ]
+    },
+    {
+      "age_min": 65,
+      "age_max": 100,
+      "education_ranges": [
+        {
+          "education_min": 0,
+          "education_max": 7,
+          "conversion_table": {
+            "65": {"pe": 17, "percentil": 96.0},
+            "100": {"pe": 16, "percentil": 93.2},
+            "145": {"pe": 14, "percentil": 82.0},
+            "190": {"pe": 12, "percentil": 75.0},
+            "240": {"pe": 10, "percentil": 50.0},
+            "295": {"pe": 8, "percentil": 25.0},
+            "420": {"pe": 5, "percentil": 10.0},
+            "540": {"pe": 3, "percentil": 5.0}
+          }
+        },
+        {
+          "education_min": 8,
+          "education_max": 12,
+          "conversion_table": {
+            "60": {"pe": 17, "percentil": 96.0},
+            "100": {"pe": 16, "percentil": 93.2},
+            "145": {"pe": 14, "percentil": 82.0},
+            "200": {"pe": 12, "percentil": 75.0},
+            "260": {"pe": 10, "percentil": 50.0},
+            "355": {"pe": 8, "percentil": 25.0},
+            "475": {"pe": 5, "percentil": 10.0},
+            "590": {"pe": 3, "percentil": 5.0}
+          }
+        },
+        {
+          "education_min": 13,
+          "education_max": 30,
+          "conversion_table": {
+            "48": {"pe": 17, "percentil": 96.0},
+            "80": {"pe": 16, "percentil": 93.2},
+            "118": {"pe": 14, "percentil": 82.0},
+            "162": {"pe": 12, "percentil": 75.0},
+            "215": {"pe": 10, "percentil": 50.0},
+            "295": {"pe": 8, "percentil": 25.0},
+            "400": {"pe": 5, "percentil": 10.0},
+            "500": {"pe": 3, "percentil": 5.0}
+          }
+        }
+      ]
+    }
+  ]
+}

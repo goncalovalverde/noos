@@ -320,7 +320,8 @@ class TestTorreLondres:
 
     def test_resultado_neuronorma_valido(self):
         r = calculator.calculate("Torre-de-Londres", 0, age=65, education_years=10)
-        assert 1 <= r["puntuacion_escalar"] <= 19
+        assert r["puntuacion_escalar"] is None
+        assert r["clasificacion"] == "Sin norma validada"
 
 
 class TestStroop:
@@ -359,17 +360,18 @@ class TestDigitos:
         assert raw["digitos_directos"] >= raw["digitos_inversos"]
 
     def test_score_baixo_indica_deficit(self):
-        # Total=9 (3+3+3) indica déficit de memória de trabalho
+        # Dígitos has no validated normative table yet
         r = calculator.calculate("Dígitos", 9, age=65, education_years=8)
-        assert r["puntuacion_escalar"] <= 7
+        assert r["puntuacion_escalar"] is None
+        assert r["clasificacion"] == "Sin norma validada"
 
 
 class TestSimulatedCalculation:
-    """Testes sem tabela NEURONORMA usam cálculo simulado."""
+    """Tests without NEURONORMA table return null scores and 'Sin norma validada'."""
 
     def test_teste_sem_tabela_usa_simulacao(self):
         r = calculator.calculate("WAIS-IV", 100, age=65, education_years=12)
-        assert r["norma_aplicada"]["fuente"] == "Simulado"
+        assert r["norma_aplicada"]["fuente"] == "Sin tabla normativa"
 
     def test_simulacao_tem_todos_os_campos(self):
         r = calculator.calculate("Rey-Copia", 32, age=65, education_years=10)
@@ -378,4 +380,5 @@ class TestSimulatedCalculation:
     def test_pe_simulado_dentro_escala_valida(self):
         for score in [5, 50, 100, 150]:
             r = calculator.calculate("Dígitos", score, age=65, education_years=10)
-            assert 1 <= r["puntuacion_escalar"] <= 19
+            assert r["puntuacion_escalar"] is None
+            assert r["clasificacion"] == "Sin norma validada"

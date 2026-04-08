@@ -27,7 +27,7 @@ export default function EvaluationSession() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [savedScore, setSavedScore] = useState<{
-    pe: number; percentil: number; clasificacion: string; testType: string
+    pe: number | null; percentil: number | null; clasificacion: string; testType: string; noNorm?: boolean
   } | null>(null)
 
   useEffect(() => {
@@ -73,12 +73,14 @@ export default function EvaluationSession() {
         qualitative_data: qualitativeData,
       })
       const scores = result.calculated_scores
-      if (scores?.puntuacion_escalar) {
+      if (scores) {
+        const noNorm = scores.norma_aplicada?.fuente === 'Sin tabla normativa'
         setSavedScore({
-          pe: scores.puntuacion_escalar,
-          percentil: scores.percentil ?? 0,
+          pe: scores.puntuacion_escalar ?? null,
+          percentil: scores.percentil ?? null,
           clasificacion: scores.clasificacion ?? '',
           testType: currentTest.test_type,
+          noNorm,
         })
       } else {
         advance()
@@ -160,22 +162,32 @@ export default function EvaluationSession() {
             <h2 className="text-lg font-semibold text-brand-ink mb-1">{savedScore.testType} guardado</h2>
             <p className="text-brand-muted text-sm mb-6">Resultado de la evaluación</p>
 
-            <div className="w-full grid grid-cols-3 gap-3 mb-8">
+            <div className="w-full grid grid-cols-3 gap-3 mb-6">
               <div className="bg-brand-bg rounded-xl p-3">
                 <p className="text-[11px] font-medium uppercase tracking-[0.7px] text-brand-muted mb-1">PE</p>
-                <p className="text-2xl font-semibold text-brand-ink">{savedScore.pe}</p>
+                <p className="text-2xl font-semibold text-brand-ink">{savedScore.pe ?? '—'}</p>
               </div>
               <div className="bg-brand-bg rounded-xl p-3">
                 <p className="text-[11px] font-medium uppercase tracking-[0.7px] text-brand-muted mb-1">Percentil</p>
-                <p className="text-2xl font-semibold text-brand-ink">{savedScore.percentil.toFixed(0)}</p>
+                <p className="text-2xl font-semibold text-brand-ink">
+                  {savedScore.percentil != null ? savedScore.percentil.toFixed(0) : '—'}
+                </p>
               </div>
               <div className="bg-brand-bg rounded-xl p-3">
                 <p className="text-[11px] font-medium uppercase tracking-[0.7px] text-brand-muted mb-1">Clasif.</p>
-                <p className={`text-base font-semibold ${CLASSIFICATION_COLORS[savedScore.clasificacion] ?? 'text-brand-ink'}`}>
-                  {savedScore.clasificacion}
-                </p>
+                {savedScore.clasificacion === 'Sin norma validada'
+                  ? <p className="text-base font-semibold text-gray-400">Sin norma</p>
+                  : <p className={`text-base font-semibold ${CLASSIFICATION_COLORS[savedScore.clasificacion] ?? 'text-brand-ink'}`}>
+                      {savedScore.clasificacion}
+                    </p>
+                }
               </div>
             </div>
+            {savedScore.noNorm && (
+              <p className="text-xs text-gray-400 mb-6 text-center">
+                Sin tablas normativas validadas para este test
+              </p>
+            )}
 
             <button
               onClick={advance}

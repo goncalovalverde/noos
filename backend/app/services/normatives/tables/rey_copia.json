@@ -1,0 +1,101 @@
+{
+  "test_name": "Rey-Copia",
+  "source": "NEURONORMA-España-2009",
+  "notes": "Based on Peña-Casanova et al. (2009). Score 0-36. Higher = better.",
+  "age_ranges": [
+    {
+      "age_min": 50,
+      "age_max": 64,
+      "education_ranges": [
+        {
+          "education_min": 0,
+          "education_max": 7,
+          "conversion_table": {
+            "14": {"pe": 3, "percentil": 5.0},
+            "19": {"pe": 5, "percentil": 10.0},
+            "23": {"pe": 7, "percentil": 16.0},
+            "26": {"pe": 8, "percentil": 25.0},
+            "31": {"pe": 10, "percentil": 50.0},
+            "33": {"pe": 12, "percentil": 75.0},
+            "34": {"pe": 14, "percentil": 82.0},
+            "35": {"pe": 16, "percentil": 93.2}
+          }
+        },
+        {
+          "education_min": 8,
+          "education_max": 12,
+          "conversion_table": {
+            "17": {"pe": 3, "percentil": 5.0},
+            "22": {"pe": 5, "percentil": 10.0},
+            "26": {"pe": 7, "percentil": 16.0},
+            "29": {"pe": 8, "percentil": 25.0},
+            "33": {"pe": 10, "percentil": 50.0},
+            "34": {"pe": 12, "percentil": 75.0},
+            "35": {"pe": 14, "percentil": 82.0},
+            "36": {"pe": 16, "percentil": 93.2}
+          }
+        },
+        {
+          "education_min": 13,
+          "education_max": 30,
+          "conversion_table": {
+            "20": {"pe": 3, "percentil": 5.0},
+            "25": {"pe": 5, "percentil": 10.0},
+            "29": {"pe": 7, "percentil": 16.0},
+            "31": {"pe": 8, "percentil": 25.0},
+            "34": {"pe": 10, "percentil": 50.0},
+            "35": {"pe": 12, "percentil": 75.0},
+            "36": {"pe": 14, "percentil": 82.0}
+          }
+        }
+      ]
+    },
+    {
+      "age_min": 65,
+      "age_max": 100,
+      "education_ranges": [
+        {
+          "education_min": 0,
+          "education_max": 7,
+          "conversion_table": {
+            "10": {"pe": 3, "percentil": 5.0},
+            "15": {"pe": 5, "percentil": 10.0},
+            "18": {"pe": 7, "percentil": 16.0},
+            "22": {"pe": 8, "percentil": 25.0},
+            "27": {"pe": 10, "percentil": 50.0},
+            "31": {"pe": 12, "percentil": 75.0},
+            "34": {"pe": 14, "percentil": 82.0},
+            "35": {"pe": 16, "percentil": 93.2}
+          }
+        },
+        {
+          "education_min": 8,
+          "education_max": 12,
+          "conversion_table": {
+            "14": {"pe": 3, "percentil": 5.0},
+            "18": {"pe": 5, "percentil": 10.0},
+            "22": {"pe": 7, "percentil": 16.0},
+            "26": {"pe": 8, "percentil": 25.0},
+            "30": {"pe": 10, "percentil": 50.0},
+            "33": {"pe": 12, "percentil": 75.0},
+            "35": {"pe": 14, "percentil": 82.0},
+            "36": {"pe": 16, "percentil": 93.2}
+          }
+        },
+        {
+          "education_min": 13,
+          "education_max": 30,
+          "conversion_table": {
+            "17": {"pe": 3, "percentil": 5.0},
+            "21": {"pe": 5, "percentil": 10.0},
+            "25": {"pe": 7, "percentil": 16.0},
+            "28": {"pe": 8, "percentil": 25.0},
+            "33": {"pe": 10, "percentil": 50.0},
+            "34": {"pe": 12, "percentil": 75.0},
+            "36": {"pe": 14, "percentil": 82.0}
+          }
+        }
+      ]
+    }
+  ]
+}

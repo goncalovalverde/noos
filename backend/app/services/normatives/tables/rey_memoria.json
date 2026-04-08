@@ -1,0 +1,103 @@
+{
+  "test_name": "Rey-Memoria",
+  "source": "NEURONORMA-España-2009",
+  "notes": "Based on Peña-Casanova et al. (2009). Score 0-36. Higher = better. 20-minute delayed recall.",
+  "age_ranges": [
+    {
+      "age_min": 50,
+      "age_max": 64,
+      "education_ranges": [
+        {
+          "education_min": 0,
+          "education_max": 7,
+          "conversion_table": {
+            "5": {"pe": 3, "percentil": 5.0},
+            "8": {"pe": 5, "percentil": 10.0},
+            "11": {"pe": 7, "percentil": 16.0},
+            "14": {"pe": 8, "percentil": 25.0},
+            "18": {"pe": 10, "percentil": 50.0},
+            "22": {"pe": 12, "percentil": 75.0},
+            "26": {"pe": 14, "percentil": 82.0},
+            "30": {"pe": 16, "percentil": 93.2}
+          }
+        },
+        {
+          "education_min": 8,
+          "education_max": 12,
+          "conversion_table": {
+            "7": {"pe": 3, "percentil": 5.0},
+            "11": {"pe": 5, "percentil": 10.0},
+            "14": {"pe": 7, "percentil": 16.0},
+            "17": {"pe": 8, "percentil": 25.0},
+            "21": {"pe": 10, "percentil": 50.0},
+            "25": {"pe": 12, "percentil": 75.0},
+            "28": {"pe": 14, "percentil": 82.0},
+            "31": {"pe": 16, "percentil": 93.2}
+          }
+        },
+        {
+          "education_min": 13,
+          "education_max": 30,
+          "conversion_table": {
+            "9": {"pe": 3, "percentil": 5.0},
+            "13": {"pe": 5, "percentil": 10.0},
+            "17": {"pe": 7, "percentil": 16.0},
+            "20": {"pe": 8, "percentil": 25.0},
+            "24": {"pe": 10, "percentil": 50.0},
+            "27": {"pe": 12, "percentil": 75.0},
+            "30": {"pe": 14, "percentil": 82.0},
+            "33": {"pe": 16, "percentil": 93.2}
+          }
+        }
+      ]
+    },
+    {
+      "age_min": 65,
+      "age_max": 100,
+      "education_ranges": [
+        {
+          "education_min": 0,
+          "education_max": 7,
+          "conversion_table": {
+            "3": {"pe": 3, "percentil": 5.0},
+            "5": {"pe": 5, "percentil": 10.0},
+            "8": {"pe": 7, "percentil": 16.0},
+            "13": {"pe": 8, "percentil": 25.0},
+            "17": {"pe": 10, "percentil": 50.0},
+            "21": {"pe": 12, "percentil": 75.0},
+            "25": {"pe": 14, "percentil": 82.0},
+            "28": {"pe": 16, "percentil": 93.2}
+          }
+        },
+        {
+          "education_min": 8,
+          "education_max": 12,
+          "conversion_table": {
+            "4": {"pe": 3, "percentil": 5.0},
+            "7": {"pe": 5, "percentil": 10.0},
+            "10": {"pe": 7, "percentil": 16.0},
+            "13": {"pe": 8, "percentil": 25.0},
+            "17": {"pe": 10, "percentil": 50.0},
+            "21": {"pe": 12, "percentil": 75.0},
+            "25": {"pe": 14, "percentil": 82.0},
+            "28": {"pe": 16, "percentil": 93.2}
+          }
+        },
+        {
+          "education_min": 13,
+          "education_max": 30,
+          "conversion_table": {
+            "5": {"pe": 3, "percentil": 5.0},
+            "9": {"pe": 5, "percentil": 10.0},
+            "13": {"pe": 7, "percentil": 16.0},
+            "16": {"pe": 8, "percentil": 25.0},
+            "20": {"pe": 10, "percentil": 50.0},
+            "24": {"pe": 12, "percentil": 75.0},
+            "28": {"pe": 14, "percentil": 82.0},
+            "31": {"pe": 16, "percentil": 93.2}
+          }
+        }
+      ]
+    }
+  ]
+}
