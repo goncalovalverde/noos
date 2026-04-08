@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom'
-import { Brain, LayoutDashboard, Users, ClipboardList, Settings, LogOut, Menu, X, UserCircle } from 'lucide-react'
+import { Brain, LayoutDashboard, Users, ClipboardList, Settings, LogOut, Menu, X } from 'lucide-react'
 import { useAuthStore } from '@/store/auth'
 import { authApi } from '@/api/auth'
 
@@ -99,9 +99,13 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
       {/* User footer */}
       <div className="border-t border-white/10 p-3">
         <div className={`flex items-center gap-3 ${collapsed ? 'justify-center' : ''}`}>
-          <div className="w-8 h-8 rounded-full bg-brand-mid flex items-center justify-center text-sm font-semibold shrink-0">
+          <NavLink
+            to="/profile"
+            className="w-8 h-8 rounded-full bg-brand-mid flex items-center justify-center text-sm font-semibold shrink-0 hover:bg-brand-accent transition-colors"
+            title="Mi perfil"
+          >
             {initials}
-          </div>
+          </NavLink>
           {!collapsed && (
             <div className="flex-1 min-w-0">
               <NavLink to="/profile" className="block hover:opacity-80 transition-opacity">
@@ -113,18 +117,13 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
             </div>
           )}
           {!collapsed && (
-            <div className="flex items-center gap-1">
-              <NavLink to="/profile" className="text-white/60 hover:text-white transition-colors" title="Mi perfil">
-                <UserCircle className="w-4 h-4" />
-              </NavLink>
-              <button
-                onClick={handleLogout}
-                className="text-white/60 hover:text-white transition-colors"
-                title="Cerrar sesión"
-              >
-                <LogOut className="w-4 h-4" />
-              </button>
-            </div>
+            <button
+              onClick={handleLogout}
+              className="text-white/60 hover:text-white transition-colors"
+              title="Cerrar sesión"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
           )}
         </div>
         {collapsed && (
