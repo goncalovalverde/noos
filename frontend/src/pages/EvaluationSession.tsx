@@ -1,12 +1,19 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { X, Loader2 } from 'lucide-react'
+import { X, Loader2, CheckCircle2 } from 'lucide-react'
 import { evaluationsApi, type TestCustomization } from '@/api/evaluations'
 import { testsApi } from '@/api/tests'
 import { patientsApi } from '@/api/patients'
 import type { Patient } from '@/types/patient'
 import TestFormDispatcher from '@/components/evaluation/TestFormDispatcher'
 import SessionTimer from '@/components/evaluation/SessionTimer'
+
+const CLASSIFICATION_COLORS: Record<string, string> = {
+  'Superior':   'text-[#15803d]',
+  'Normal':     'text-[#1d4ed8]',
+  'Limítrofe':  'text-[#a16207]',
+  'Deficitario':'text-[#b91c1c]',
+}
 
 export default function EvaluationSession() {
   const { id: patientId, planId } = useParams<{ id: string; planId: string }>()
@@ -19,7 +26,7 @@ export default function EvaluationSession() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [savedScore, setSavedScore] = useState<{
-    pe: number; percentil: number; clasificacion: string
+    pe: number; percentil: number; clasificacion: string; testType: string
   } | null>(null)
 
   useEffect(() => {
@@ -44,10 +51,10 @@ export default function EvaluationSession() {
   const isLast = currentIdx >= tests.length - 1
 
   const advance = useCallback(() => {
+    setSavedScore(null)
     if (isLast) {
       navigate(`/patients/${patientId}/evaluate/${planId}/summary`)
     } else {
-      setSavedScore(null)
       setCurrentIdx(i => i + 1)
     }
   }, [isLast, patientId, planId, navigate])
@@ -69,8 +76,8 @@ export default function EvaluationSession() {
           pe: scores.puntuacion_escalar,
           percentil: scores.percentil ?? 0,
           clasificacion: scores.clasificacion ?? '',
+          testType: currentTest.test_type,
         })
-        setTimeout(advance, 2000)
       } else {
         advance()
       }
@@ -130,18 +137,6 @@ export default function EvaluationSession() {
 
       {/* Main content */}
       <main className="flex-1 max-w-3xl mx-auto w-full px-6 py-8">
-        {/* Score toast */}
-        {savedScore && (
-          <div className="mb-4 flex items-center gap-3 bg-green-50 border border-green-200 text-green-700 rounded-card px-4 py-3">
-            <span className="text-lg">✅</span>
-            <span className="text-sm font-medium">
-              {currentTest.test_type} guardado — PE: <strong>{savedScore.pe}</strong> ·{' '}
-              Percentil: <strong>{savedScore.percentil.toFixed(0)}%</strong> ·{' '}
-              <strong>{savedScore.clasificacion}</strong>
-            </span>
-          </div>
-        )}
-
         {/* Timer (live mode only) */}
         {mode === 'live' && <SessionTimer key={currentTest.test_type} />}
 
@@ -154,6 +149,41 @@ export default function EvaluationSession() {
           saving={saving}
         />
       </main>
+
+      {/* Results modal */}
+      {savedScore && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-[16px] shadow-xl w-full max-w-sm mx-4 p-8 flex flex-col items-center text-center">
+            <CheckCircle2 className="w-14 h-14 text-[#15803d] mb-4" />
+            <h2 className="text-lg font-semibold text-brand-ink mb-1">{savedScore.testType} guardado</h2>
+            <p className="text-brand-muted text-sm mb-6">Resultado de la evaluación</p>
+
+            <div className="w-full grid grid-cols-3 gap-3 mb-8">
+              <div className="bg-brand-bg rounded-xl p-3">
+                <p className="text-[11px] font-medium uppercase tracking-[0.7px] text-brand-muted mb-1">PE</p>
+                <p className="text-2xl font-semibold text-brand-ink">{savedScore.pe}</p>
+              </div>
+              <div className="bg-brand-bg rounded-xl p-3">
+                <p className="text-[11px] font-medium uppercase tracking-[0.7px] text-brand-muted mb-1">Percentil</p>
+                <p className="text-2xl font-semibold text-brand-ink">{savedScore.percentil.toFixed(0)}</p>
+              </div>
+              <div className="bg-brand-bg rounded-xl p-3">
+                <p className="text-[11px] font-medium uppercase tracking-[0.7px] text-brand-muted mb-1">Clasif.</p>
+                <p className={`text-base font-semibold ${CLASSIFICATION_COLORS[savedScore.clasificacion] ?? 'text-brand-ink'}`}>
+                  {savedScore.clasificacion}
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={advance}
+              className="w-full bg-brand-mid hover:bg-brand-dark text-white font-medium py-2.5 rounded-btn transition-colors"
+            >
+              {isLast ? 'Ver resumen' : 'Siguiente test'}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
