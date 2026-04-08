@@ -9,6 +9,7 @@ from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from app.core.limiter import limiter
 from app.core.config import settings
+from app.core.middleware import SecurityHeadersMiddleware
 from app.db.base import Base, engine, SessionLocal
 from app.api.routes import auth as auth_router
 from app.api.routes import users as users_router
@@ -99,6 +100,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Security headers on every response (added after CORS middleware).
+app.add_middleware(SecurityHeadersMiddleware)
 
 app.include_router(auth_router.router)
 app.include_router(users_router.router)
