@@ -60,7 +60,7 @@ services:
     ports:
       # Port 80 is used by the host nginx reverse proxy.
       # The frontend container listens on 8080; host nginx proxies to it.
-      - "127.0.0.1:8080:80"
+      - "8080:80"
     depends_on:
       backend:
         condition: service_healthy
