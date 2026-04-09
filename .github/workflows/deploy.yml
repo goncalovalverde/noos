@@ -39,10 +39,27 @@ jobs:
 
       # Restore the .env file from a GitHub secret on every deploy.
       # The _work directory is wiped on each checkout, so the file must be
-      # re-created here. Store the full .env content in a repository secret
-      # named BACKEND_ENV (Settings → Secrets and variables → Actions).
+      # re-created here.
+      #
+      # Setup (once):
+      #   GitHub repo → Settings → Secrets and variables → Actions → New secret
+      #   Name:  BACKEND_ENV
+      #   Value: full contents of backend/.env  (multi-line is fine)
+      #
+      # Using printf via env var to correctly handle multi-line secret values.
       - name: Write backend .env
-        run: echo "${{ secrets.BACKEND_ENV }}" > backend/.env
+        env:
+          BACKEND_ENV: ${{ secrets.BACKEND_ENV }}
+        run: printf '%s\n' "$BACKEND_ENV" > backend/.env
+
+      - name: Verify .env exists
+        run: |
+          if [ ! -s backend/.env ]; then
+            echo "ERROR: backend/.env is missing or empty."
+            echo "Create a repository secret named BACKEND_ENV with the file contents."
+            exit 1
+          fi
+          echo ".env written ($(wc -l < backend/.env) lines)"
 
       # Build new images and restart containers.
       # --build       forces a rebuild even if Dockerfiles haven't changed
