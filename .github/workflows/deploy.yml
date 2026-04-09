@@ -37,6 +37,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Restore the .env file from a GitHub secret on every deploy.
+      # The _work directory is wiped on each checkout, so the file must be
+      # re-created here. Store the full .env content in a repository secret
+      # named BACKEND_ENV (Settings → Secrets and variables → Actions).
+      - name: Write backend .env
+        run: echo "${{ secrets.BACKEND_ENV }}" > backend/.env
+
       # Build new images and restart containers.
       # --build       forces a rebuild even if Dockerfiles haven't changed
       # --no-deps     only recreates containers whose image changed
