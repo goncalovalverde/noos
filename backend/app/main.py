@@ -7,10 +7,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
+from alembic.config import Config as AlembicConfig
+from alembic import command as alembic_command
 from app.core.limiter import limiter
 from app.core.config import settings
 from app.core.middleware import SecurityHeadersMiddleware
-from app.db.base import Base, engine, SessionLocal
+from app.db.base import SessionLocal
 from app.api.routes import auth as auth_router
 from app.api.routes import users as users_router
 from app.api.routes import patients as patients_router
@@ -20,8 +22,23 @@ from app.api.routes import execution_plans as execution_plans_router
 from app.api.routes import reports as reports_router
 from app.api.routes import stats as stats_router
 
-# Import models so SQLAlchemy registers them before create_all
+# Models must be imported so Alembic's env.py can see them via Base.metadata.
+# They are also imported by alembic/env.py directly; these imports ensure the
+# app module graph is consistent at runtime.
 from app.models import User, AuditLog, Patient, PatientAccess, TestSession, Protocol, ProtocolTest, PatientProtocol, ExecutionPlan, UsedRefreshToken  # noqa: F401
+
+def _run_migrations():
+    """Apply any pending Alembic migrations on startup.
+
+    This replaces the previous `Base.metadata.create_all()` call. Unlike
+    create_all(), Alembic will correctly handle ALTER TABLE, column renames,
+    index changes, and other schema modifications across deployments.
+
+    The alembic.ini file is resolved relative to this file's location so the
+    app works regardless of the working directory when uvicorn is launched.
+    """
+    alembic_cfg = AlembicConfig(str(Path(__file__).resolve().parents[1] / "alembic.ini"))
+    alembic_command.upgrade(alembic_cfg, "head")
 
 def _seed_admin():
     """Create initial Administrador if none exists."""
@@ -76,7 +93,7 @@ def _validate_secrets():
 async def lifespan(app: FastAPI):
     _validate_secrets()
     _secure_db_files()
-    Base.metadata.create_all(bind=engine)
+    _run_migrations()
     _seed_admin()
     yield
 
