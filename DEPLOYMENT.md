@@ -43,13 +43,16 @@ git clone https://github.com/<your-org>/noos.git /opt/noos
 cd /opt/noos
 cp backend/.env.example backend/.env
 nano backend/.env
-# Set: SECRET_KEY, ADMIN_PASSWORD, and optionally ENVIRONMENT=production
+# Set: SECRET_KEY, ADMIN_PASSWORD, POSTGRES_PASSWORD
 ```
 
 Generate a strong secret key:
 ```bash
 openssl rand -hex 32
 ```
+
+> **Note:** `DATABASE_URL` is set automatically by `docker-compose.prod.yml` using
+> the `POSTGRES_PASSWORD` you configured. You do **not** need to set it manually.
 
 ### 4. Install the GitHub Actions self-hosted runner
 
@@ -85,29 +88,33 @@ You can also trigger a manual deploy from **GitHub → Actions → Deploy to Ora
 
 ## Data persistence
 
-All persistent data is stored in the `noos_db` Docker named volume:
+All persistent data is stored in named Docker volumes:
 
-| Path inside container | Contents |
+| Volume | Contents |
 |---|---|
-| `/data/noos.db` | SQLite database |
-| `/data/reports/` | Generated PDF / Word reports |
+| `noos_pgdata` | PostgreSQL data directory |
+| `noos_reports` | Generated PDF / Word reports |
 
 ### Backup
 
 ```bash
+# Database
+docker compose -f docker-compose.prod.yml exec db \
+  pg_dump -U noos noos | gzip > noos-db-$(date +%Y%m%d).sql.gz
+
+# Reports
 docker run --rm \
-  -v noos_noos_db:/data \
+  -v noos_noos_reports:/data \
   -v $(pwd):/backup \
-  alpine tar czf /backup/noos-backup-$(date +%Y%m%d).tar.gz /data
+  alpine tar czf /backup/noos-reports-$(date +%Y%m%d).tar.gz /data
 ```
 
 ### Restore
 
 ```bash
-docker run --rm \
-  -v noos_noos_db:/data \
-  -v $(pwd):/backup \
-  alpine tar xzf /backup/noos-backup-YYYYMMDD.tar.gz -C /
+# Database
+gunzip -c noos-db-YYYYMMDD.sql.gz | \
+  docker compose -f docker-compose.prod.yml exec -T db psql -U noos noos
 ```
 
 ---
