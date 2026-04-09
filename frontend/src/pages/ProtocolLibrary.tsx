@@ -139,7 +139,7 @@ function ProtocolModal({ initial, onSave, onClose }: ModalProps) {
   const isEdit = !!initial
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-brand-dark/45 backdrop-blur-sm p-4">
       <div className="bg-white rounded-card shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
