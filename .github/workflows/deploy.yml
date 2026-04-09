@@ -52,6 +52,14 @@ jobs:
           BACKEND_ENV: ${{ secrets.BACKEND_ENV }}
         run: printf '%s\n' "$BACKEND_ENV" > backend/.env
 
+      # Docker Compose reads the root .env for variable substitution (e.g.
+      # ${POSTGRES_PASSWORD} in docker-compose.prod.yml). The backend/.env is
+      # only mounted into the backend container. Write both from the same secret.
+      - name: Write root .env for Compose variable substitution
+        env:
+          BACKEND_ENV: ${{ secrets.BACKEND_ENV }}
+        run: printf '%s\n' "$BACKEND_ENV" > .env
+
       - name: Verify .env exists
         run: |
           if [ ! -s backend/.env ]; then
