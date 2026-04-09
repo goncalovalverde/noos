@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
-import { Link, useParams } from 'react-router-dom'
-import { ArrowLeft, Loader2, Plus, Zap, ChevronDown, ChevronRight, ClipboardList, Calendar, FileText, FileDown, PlayCircle, Lock, UserPlus, X, History, ClipboardEdit, Save, CheckCircle2 } from 'lucide-react'
+import { Link, useParams, useNavigate } from 'react-router-dom'
+import { ArrowLeft, Loader2, Plus, Zap, ChevronDown, ChevronRight, ClipboardList, Calendar, FileText, FileDown, PlayCircle, Lock, UserPlus, X, History, ClipboardEdit, Save, CheckCircle2, Trash2, AlertTriangle } from 'lucide-react'
 import { useAuthStore } from '@/store/auth'
 import { patientsApi, type AccessGrant, type PatientCreate } from '@/api/patients'
 import { evaluationsApi, type ExecutionPlanSummary, type ExecutionPlanWithResults } from '@/api/evaluations'
@@ -201,6 +201,7 @@ function EvaluationRow({ plan, patientId }: { plan: ExecutionPlanSummary; patien
 export default function PatientHub() {
   const { id } = useParams<{ id: string }>()
   const { user } = useAuthStore()
+  const navigate = useNavigate()
   const [patient, setPatient] = useState<Patient | null>(null)
   const [plans, setPlans] = useState<ExecutionPlanSummary[]>([])
   const [loading, setLoading] = useState(true)
@@ -219,6 +220,11 @@ export default function PatientHub() {
   const [saving, setSaving] = useState(false)
   const [saveSuccess, setSaveSuccess] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
+
+  // Delete state
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
 
   const canEvaluate = user?.role === 'Administrador' || user?.role === 'Neuropsicólogo'
   const isCreator = patient?.created_by_id === user?.id || user?.role === 'Administrador'
@@ -290,6 +296,19 @@ export default function PatientHub() {
       setSaveError('Error al guardar. Inténtalo de nuevo.')
     } finally {
       setSaving(false)
+    }
+  }
+
+  const handleDeletePatient = async () => {
+    if (!id) return
+    setDeleting(true)
+    setDeleteError(null)
+    try {
+      await patientsApi.delete(id)
+      navigate('/patients')
+    } catch {
+      setDeleteError('Error al eliminar el paciente. Inténtalo de nuevo.')
+      setDeleting(false)
     }
   }
 
@@ -579,9 +598,89 @@ export default function PatientHub() {
                 )}
               </div>
             )}
+
+            {/* Delete patient — only for creator */}
+            {isCreator && (
+              <div className="bg-white rounded-card shadow-card border border-red-100 p-6">
+                <h2 className="text-base font-semibold text-red-700 mb-1">Zona de peligro</h2>
+                <p className="text-sm text-brand-muted mb-4">
+                  Eliminar el paciente borrará permanentemente todos sus datos, evaluaciones y registros de la plataforma. Esta acción no se puede deshacer.
+                </p>
+                <button
+                  onClick={() => { setShowDeleteModal(true); setDeleteError(null) }}
+                  className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold px-5 py-2.5 rounded-btn transition-colors"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Eliminar paciente
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>
+
+      {/* Delete confirmation modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-card shadow-xl border border-gray-200 w-full max-w-md">
+            <div className="p-6">
+              <div className="flex items-start gap-4 mb-5">
+                <div className="shrink-0 w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
+                  <AlertTriangle className="w-5 h-5 text-red-600" />
+                </div>
+                <div>
+                  <h2 className="text-base font-semibold text-brand-ink mb-1">
+                    ¿Eliminar paciente {patient?.display_id}?
+                  </h2>
+                  <p className="text-sm text-brand-muted">Esta acción es permanente e irreversible.</p>
+                </div>
+              </div>
+
+              <div className="bg-red-50 border border-red-200 rounded-input px-4 py-3 mb-5 space-y-1.5">
+                <p className="text-xs font-semibold text-red-700 uppercase tracking-wide mb-2">Se eliminará permanentemente:</p>
+                <div className="flex items-center gap-2 text-sm text-red-700">
+                  <span className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
+                  Todos los datos demográficos del paciente
+                </div>
+                <div className="flex items-center gap-2 text-sm text-red-700">
+                  <span className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
+                  {plans.length} evaluaci{plans.length !== 1 ? 'ones' : 'ón'} (activas, en borrador y completadas)
+                </div>
+                <div className="flex items-center gap-2 text-sm text-red-700">
+                  <span className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
+                  Todos los resultados de tests neuropsicológicos
+                </div>
+                <div className="flex items-center gap-2 text-sm text-red-700">
+                  <span className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
+                  Permisos de acceso concedidos a otros usuarios
+                </div>
+              </div>
+
+              {deleteError && (
+                <p className="mb-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-input px-3 py-2">{deleteError}</p>
+              )}
+
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={() => setShowDeleteModal(false)}
+                  disabled={deleting}
+                  className="px-4 py-2 text-sm font-semibold text-brand-ink border border-gray-200 rounded-btn hover:bg-brand-bg transition-colors disabled:opacity-60"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleDeletePatient}
+                  disabled={deleting}
+                  className="flex items-center gap-2 px-5 py-2 text-sm font-semibold text-white bg-red-600 hover:bg-red-700 rounded-btn transition-colors disabled:opacity-60"
+                >
+                  {deleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                  {deleting ? 'Eliminando…' : 'Sí, eliminar paciente'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

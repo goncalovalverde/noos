@@ -93,7 +93,7 @@ async def delete_patient(
     patient_id: str,
     request: Request,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role(UserRole.ADMIN)),
+    current_user: User = Depends(require_role(UserRole.ADMIN, UserRole.NEURO)),
 ):
     PatientService(db).delete_patient(patient_id, current_user, request)
 

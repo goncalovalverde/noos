@@ -72,6 +72,8 @@ class PatientService:
     def delete_patient(self, patient_id: str, user: User, request: Request) -> None:
         patient = self._get_or_404(patient_id)
         self._assert_access(patient, user)
+        if user.role != UserRole.ADMIN and patient.created_by_id != user.id:
+            raise HTTPException(403, "Solo el creador del paciente puede eliminarlo")
         audit(self.db, "patient.delete", user_id=user.id, resource_type="patient",
               resource_id=patient_id, details={"display_id": patient.get_display_id()}, request=request)
         self.db.delete(patient)
