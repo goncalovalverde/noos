@@ -6,11 +6,27 @@
 #
 # Subsequent deploys are handled automatically by GitHub Actions.
 #
-# Data lives in named volumes so it survives container rebuilds:
-#   noos_db       → SQLite database  (/data/noos.db)
-#   noos_reports  → generated PDF/Word reports (/data/reports/)
+# Persistent data:
+#   noos_pgdata   → PostgreSQL data directory
+#   noos_reports  → generated PDF/Word reports
 
 services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: noos
+      POSTGRES_USER: noos
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - noos_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U noos -d noos"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
   backend:
     build:
       context: ./backend
@@ -19,19 +35,22 @@ services:
     expose:
       - "8000"
     volumes:
-      - noos_db:/data
+      - noos_reports:/data/reports
     env_file:
       - ./backend/.env
     environment:
-      - DATABASE_URL=sqlite:////data/noos.db
+      - DATABASE_URL=postgresql://noos:${POSTGRES_PASSWORD}@db:5432/noos
       - REPORTS_DIR=/data/reports
       - ENVIRONMENT=production
+    depends_on:
+      db:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 15s
+      start_period: 20s
 
   frontend:
     build:
@@ -45,4 +64,5 @@ services:
         condition: service_healthy
 
 volumes:
-  noos_db:
+  noos_pgdata:
+  noos_reports:
