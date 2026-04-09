@@ -22,6 +22,13 @@ class UserUpdate(BaseModel):
     is_active: Optional[bool] = None
 
 
+class ProfileUpdate(BaseModel):
+    """Schema for PATCH /users/me — self-service profile and password update."""
+    email: Optional[EmailStr] = Field(default=None, max_length=255)
+    current_password: Optional[str] = Field(default=None, min_length=1, max_length=256)
+    new_password: Optional[str] = Field(default=None, min_length=12, max_length=256)
+
+
 class UserOut(BaseModel):
     id: str
     username: str

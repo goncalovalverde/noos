@@ -1,22 +1,16 @@
 from fastapi import APIRouter, Depends, Request
 from sqlalchemy.orm import Session
-from typing import List, Optional
-from pydantic import BaseModel
+from typing import List
 
 from app.db.base import get_db
 from app.models.user import User
-from app.schemas.user import UserCreate, UserUpdate, UserOut
+from app.schemas.user import UserCreate, UserUpdate, UserOut, ProfileUpdate
 from app.auth.dependencies import require_role, get_current_active_user
 from app.enums import UserRole
 from app.services.user_service import UserService
+from app.core.limiter import limiter
 
 router = APIRouter(prefix="/api/users", tags=["users"])
-
-
-class ProfileUpdate(BaseModel):
-    email: Optional[str] = None
-    current_password: Optional[str] = None
-    new_password: Optional[str] = None
 
 
 @router.get("/me", response_model=UserOut)
@@ -27,12 +21,14 @@ async def get_my_profile(
 
 
 @router.patch("/me", response_model=UserOut)
+@limiter.limit("5/minute")
 async def update_my_profile(
     body: ProfileUpdate,
+    request: Request,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
-    return UserService(db).update_profile(body, current_user)
+    return UserService(db).update_profile(body, current_user, request)
 
 
 @router.get("/", response_model=List[UserOut])

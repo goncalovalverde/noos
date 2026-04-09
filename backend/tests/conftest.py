@@ -2,6 +2,7 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
 from app.main import app
 from app.db.base import Base, get_db
 from app.auth.password import hash_password
@@ -10,9 +11,16 @@ from app.enums import UserRole
 from app.models.user import User
 from app.models.patient import Patient
 
-# In-memory SQLite for tests
-SQLALCHEMY_TEST_URL = "sqlite:///./test.db"
-engine = create_engine(SQLALCHEMY_TEST_URL, connect_args={"check_same_thread": False})
+# In-memory SQLite for tests.
+# StaticPool forces all connections to reuse the same underlying connection so
+# that create_all(), the test session, and the app's session all share one DB.
+# Without StaticPool, each new connection opens a separate (empty) :memory: DB.
+SQLALCHEMY_TEST_URL = "sqlite:///:memory:"
+engine = create_engine(
+    SQLALCHEMY_TEST_URL,
+    connect_args={"check_same_thread": False},
+    poolclass=StaticPool,
+)
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 @pytest.fixture(autouse=True)

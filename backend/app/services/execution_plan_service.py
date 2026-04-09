@@ -1,5 +1,6 @@
 from fastapi import HTTPException, Request
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
+from sqlalchemy import func
 from typing import List
 from datetime import datetime, timezone
 import json
@@ -62,18 +63,28 @@ class ExecutionPlanService:
             raise HTTPException(404, "Paciente no encontrado")
         if not can_access_patient(self.db, patient, user):
             raise HTTPException(403, "No tienes acceso a este paciente")
-        plans = self.db.query(ExecutionPlan).filter(
-            ExecutionPlan.patient_id == patient_id
-        ).order_by(ExecutionPlan.created_at.desc()).all()
-        return [self._plan_summary(plan) for plan in plans]
+        plans = (
+            self.db.query(ExecutionPlan)
+            .options(joinedload(ExecutionPlan.protocol))
+            .filter(ExecutionPlan.patient_id == patient_id)
+            .order_by(ExecutionPlan.created_at.desc())
+            .all()
+        )
+        test_counts = self._test_counts_for_plans([p.id for p in plans])
+        return [self._plan_summary(plan, test_counts) for plan in plans]
 
     def get_incomplete_plans(self, user: User) -> list:
-        q = self.db.query(ExecutionPlan).filter(ExecutionPlan.status.in_(["active", "draft"]))
+        q = (
+            self.db.query(ExecutionPlan)
+            .options(joinedload(ExecutionPlan.protocol), joinedload(ExecutionPlan.patient))
+            .filter(ExecutionPlan.status.in_(["active", "draft"]))
+        )
         if user.role != UserRole.ADMIN:
             accessible_ids = get_accessible_patient_ids(self.db, user)
             q = q.filter(ExecutionPlan.patient_id.in_(accessible_ids))
         plans = q.order_by(ExecutionPlan.updated_at.desc()).all()
-        return [self._incomplete_summary(plan) for plan in plans]
+        test_counts = self._test_counts_for_plans([p.id for p in plans])
+        return [self._incomplete_summary(plan, test_counts) for plan in plans]
 
     def get_plan_results(self, plan_id: str, user: User) -> dict:
         plan = self._get_or_404(plan_id)
@@ -119,22 +130,36 @@ class ExecutionPlanService:
             raise HTTPException(403, "No tienes acceso a este paciente")
 
         old_status = plan.status
+        changed_fields: list[str] = []
+
         if body.status is not None:
             plan.status = body.status
+            changed_fields.append("status")
         if body.mode is not None:
             plan.mode = body.mode
+            changed_fields.append("mode")
         if body.test_customizations is not None:
             plan._set_customizations(body.test_customizations)
+            changed_fields.append("test_customizations")
         if body.variant_name is not None:
             plan.variant_name = body.variant_name
+            changed_fields.append("variant_name")
         if body.is_saved_variant is not None:
             plan.is_saved_variant = body.is_saved_variant
+            changed_fields.append("is_saved_variant")
         if body.performed_at is not None:
             plan.performed_at = body.performed_at
-        if body.status is not None and body.status != old_status:
-            audit(self.db, "execution_plan.status_change", user_id=user.id,
+            changed_fields.append("performed_at")
+
+        if changed_fields:
+            details: dict = {"fields_changed": changed_fields}
+            if "status" in changed_fields and body.status != old_status:
+                details["status_from"] = old_status
+                details["status_to"] = body.status
+            audit(self.db, "execution_plan.update", user_id=user.id,
                   resource_type="execution_plan", resource_id=plan_id,
-                  details={"from": old_status, "to": body.status}, request=request)
+                  details=details, request=request)
+
         self.db.commit()
         self.db.refresh(plan)
         out = ExecutionPlanOut.model_validate(plan)
@@ -149,9 +174,21 @@ class ExecutionPlanService:
             raise HTTPException(404, "Plan de evaluación no encontrado")
         return plan
 
-    def _plan_summary(self, plan: ExecutionPlan) -> dict:
-        protocol = self.db.query(Protocol).filter(Protocol.id == plan.protocol_id).first() if plan.protocol_id else None
-        test_count = self.db.query(TestSession).filter(TestSession.execution_plan_id == plan.id).count()
+    def _test_counts_for_plans(self, plan_ids: list[str]) -> dict[str, int]:
+        """Single aggregation query: plan_id → number of saved TestSessions."""
+        if not plan_ids:
+            return {}
+        rows = (
+            self.db.query(TestSession.execution_plan_id, func.count(TestSession.id))
+            .filter(TestSession.execution_plan_id.in_(plan_ids))
+            .group_by(TestSession.execution_plan_id)
+            .all()
+        )
+        return {plan_id: count for plan_id, count in rows}
+
+    def _plan_summary(self, plan: ExecutionPlan, test_counts: dict[str, int]) -> dict:
+        protocol = plan.protocol  # already eager-loaded
+        test_count = test_counts.get(plan.id, 0)
         return {
             "id": plan.id, "patient_id": plan.patient_id, "protocol_id": plan.protocol_id,
             "protocol_name": protocol.name if protocol else None,
@@ -161,12 +198,13 @@ class ExecutionPlanService:
             "total_tests": len(plan.get_tests_to_execute()),
         }
 
-    def _incomplete_summary(self, plan: ExecutionPlan) -> dict:
-        protocol = self.db.query(Protocol).filter(Protocol.id == plan.protocol_id).first() if plan.protocol_id else None
-        test_count = self.db.query(TestSession).filter(TestSession.execution_plan_id == plan.id).count()
-        patient_display_id = plan.patient.get_display_id() if plan.patient else "—"
+    def _incomplete_summary(self, plan: ExecutionPlan, test_counts: dict[str, int]) -> dict:
+        protocol = plan.protocol  # already eager-loaded
+        patient = plan.patient    # already eager-loaded
+        test_count = test_counts.get(plan.id, 0)
         return {
-            "id": plan.id, "patient_id": plan.patient_id, "patient_display_id": patient_display_id,
+            "id": plan.id, "patient_id": plan.patient_id,
+            "patient_display_id": patient.get_display_id() if patient else "—",
             "protocol_id": plan.protocol_id,
             "protocol_name": protocol.name if protocol else None,
             "status": plan.status, "mode": plan.mode, "performed_at": plan.performed_at,

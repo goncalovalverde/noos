@@ -2,7 +2,7 @@ import uuid
 import json
 from datetime import datetime, timezone
 from typing import List, Dict, Any
-from sqlalchemy import Column, String, Boolean, DateTime, Text, ForeignKey
+from sqlalchemy import Column, String, Boolean, DateTime, Text, ForeignKey, Index
 from sqlalchemy.orm import relationship
 from app.db.base import Base
 
@@ -12,10 +12,10 @@ class ExecutionPlan(Base):
     __tablename__ = "execution_plans"
 
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-    patient_id = Column(String, ForeignKey("patients.id", ondelete="CASCADE"), nullable=False)
+    patient_id = Column(String, ForeignKey("patients.id", ondelete="CASCADE"), nullable=False, index=True)
     protocol_id = Column(String, ForeignKey("protocols.id", ondelete="SET NULL"), nullable=True)
     test_customizations = Column(Text, nullable=True)   # JSON array
-    status = Column(String, default="draft")             # draft | active | completed | abandoned
+    status = Column(String, default="draft", index=True) # draft | active | completed | abandoned
     mode = Column(String, default="live")                # live | paper
     is_saved_variant = Column(Boolean, default=False)
     variant_name = Column(String, nullable=True)

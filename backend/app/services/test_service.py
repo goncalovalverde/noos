@@ -1,6 +1,7 @@
 from fastapi import HTTPException, Request
 from sqlalchemy.orm import Session
 from typing import List
+import logging
 
 from app.models.test_session import TestSession
 from app.models.execution_plan import ExecutionPlan
@@ -12,6 +13,7 @@ from app.services.normatives.raw_score_extractor import extract_raw_score
 from app.api.utils.access import can_access_patient
 from app.api.utils.audit import audit
 
+_log = logging.getLogger(__name__)
 
 class TestService:
     def __init__(self, db: Session):
@@ -123,13 +125,21 @@ class TestService:
         return out
 
     def _calculate_scores(self, test_type: str, raw_data: dict, patient: Patient) -> dict:
-        """Run normative calculation; return empty dict on any error (non-fatal)."""
+        """Run normative calculation; return empty dict on any error (non-fatal).
+
+        Errors are logged as warnings so they surface during development without
+        crashing the test-save flow — a missing normative table is not fatal.
+        """
         try:
             if raw_data.get("puntuacion_escalar_wais"):
                 return calculator.calculate_from_pe(test_type, int(raw_data["puntuacion_escalar_wais"]))
             raw_score = extract_raw_score(test_type, raw_data)
             return calculator.calculate(test_type, raw_score, patient.age, patient.education_years)
-        except Exception:
+        except Exception as exc:
+            _log.warning(
+                "Score calculation failed for test_type=%r patient=%s: %s",
+                test_type, patient.id, exc,
+            )
             return {}
 
     def _auto_complete_plan(self, plan_id: str) -> None:

@@ -1,7 +1,7 @@
 import uuid
 import json
 from datetime import datetime, timezone
-from sqlalchemy import Column, String, DateTime, Text, ForeignKey
+from sqlalchemy import Column, String, DateTime, Text, ForeignKey, Index
 from sqlalchemy.orm import relationship
 from app.db.base import Base
 
@@ -9,9 +9,9 @@ class TestSession(Base):
     __tablename__ = "test_sessions"
 
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-    patient_id = Column(String, ForeignKey("patients.id", ondelete="CASCADE"), nullable=False)
+    patient_id = Column(String, ForeignKey("patients.id", ondelete="CASCADE"), nullable=False, index=True)
     protocol_id = Column(String, ForeignKey("protocols.id", ondelete="SET NULL"), nullable=True)
-    execution_plan_id = Column(String, ForeignKey("execution_plans.id", ondelete="SET NULL"), nullable=True)
+    execution_plan_id = Column(String, ForeignKey("execution_plans.id", ondelete="SET NULL"), nullable=True, index=True)
     test_type = Column(String, nullable=False)
     date = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     raw_data = Column(Text, nullable=True)

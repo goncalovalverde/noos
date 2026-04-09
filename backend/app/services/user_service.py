@@ -50,30 +50,40 @@ class UserService:
         return user
 
     def delete_user(self, user_id: str, actor: User, request: Request) -> None:
+        if user_id == actor.id:
+            raise HTTPException(400, "No puedes eliminar tu propia cuenta")
         user = self._get_or_404(user_id)
         audit(self.db, "user.delete", user_id=actor.id, resource_type="user", resource_id=user_id,
               details={"username": user.username, "role": user.role}, request=request)
         self.db.delete(user)
         self.db.commit()
 
-    def update_profile(self, body, user: User) -> UserOut:
+    def update_profile(self, body, user: User, request: Request) -> UserOut:
         """Update the authenticated user's own email and/or password."""
         db_user = self.db.query(User).filter(User.id == user.id).first()
+        changed_fields = []
 
         if body.email is not None:
             existing = self.db.query(User).filter(User.email == body.email, User.id != db_user.id).first()
             if existing:
-                raise HTTPException(409, "Esse email já está em uso")
+                raise HTTPException(409, "Ese email ya está en uso")
             db_user.email = body.email
+            changed_fields.append("email")
 
         if body.new_password:
             if not body.current_password:
-                raise HTTPException(400, "É necessário indicar a password atual para a alterar")
+                raise HTTPException(400, "Debes indicar la contraseña actual para cambiarla")
             if not verify_password(body.current_password, db_user.hashed_password):
-                raise HTTPException(400, "Password atual incorreta")
+                raise HTTPException(400, "Contraseña actual incorrecta")
             if not validate_password_strength(body.new_password):
-                raise HTTPException(400, "A nova password não cumpre os requisitos de segurança (mín. 12 caracteres, maiúsculas, minúsculas, números e símbolo especial)")
+                raise HTTPException(400, "La nueva contraseña no cumple los requisitos de seguridad "
+                                    "(mín. 12 caracteres, mayúsculas, minúsculas, números y símbolo especial)")
             db_user.hashed_password = hash_password(body.new_password)
+            changed_fields.append("password")
+
+        if changed_fields:
+            audit(self.db, "user.profile_update", user_id=user.id, resource_type="user",
+                  resource_id=user.id, details={"fields": changed_fields}, request=request)
 
         self.db.commit()
         self.db.refresh(db_user)

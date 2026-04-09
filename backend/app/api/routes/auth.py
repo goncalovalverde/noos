@@ -5,7 +5,8 @@ from sqlalchemy.orm import Session
 from app.db.base import get_db
 from app.models.user import User
 from app.models.used_refresh_token import UsedRefreshToken
-from app.schemas.auth import LoginRequest, TokenResponse, UserOut, ChangePasswordRequest, RefreshRequest
+from app.schemas.auth import LoginRequest, TokenResponse, ChangePasswordRequest, RefreshRequest
+from app.schemas.user import UserOut
 from app.auth.password import verify_password, hash_password, validate_password_strength
 from app.auth.jwt import create_access_token, create_refresh_token, decode_refresh_token
 from app.auth.dependencies import get_current_active_user
