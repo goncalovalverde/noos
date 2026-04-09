@@ -51,8 +51,13 @@ export const usersApi = {
   setPassword: async (id: string, newPassword: string): Promise<void> => {
     await apiClient.post(`/users/${id}/set-password`, { new_password: newPassword })
   },
-  delete: async (id: string): Promise<void> => {
-    await apiClient.delete(`/users/${id}`)
+  delete: async (id: string, reassignTo?: string): Promise<void> => {
+    const params = reassignTo ? `?reassign_to=${reassignTo}` : ''
+    await apiClient.delete(`/users/${id}${params}`)
+  },
+  getPatientsCount: async (id: string): Promise<number> => {
+    const { data } = await apiClient.get<{ count: number }>(`/users/${id}/patients-count`)
+    return data.count
   },
   getMe: async (): Promise<UserOut> => {
     const { data } = await apiClient.get<UserOut>('/users/me')

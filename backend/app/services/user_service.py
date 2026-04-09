@@ -1,8 +1,9 @@
 from fastapi import HTTPException, Request
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 
 from app.models.user import User
+from app.models.patient import Patient
 from app.schemas.user import UserCreate, UserUpdate, UserOut
 from app.auth.password import hash_password, validate_password_strength, verify_password
 from app.api.utils.audit import audit
@@ -49,12 +50,40 @@ class UserService:
         self.db.refresh(user)
         return user
 
-    def delete_user(self, user_id: str, actor: User, request: Request) -> None:
+    def count_owned_patients(self, user_id: str) -> int:
+        self._get_or_404(user_id)
+        return self.db.query(Patient).filter(Patient.created_by_id == user_id).count()
+
+    def delete_user(self, user_id: str, actor: User, request: Request,
+                    reassign_to: Optional[str] = None) -> None:
         if user_id == actor.id:
             raise HTTPException(400, "No puedes eliminar tu propia cuenta")
         user = self._get_or_404(user_id)
+
+        owned = self.db.query(Patient).filter(Patient.created_by_id == user_id).all()
+        if owned:
+            if reassign_to:
+                new_owner = self.db.query(User).filter(User.id == reassign_to).first()
+                if not new_owner:
+                    raise HTTPException(404, "El usuario de reasignación no existe")
+                if new_owner.id == user_id:
+                    raise HTTPException(400, "No puedes reasignar al mismo usuario que se elimina")
+            else:
+                # Fallback: assign to admin user
+                new_owner = self.db.query(User).filter(User.username == "admin").first()
+
+            new_owner_id = new_owner.id if new_owner else None
+            for patient in owned:
+                patient.created_by_id = new_owner_id
+            self.db.flush()
+
         audit(self.db, "user.delete", user_id=actor.id, resource_type="user", resource_id=user_id,
-              details={"username": user.username, "role": user.role}, request=request)
+              details={
+                  "username": user.username,
+                  "role": user.role,
+                  "patients_reassigned": len(owned),
+                  "reassigned_to": reassign_to or ("admin" if owned else None),
+              }, request=request)
         self.db.delete(user)
         self.db.commit()
 

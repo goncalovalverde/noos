@@ -1,6 +1,6 @@
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Request, Query
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 
 from app.db.base import get_db
 from app.models.user import User
@@ -60,14 +60,25 @@ async def update_user(
     return UserService(db).update_user(user_id, body, current_user, request)
 
 
+@router.get("/{user_id}/patients-count")
+async def get_user_patients_count(
+    user_id: str,
+    db: Session = Depends(get_db),
+    _=Depends(require_role(UserRole.ADMIN)),
+):
+    count = UserService(db).count_owned_patients(user_id)
+    return {"count": count}
+
+
 @router.delete("/{user_id}", status_code=204)
 async def delete_user(
     user_id: str,
     request: Request,
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role(UserRole.ADMIN)),
+    reassign_to: Optional[str] = Query(None, description="User ID to reassign owned patients to"),
 ):
-    UserService(db).delete_user(user_id, current_user, request)
+    UserService(db).delete_user(user_id, current_user, request, reassign_to=reassign_to)
 
 
 @router.post("/{user_id}/set-password", status_code=204)
