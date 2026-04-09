@@ -60,7 +60,7 @@ Deployed locally at clinics — GDPR applies, PHI rules are strict, data never l
 - ❌ Add a mutating endpoint without calling `audit()` before `db.commit()`
 - ❌ Use `datetime.utcnow` — use `lambda: datetime.now(timezone.utc)`
 - ❌ Cast `err` as `any` in TypeScript — use `extractApiError()` from `@/utils/apiError`
-- ❌ Store role strings as plain literals — use the exact Spanish strings from the enum
+- ❌ Use bare role string literals — always use `UserRole.ADMIN`, `UserRole.NEURO`, `UserRole.OBSERVER` from `app.enums`
 
 ### ALWAYS do these:
 - ✅ Add an Alembic migration for every model change
