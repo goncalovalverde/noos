@@ -74,21 +74,12 @@ class TestCreateTestSession:
                            headers=neuro_headers)
         assert resp.status_code == 403
 
-    @pytest.mark.xfail(
-        strict=True,
-        reason=(
-            "BUG: TestSessionCreate.raw_data has default={}, so omitting it silently "
-            "creates a test with no data (201) instead of rejecting the request (422). "
-            "raw_data should be a required field with no default."
-        ),
-    )
     def test_create_test_missing_required_raw_data_returns_422(self, client, neuro_headers, sample_patient):
         resp = client.post(
             "/api/tests/",
             json={"patient_id": sample_patient.id, "test_type": "TMT-A"},
             headers=neuro_headers,
         )
-        # raw_data is required by schema
         assert resp.status_code == 422
 
     def test_create_test_with_qualitative_data(self, client, neuro_headers, neuro_user, db):

@@ -8,7 +8,7 @@ class TestSessionCreate(BaseModel):
     test_type: str
     protocol_id: Optional[str] = None
     execution_plan_id: Optional[str] = None
-    raw_data: Dict[str, Any] = {}
+    raw_data: Dict[str, Any]
     qualitative_data: Optional[Dict[str, Any]] = None
 
 class TestSessionUpdate(BaseModel):
