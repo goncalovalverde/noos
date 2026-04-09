@@ -1,11 +1,6 @@
 import { useState } from 'react'
 import { ChevronRight, SkipForward } from 'lucide-react'
 
-interface QualData {
-  observaciones: string
-  checklist: Record<string, boolean>
-}
-
 interface Props {
   testType: string
   description?: string

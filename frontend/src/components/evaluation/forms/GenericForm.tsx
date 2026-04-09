@@ -9,7 +9,7 @@ interface Props {
   saving: boolean
 }
 
-export default function GenericForm({ testType, mode, onSave, onSkip, saving }: Props) {
+export default function GenericForm({ testType, mode: _mode, onSave, onSkip, saving }: Props) {
   const [value, setValue] = useState('')
   const raw = { puntuacion_bruta: Number(value) || 0 }
   const isValid = value !== ''

@@ -157,7 +157,7 @@ export const handlers = [
     const body = await request.json() as Record<string, unknown>
     return HttpResponse.json({ ...mockProtocol, ...body, id: 'protocol-uuid-new' }, { status: 201 })
   }),
-  http.get('/api/protocols/:id', ({ params }) => HttpResponse.json(mockProtocol)),
+  http.get('/api/protocols/:id', () => HttpResponse.json(mockProtocol)),
   http.put('/api/protocols/:id', async ({ request }) => {
     const body = await request.json() as Record<string, unknown>
     return HttpResponse.json({ ...mockProtocol, ...body })

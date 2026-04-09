@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { http, HttpResponse } from 'msw'
 import { setupServer } from 'msw/node'
-import { mockPatient, mockSession, handlers } from '@/test/mocks/handlers'
+import { mockPatient, handlers } from '@/test/mocks/handlers'
 import PatientHub from '@/pages/PatientHub'
 import { useAuthStore } from '@/store/auth'
 

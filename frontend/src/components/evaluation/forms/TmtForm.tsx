@@ -14,7 +14,7 @@ const TMT_DESCRIPTIONS: Record<string, string> = {
   'TMT-B': 'Alternar entre números y letras (1-A-2-B...) lo más rápido posible.',
 }
 
-export default function TmtForm({ testType, mode, onSave, onSkip, saving }: Props) {
+export default function TmtForm({ testType, mode: _mode, onSave, onSkip, saving }: Props) {
   const [tiempo, setTiempo] = useState('')
   const [errores, setErrores] = useState('')
 

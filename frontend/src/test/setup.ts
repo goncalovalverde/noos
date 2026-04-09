@@ -1,7 +1,7 @@
 import '@testing-library/jest-dom'
 
 // Recharts uses ResizeObserver — polyfill for jsdom
-global.ResizeObserver = class ResizeObserver {
+;(globalThis as unknown as Record<string, unknown>).ResizeObserver = class ResizeObserver {
   observe() {}
   unobserve() {}
   disconnect() {}

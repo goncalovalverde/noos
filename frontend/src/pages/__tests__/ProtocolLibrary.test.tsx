@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll, afterEach, vi } from 'vitest'
-import { render, screen, waitFor, fireEvent } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { setupServer } from 'msw/node'
@@ -53,15 +53,15 @@ describe('ProtocolLibrary', () => {
   })
 
   it('hides Nuevo Protocolo button for Observador role', async () => {
-    vi.mocked(useAuthStore).mockImplementation((selector: (s: unknown) => unknown) =>
-      selector({ user: { role: 'Observador', can_manage_protocols: false }, logout: vi.fn() })
+    vi.mocked(useAuthStore).mockImplementation((selector) =>
+      selector({ user: { role: 'Observador', can_manage_protocols: false }, logout: vi.fn() } as never)
     )
     renderWithRouter(<ProtocolLibrary />)
     await screen.findByText(mockProtocol.name)
     expect(screen.queryByRole('button', { name: /nuevo protocolo/i })).not.toBeInTheDocument()
     // restore
-    vi.mocked(useAuthStore).mockImplementation((selector: (s: unknown) => unknown) =>
-      selector({ user: { role: 'Administrador', can_manage_protocols: true }, logout: vi.fn() })
+    vi.mocked(useAuthStore).mockImplementation((selector) =>
+      selector({ user: { role: 'Administrador', can_manage_protocols: true }, logout: vi.fn() } as never)
     )
   })
 
