@@ -6,6 +6,32 @@
 
 ---
 
+## ⚠️ Meta-Rule: Keep This File Current
+
+**Whenever you make any change to the codebase, you MUST update both:**
+- `AGENTS.md` (this file)
+- `.github/copilot-instructions.md`
+
+This is not optional. These files are the memory of the project across machines and AI sessions.
+A change committed without updating these files leaves the next agent with stale context.
+
+**What to update for each type of change:**
+
+| Change type | What to update |
+|---|---|
+| New endpoint or route | Key Files table, mandatory patterns if new pattern introduced |
+| New model / migration | DB Conventions section |
+| New mandatory pattern or utility | "Mandatory Rules" + NEVER/ALWAYS lists |
+| Security fix | Current Security Posture table (mark resolved, add new items) |
+| New tech debt identified | Known Technical Debt section in `copilot-instructions.md` |
+| Architecture decision | ADRs section |
+| New dependency | Stack line at top |
+| File moved or renamed | Key Files Quick Reference table |
+
+After updating, commit the docs in the **same commit** as the code change.
+
+---
+
 ## What This Codebase Is
 
 **Nóos** is a neuropsychological assessment platform for Triune Neuropsicología (Spain).

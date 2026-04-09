@@ -6,6 +6,22 @@ Language: Spanish UI, English code. GDPR-compliant, clinical data (PHI), local d
 
 ---
 
+## ⚠️ Self-Maintenance Rule
+
+**Any AI agent that makes a change to this codebase MUST update this file and `AGENTS.md` in the same commit.**
+
+These files are the shared memory of the project across machines, AI sessions, and developers.
+Stale docs are worse than no docs — the next agent will make wrong assumptions.
+
+Update the relevant sections below to reflect every change:
+- New pattern introduced → add to "Non-Negotiable Patterns"
+- Security issue resolved or found → update "Known Technical Debt"
+- New table or column → update "Database Conventions"
+- New mandatory utility or file → update "Key Files Quick Reference" in `AGENTS.md`
+- Architecture decision made → add to ADRs in `AGENTS.md`
+
+---
+
 ## Architecture
 
 ```
