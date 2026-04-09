@@ -1,0 +1,48 @@
+# Production docker-compose — used by the GitHub Actions self-hosted runner.
+#
+# Usage on the Orange Pi (first time):
+#   cp backend/.env.example backend/.env && nano backend/.env   # fill in secrets
+#   docker compose -f docker-compose.prod.yml up -d --build
+#
+# Subsequent deploys are handled automatically by GitHub Actions.
+#
+# Data lives in named volumes so it survives container rebuilds:
+#   noos_db       → SQLite database  (/data/noos.db)
+#   noos_reports  → generated PDF/Word reports (/data/reports/)
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    expose:
+      - "8000"
+    volumes:
+      - noos_db:/data
+    env_file:
+      - ./backend/.env
+    environment:
+      - DATABASE_URL=sqlite:////data/noos.db
+      - REPORTS_DIR=/data/reports
+      - ENVIRONMENT=production
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  noos_db:
