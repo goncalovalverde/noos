@@ -74,12 +74,13 @@ Deployed locally at clinics — GDPR applies, PHI rules are strict, data never l
 ## How to Add a New Feature (Checklist)
 
 ### New API endpoint
-1. Add route to appropriate file in `backend/app/api/routes/`
-2. Add Pydantic schemas to `backend/app/schemas/`
-3. If touching patient data: add `can_access_patient()` check
-4. Add `audit()` call before `db.commit()` on mutating operations
-5. Add `@limiter.limit()` if the endpoint is a potential DoS/brute-force target
-6. Add tests in `backend/tests/`
+1. Add business logic to the appropriate service in `backend/app/services/`
+2. Add a thin route handler in `backend/app/api/routes/` that calls the service
+3. Add Pydantic schemas to `backend/app/schemas/`
+4. If touching patient data: the service must call `can_access_patient()`
+5. The service must call `audit()` before `db.commit()` on mutating operations
+6. Add `@limiter.limit()` to the route if it's a potential DoS/brute-force target
+7. Add tests in `backend/tests/`
 
 ### New database column or table
 1. Edit the SQLAlchemy model in `backend/app/models/`
@@ -139,10 +140,14 @@ All P0 and P1 security audit findings have been resolved. Remaining known issues
 Single-file database, zero infrastructure, portable backup. Sufficient for single-practitioner use.
 SQLAlchemy ORM means migration to PostgreSQL requires only a `DATABASE_URL` change.
 
-### Why no service layer (yet)
-Business logic currently lives in route handlers. This is acknowledged technical debt.
-The normatives calculator in `services/normatives/` is the one existing service.
-New features should extract business logic into `app/services/` — do not add more logic to route files.
+### Service layer pattern
+All business logic lives in class-based services under `backend/app/services/`:
+- `PatientService`, `UserService`, `ProtocolService`, `TestService`, `ExecutionPlanService`, `StatsService`
+- Each takes `db: Session` in the constructor
+- Each method receives domain data + `current_user: User` + `request: Request` (for audit)
+- Services raise `HTTPException` directly (pragmatic — avoids a mapping layer)
+- Route handlers only inject dependencies and delegate: `return ServiceClass(db).method(...)`
+- `services/normatives/` and `services/reports/` remain standalone (no class wrapper needed)
 
 ### Why anonymous patients
 GDPR data minimisation. Patients are identified by UUID only. No names, no DNI, no contact info.

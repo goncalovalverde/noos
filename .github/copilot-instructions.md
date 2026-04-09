@@ -33,7 +33,7 @@ backend/
     core/            ← config.py, middleware.py, limiter.py
     models/          ← SQLAlchemy ORM (one file per table)
     schemas/         ← Pydantic in/out (one file per domain)
-    services/        ← normatives calculator, PDF/Word report generation
+    services/        ← business logic services + normatives calculator, PDF/Word report generation
   alembic/           ← migrations (NEVER use create_all in app code)
   tests/             ← pytest, TestClient, in-memory SQLite
 
@@ -126,6 +126,29 @@ created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 created_at = Column(DateTime, default=datetime.utcnow)
 ```
 
+### 8. Service layer — add business logic to services, not routes
+```python
+# backend/app/services/my_service.py
+class MyService:
+    def __init__(self, db: Session):
+        self.db = db
+
+    def do_thing(self, body: MyCreate, user: User, request: Request) -> MyOut:
+        # access control, business logic, audit — all here
+        audit(self.db, "thing.create", user_id=user.id, ..., request=request)
+        self.db.commit()
+        ...
+
+# backend/app/api/routes/my_router.py — thin wrapper only
+@router.post("/")
+async def create_thing(body: MyCreate, request: Request, db=Depends(get_db),
+                       current_user=Depends(require_role(...))):
+    return MyService(db).do_thing(body, current_user, request)
+```
+Services in `app/services/`: `patient_service`, `user_service`, `protocol_service`,
+`test_service`, `execution_plan_service`, `stats_service`.
+`services/normatives/` and `services/reports/` are standalone (no class wrapper).
+
 ---
 
 ## Security Model
@@ -184,7 +207,7 @@ pytest tests/test_auth.py -v         # auth + denylist tests
 
 ## Known Technical Debt (prioritised)
 
-1. **No service layer** — business logic lives in route handlers. Should extract to `app/services/`.
+1. **~~No service layer~~** — RESOLVED: business logic extracted to `app/services/` (patient, user, protocol, test, execution_plan, stats). Route handlers are now thin wrappers.
 2. **Magic role strings** — should be `StrEnum` in `app/enums.py` instead of literals.
 3. **Inverted test pyramid** — needs unit tests for normatives calculator, access control logic, password policy, JWT.
 4. **`ProfileUpdate` schema** in `routes/users.py` (wrong file, missing Field constraints) → move to `schemas/user.py`.
