@@ -29,6 +29,11 @@ class ProfileUpdate(BaseModel):
     new_password: Optional[str] = Field(default=None, min_length=12, max_length=256)
 
 
+class AdminPasswordReset(BaseModel):
+    """Schema for POST /users/{id}/set-password — admin resets any user's password."""
+    new_password: str = Field(min_length=12, max_length=256)
+
+
 class UserOut(BaseModel):
     id: str
     username: str

@@ -48,6 +48,9 @@ export const usersApi = {
     const { data } = await apiClient.patch<UserOut>(`/users/${id}`, body)
     return data
   },
+  setPassword: async (id: string, newPassword: string): Promise<void> => {
+    await apiClient.post(`/users/${id}/set-password`, { new_password: newPassword })
+  },
   delete: async (id: string): Promise<void> => {
     await apiClient.delete(`/users/${id}`)
   },

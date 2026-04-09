@@ -58,6 +58,17 @@ class UserService:
         self.db.delete(user)
         self.db.commit()
 
+    def reset_user_password(self, user_id: str, new_password: str, actor: User, request: Request) -> None:
+        """Admin sets a new password for any user without requiring the current one."""
+        user = self._get_or_404(user_id)
+        if not validate_password_strength(new_password):
+            raise HTTPException(400, "La contraseña no cumple los requisitos de seguridad "
+                                "(mín. 12 caracteres, mayúsculas, minúsculas, números y símbolo especial)")
+        user.hashed_password = hash_password(new_password)
+        audit(self.db, "user.password_reset_by_admin", user_id=actor.id, resource_type="user",
+              resource_id=user_id, details={"target_username": user.username}, request=request)
+        self.db.commit()
+
     def update_profile(self, body, user: User, request: Request) -> UserOut:
         """Update the authenticated user's own email and/or password."""
         db_user = self.db.query(User).filter(User.id == user.id).first()
