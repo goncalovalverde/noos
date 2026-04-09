@@ -382,3 +382,102 @@ class TestSimulatedCalculation:
             r = calculator.calculate("Dígitos", score, age=65, education_years=10)
             assert r["puntuacion_escalar"] is None
             assert r["clasificacion"] == "Sin norma validada"
+
+
+class TestCalculateFromPE:
+    """calculate_from_pe: direct PE entry (WAIS-IV subtests), clamps to 1-19 scale."""
+
+    def test_pe_10_returns_percentil_50(self):
+        r = calculator.calculate_from_pe("WAIS-IV", 10)
+        assert r["puntuacion_escalar"] == 10
+        assert r["percentil"] == 50.0
+
+    def test_pe_19_returns_percentil_999(self):
+        r = calculator.calculate_from_pe("WAIS-IV", 19)
+        assert r["puntuacion_escalar"] == 19
+        assert r["percentil"] == 99.9
+
+    def test_pe_1_returns_lowest_percentil(self):
+        r = calculator.calculate_from_pe("WAIS-IV", 1)
+        assert r["puntuacion_escalar"] == 1
+        assert r["percentil"] == 0.1
+
+    def test_pe_above_19_clamped_to_19(self):
+        r = calculator.calculate_from_pe("WAIS-IV", 25)
+        assert r["puntuacion_escalar"] == 19
+
+    def test_pe_below_1_clamped_to_1(self):
+        r = calculator.calculate_from_pe("WAIS-IV", 0)
+        assert r["puntuacion_escalar"] == 1
+
+    def test_wais_iv_source_in_norma(self):
+        r = calculator.calculate_from_pe("Cubos", 12)
+        assert r["norma_aplicada"]["fuente"] == "WAIS-IV"
+
+    def test_classification_derived_from_percentil(self):
+        r = calculator.calculate_from_pe("WAIS-IV", 13)  # PE=13 → P84 → Superior
+        assert r["clasificacion"] == "Superior"
+
+    def test_result_has_all_required_fields(self):
+        r = calculator.calculate_from_pe("WAIS-IV", 10)
+        assert all(k in r for k in ("puntuacion_escalar", "percentil", "z_score", "clasificacion", "norma_aplicada"))
+
+
+class TestRawScoreExtractorAllTests:
+    """Unit tests for extract_raw_score — each test type's extraction formula."""
+
+    def test_tmt_a_uses_tiempo_segundos(self):
+        assert extract_raw_score("TMT-A", {"tiempo_segundos": 75, "errores": 1}) == 75.0
+
+    def test_tmt_b_uses_tiempo_segundos(self):
+        assert extract_raw_score("TMT-B", {"tiempo_segundos": 180, "errores": 3}) == 180.0
+
+    def test_fluidez_semantica_uses_animales(self):
+        assert extract_raw_score("Fluidez-Semantica", {"animales": 18, "frutas": 12}) == 18.0
+
+    def test_fluidez_semantica_defaults_to_zero_when_missing(self):
+        assert extract_raw_score("Fluidez-Semantica", {"frutas": 10}) == 0.0
+
+    def test_toulouse_pieron_uses_productividad_neta(self):
+        assert extract_raw_score("Toulouse-Pieron", {"productividad_neta": 120, "tiempo": 300}) == 120.0
+
+    def test_diva5_sums_inatention_and_hyperactivity(self):
+        assert extract_raw_score("DIVA-5", {"inatención_actual": 7, "hiperactividad_actual": 5, "other": 2}) == 12.0
+
+    def test_brief_a_sums_all_values(self):
+        assert extract_raw_score("BRIEF-A", {"inhibicion": 10, "flexibilidad": 8, "memoria_trabajo": 12}) == 30.0
+
+    def test_wais_iv_uses_ci_total(self):
+        assert extract_raw_score("WAIS-IV", {"CI_total": 98, "CI_verbal": 100}) == 98.0
+
+    def test_digitos_sums_three_components(self):
+        raw = {"digitos_directos": 7, "digitos_inversos": 5, "secuencia_letras_numeros": 6}
+        assert extract_raw_score("Dígitos", raw) == 18.0
+
+    def test_test_d2r_uses_indice_concentracion(self):
+        assert extract_raw_score("Test-d2-R", {"indice_concentracion": 134, "total_respuestas": 300}) == 134.0
+
+    def test_fdt_sums_two_times(self):
+        assert extract_raw_score("FDT", {"elegir_tiempo": 45, "alternar_tiempo": 60, "contar_tiempo": 30}) == 105.0
+
+    def test_bads_zoo_uses_puntuacion_perfil(self):
+        assert extract_raw_score("BADS-Zoo", {"puntuacion_perfil": 3, "tiempo": 120}) == 3.0
+
+    def test_bads_llave_uses_puntuacion_estrategia(self):
+        assert extract_raw_score("BADS-Llave", {"puntuacion_estrategia": 12, "tiempo": 90}) == 12.0
+
+    def test_fcsrt_uses_total_inmediato(self):
+        assert extract_raw_score("FCSRT", {"total_inmediato": 40, "total_demorado": 35}) == 40.0
+
+    def test_perfil_sensorial_sums_all(self):
+        assert extract_raw_score("Perfil-Sensorial", {"tactil": 20, "visual": 25, "auditivo": 18}) == 63.0
+
+    def test_unknown_test_type_sums_numeric_values(self):
+        """Fallback: sum all numeric values for unknown test types."""
+        result = extract_raw_score("Unknown-Test", {"a": 10, "b": 5.5, "c": "label"})
+        assert result == 15.5
+
+    def test_unknown_test_ignores_non_numeric(self):
+        result = extract_raw_score("Unknown-Test", {"score": 42, "notes": "some text", "valid": True})
+        # True is an int subclass (=1) in Python, score=42 → 43.0
+        assert result == 43.0
