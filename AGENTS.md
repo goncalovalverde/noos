@@ -67,7 +67,7 @@ Deployed locally at clinics — GDPR applies, PHI rules are strict, data never l
 - ✅ Add `Field(min_length=..., max_length=...)` to every new Pydantic schema field
 - ✅ Add `render_as_batch=True` to any new Alembic migration context (SQLite requirement)
 - ✅ Add `request: Request` as a parameter to any new mutating route
-- ✅ Run `pytest tests/ -x -q` after every change and confirm all tests pass (baseline: 233)
+- ✅ Run `pytest tests/ -x -q` after every change and confirm all tests pass (baseline: 237)
 - ✅ Write unit tests (no HTTP) for new pure functions or access/business logic; integration tests for new endpoints
 
 ---
@@ -126,7 +126,6 @@ All P0 and P1 security audit findings have been resolved. Remaining known issues
 | P2-2 | Medium | `PATCH /users/me` missing rate limit and audit on password change |
 | P2-3 | Medium | `ProfileUpdate` schema missing Field constraints (in wrong file) |
 | P2-4 | Medium | `LoginRequest` missing `max_length` (bcrypt DoS vector) |
-| P2-5 | Medium | Swagger UI enabled in all environments |
 | P2-7 | Medium | `python-multipart==0.0.9` — CVE-2024-53498 |
 | P2-8 | Medium | `encrypted_metadata` column never encrypted |
 | P2-9 | Medium | No `Cache-Control: no-store` on PHI API responses |
