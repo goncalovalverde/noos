@@ -209,7 +209,7 @@ pytest tests/test_auth.py -v         # auth + denylist tests
 
 1. **~~No service layer~~** — RESOLVED: business logic extracted to `app/services/` (patient, user, protocol, test, execution_plan, stats). Route handlers are now thin wrappers.
 2. **Magic role strings** — should be `StrEnum` in `app/enums.py` instead of literals.
-3. **Inverted test pyramid** — needs unit tests for normatives calculator, access control logic, password policy, JWT.
+3. **~~Inverted test pyramid~~** — RESOLVED: unit tests now cover password policy (`test_unit_password.py`), JWT type safety + JTI (`test_unit_jwt.py`), access control logic (`test_unit_access.py`), normatives calculator + all raw score extractors (`test_normatives.py`). Total: 233 tests.
 4. **`ProfileUpdate` schema** in `routes/users.py` (wrong file, missing Field constraints) → move to `schemas/user.py`.
 5. **`UsedRefreshToken` never purged** — add cleanup task for rows where `expires_at < now()`.
 6. **Swagger UI** unconditionally enabled — disable in production (`ENVIRONMENT=production`).

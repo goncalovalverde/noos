@@ -67,7 +67,8 @@ Deployed locally at clinics — GDPR applies, PHI rules are strict, data never l
 - ✅ Add `Field(min_length=..., max_length=...)` to every new Pydantic schema field
 - ✅ Add `render_as_batch=True` to any new Alembic migration context (SQLite requirement)
 - ✅ Add `request: Request` as a parameter to any new mutating route
-- ✅ Run `pytest tests/ -x -q` after every change and confirm all tests pass
+- ✅ Run `pytest tests/ -x -q` after every change and confirm all tests pass (baseline: 233)
+- ✅ Write unit tests (no HTTP) for new pure functions or access/business logic; integration tests for new endpoints
 
 ---
 
