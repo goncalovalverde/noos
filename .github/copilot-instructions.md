@@ -209,11 +209,15 @@ pytest tests/test_auth.py -v         # auth + denylist tests
 
 1. **~~No service layer~~** — RESOLVED: business logic extracted to `app/services/` (patient, user, protocol, test, execution_plan, stats). Route handlers are now thin wrappers.
 2. **~~Magic role strings~~** — RESOLVED: `UserRole(StrEnum)` in `app/enums.py`. Use `UserRole.ADMIN`, `UserRole.NEURO`, `UserRole.OBSERVER` everywhere. Never use bare string literals for roles.
-3. **~~Inverted test pyramid~~** — RESOLVED: unit tests now cover password policy (`test_unit_password.py`), JWT type safety + JTI (`test_unit_jwt.py`), access control logic (`test_unit_access.py`), normatives calculator + all raw score extractors (`test_normatives.py`). Total: 237 tests.
-4. **`ProfileUpdate` schema** in `routes/users.py` (wrong file, missing Field constraints) → move to `schemas/user.py`.
-5. **~~`UsedRefreshToken` never purged~~** — RESOLVED: `_purge_expired_refresh_tokens()` called at startup + opportunistic inline purge on every `/auth/refresh` call.
-6. **~~Swagger UI unconditionally enabled~~** — RESOLVED: `docs_url`, `redoc_url`, `openapi_url` set to `None` when `ENVIRONMENT=production`.
-7. **`python-multipart==0.0.9`** — CVE-2024-53498 ReDoS — bump to `>=0.0.12`.
+3. **~~Inverted test pyramid~~** — RESOLVED: unit tests now cover password policy, JWT type safety, access control, normatives calculator. Total: 237 tests.
+4. **~~ProfileUpdate schema in wrong file~~** — RESOLVED: moved to `schemas/user.py` with `EmailStr` + `Field` constraints.
+5. **~~`UsedRefreshToken` never purged~~** — RESOLVED.
+6. **~~Swagger UI unconditionally enabled~~** — RESOLVED.
+7. **~~`python-multipart==0.0.9` CVE~~** — RESOLVED: bumped to `>=0.0.12`.
+8. **`encrypted_metadata`** column never encrypted — P2.
+9. **No `Cache-Control: no-store`** on PHI API responses — P2.
+10. **Patient deletion leaves PHI in audit logs** — P2 GDPR.
+11. **No GDPR Art.20 data export endpoint** — P2.
 
 ---
 

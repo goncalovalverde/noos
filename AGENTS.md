@@ -61,6 +61,9 @@ Deployed locally at clinics — GDPR applies, PHI rules are strict, data never l
 - ❌ Use `datetime.utcnow` — use `lambda: datetime.now(timezone.utc)`
 - ❌ Cast `err` as `any` in TypeScript — use `extractApiError()` from `@/utils/apiError`
 - ❌ Use bare role string literals — always use `UserRole.ADMIN`, `UserRole.NEURO`, `UserRole.OBSERVER` from `app.enums`
+- ❌ Allow an admin to delete their own account — `delete_user` must guard `user_id == actor.id`
+- ❌ Define schemas inline in route files — all Pydantic schemas belong in `app/schemas/`
+- ❌ Silently swallow exceptions in service methods — log with `logging.getLogger(__name__).warning(...)`
 
 ### ALWAYS do these:
 - ✅ Add an Alembic migration for every model change
@@ -123,10 +126,6 @@ All P0 and P1 security audit findings have been resolved. Remaining known issues
 
 | ID | Priority | Issue |
 |---|---|---|
-| P2-2 | Medium | `PATCH /users/me` missing rate limit and audit on password change |
-| P2-3 | Medium | `ProfileUpdate` schema missing Field constraints (in wrong file) |
-| P2-4 | Medium | `LoginRequest` missing `max_length` (bcrypt DoS vector) |
-| P2-7 | Medium | `python-multipart==0.0.9` — CVE-2024-53498 |
 | P2-8 | Medium | `encrypted_metadata` column never encrypted |
 | P2-9 | Medium | No `Cache-Control: no-store` on PHI API responses |
 | P2-10 | Medium | Patient deletion leaves PHI in audit logs |
