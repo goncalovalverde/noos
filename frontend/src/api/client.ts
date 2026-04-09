@@ -35,7 +35,8 @@ apiClient.interceptors.response.use(
     if (
       error.response?.status === 401 &&
       !original._retried &&
-      !original.url?.includes('/auth/refresh')
+      !original.url?.includes('/auth/refresh') &&
+      !original.url?.includes('/auth/login')
     ) {
       const { refreshToken, updateTokens, logout } = useAuthStore.getState()
 
