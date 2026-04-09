@@ -26,6 +26,7 @@ from app.api.routes import stats as stats_router
 # They are also imported by alembic/env.py directly; these imports ensure the
 # app module graph is consistent at runtime.
 from app.models import User, AuditLog, Patient, PatientAccess, TestSession, Protocol, ProtocolTest, PatientProtocol, ExecutionPlan, UsedRefreshToken  # noqa: F401
+from app.enums import UserRole
 
 def _run_migrations():
     """Apply any pending Alembic migrations on startup.
@@ -49,7 +50,7 @@ def _seed_admin():
     try:
         from app.models.user import User
         from app.auth.password import hash_password, validate_password_strength
-        if db.query(User).filter(User.role == "Administrador").count() == 0:
+        if db.query(User).filter(User.role == UserRole.ADMIN).count() == 0:
             if not validate_password_strength(settings.ADMIN_PASSWORD):
                 raise ValueError(
                     "ADMIN_PASSWORD no cumple los requisitos de seguridad "
@@ -59,7 +60,7 @@ def _seed_admin():
                 username="admin",
                 hashed_password=hash_password(settings.ADMIN_PASSWORD),
                 full_name="Administrador",
-                role="Administrador",
+                role=UserRole.ADMIN,
                 can_manage_protocols=True,
             )
             db.add(admin)

@@ -16,6 +16,7 @@ from app.models.user import User
 from app.models.patient import Patient
 from app.models.patient_access import PatientAccess
 from app.auth.password import hash_password
+from app.enums import UserRole
 from app.api.utils.access import can_access_patient, get_accessible_patient_ids
 
 
@@ -77,51 +78,51 @@ def _grant(db, patient: Patient, user: User, granted_by: User) -> None:
 class TestCanAccessPatient:
 
     def test_admin_can_access_any_patient(self, db):
-        admin = _user(db, "admin", "Administrador")
-        neuro = _user(db, "neuro", "Neuropsicólogo")
+        admin = _user(db, "admin", UserRole.ADMIN)
+        neuro = _user(db, "neuro", UserRole.NEURO)
         patient = _patient(db, created_by=neuro)
         assert can_access_patient(db, patient, admin) is True
 
     def test_admin_can_access_legacy_patient(self, db):
-        admin = _user(db, "admin", "Administrador")
+        admin = _user(db, "admin", UserRole.ADMIN)
         patient = _patient(db, created_by=None)  # legacy — no creator
         assert can_access_patient(db, patient, admin) is True
 
     def test_creator_can_access_own_patient(self, db):
-        neuro = _user(db, "neuro", "Neuropsicólogo")
+        neuro = _user(db, "neuro", UserRole.NEURO)
         patient = _patient(db, created_by=neuro)
         assert can_access_patient(db, patient, neuro) is True
 
     def test_different_neuro_cannot_access_others_patient(self, db):
-        neuro1 = _user(db, "neuro1", "Neuropsicólogo")
-        neuro2 = _user(db, "neuro2", "Neuropsicólogo")
+        neuro1 = _user(db, "neuro1", UserRole.NEURO)
+        neuro2 = _user(db, "neuro2", UserRole.NEURO)
         patient = _patient(db, created_by=neuro1)
         assert can_access_patient(db, patient, neuro2) is False
 
     def test_granted_user_can_access(self, db):
-        admin = _user(db, "admin", "Administrador")
-        neuro = _user(db, "neuro", "Neuropsicólogo")
-        observer = _user(db, "obs", "Observador")
+        admin = _user(db, "admin", UserRole.ADMIN)
+        neuro = _user(db, "neuro", UserRole.NEURO)
+        observer = _user(db, "obs", UserRole.OBSERVER)
         patient = _patient(db, created_by=neuro)
         _grant(db, patient, observer, granted_by=admin)
         assert can_access_patient(db, patient, observer) is True
 
     def test_not_granted_observer_cannot_access(self, db):
-        neuro = _user(db, "neuro", "Neuropsicólogo")
-        observer = _user(db, "obs", "Observador")
+        neuro = _user(db, "neuro", UserRole.NEURO)
+        observer = _user(db, "obs", UserRole.OBSERVER)
         patient = _patient(db, created_by=neuro)
         assert can_access_patient(db, patient, observer) is False
 
     def test_legacy_patient_no_creator_accessible_by_any_neuro(self, db):
         """Patients created before access-control existed (created_by_id=None) are open."""
-        neuro = _user(db, "neuro", "Neuropsicólogo")
+        neuro = _user(db, "neuro", UserRole.NEURO)
         patient = _patient(db, created_by=None)
         assert can_access_patient(db, patient, neuro) is True
 
     def test_revoking_access_denies_entry(self, db):
-        admin = _user(db, "admin", "Administrador")
-        neuro = _user(db, "neuro", "Neuropsicólogo")
-        observer = _user(db, "obs", "Observador")
+        admin = _user(db, "admin", UserRole.ADMIN)
+        neuro = _user(db, "neuro", UserRole.NEURO)
+        observer = _user(db, "obs", UserRole.OBSERVER)
         patient = _patient(db, created_by=neuro)
         _grant(db, patient, observer, granted_by=admin)
         assert can_access_patient(db, patient, observer) is True
@@ -135,8 +136,8 @@ class TestCanAccessPatient:
 
     def test_grant_is_per_patient(self, db):
         """Access to patient A does not imply access to patient B."""
-        neuro = _user(db, "neuro", "Neuropsicólogo")
-        observer = _user(db, "obs", "Observador")
+        neuro = _user(db, "neuro", UserRole.NEURO)
+        observer = _user(db, "obs", UserRole.OBSERVER)
         patient_a = _patient(db, created_by=neuro)
         patient_b = _patient(db, created_by=neuro)
         _grant(db, patient_a, observer, granted_by=neuro)
@@ -153,8 +154,8 @@ class TestGetAccessiblePatientIds:
         return {row[0] for row in db.query(Patient.id).filter(Patient.id.in_(subq)).all()}
 
     def test_admin_sees_all_patients(self, db):
-        admin = _user(db, "admin", "Administrador")
-        neuro = _user(db, "neuro", "Neuropsicólogo")
+        admin = _user(db, "admin", UserRole.ADMIN)
+        neuro = _user(db, "neuro", UserRole.NEURO)
         p1 = _patient(db, created_by=neuro)
         p2 = _patient(db, created_by=neuro)
         # Admin filter is applied at route level; this function is for non-admins
@@ -165,7 +166,7 @@ class TestGetAccessiblePatientIds:
         assert isinstance(ids, set)
 
     def test_creator_sees_own_patients(self, db):
-        neuro = _user(db, "neuro", "Neuropsicólogo")
+        neuro = _user(db, "neuro", UserRole.NEURO)
         p1 = _patient(db, created_by=neuro)
         p2 = _patient(db, created_by=neuro)
         ids = self._ids(db, neuro)
@@ -173,30 +174,30 @@ class TestGetAccessiblePatientIds:
         assert p2.id in ids
 
     def test_does_not_see_other_creators_patients(self, db):
-        neuro1 = _user(db, "neuro1", "Neuropsicólogo")
-        neuro2 = _user(db, "neuro2", "Neuropsicólogo")
+        neuro1 = _user(db, "neuro1", UserRole.NEURO)
+        neuro2 = _user(db, "neuro2", UserRole.NEURO)
         p1 = _patient(db, created_by=neuro1)
         ids = self._ids(db, neuro2)
         assert p1.id not in ids
 
     def test_sees_granted_patients(self, db):
-        neuro = _user(db, "neuro", "Neuropsicólogo")
-        observer = _user(db, "obs", "Observador")
+        neuro = _user(db, "neuro", UserRole.NEURO)
+        observer = _user(db, "obs", UserRole.OBSERVER)
         patient = _patient(db, created_by=neuro)
         _grant(db, patient, observer, granted_by=neuro)
         ids = self._ids(db, observer)
         assert patient.id in ids
 
     def test_legacy_patients_visible_to_everyone(self, db):
-        neuro = _user(db, "neuro", "Neuropsicólogo")
-        observer = _user(db, "obs", "Observador")
+        neuro = _user(db, "neuro", UserRole.NEURO)
+        observer = _user(db, "obs", UserRole.OBSERVER)
         legacy = _patient(db, created_by=None)
         assert legacy.id in self._ids(db, neuro)
         assert legacy.id in self._ids(db, observer)
 
     def test_owns_plus_granted_combined(self, db):
-        neuro1 = _user(db, "neuro1", "Neuropsicólogo")
-        neuro2 = _user(db, "neuro2", "Neuropsicólogo")
+        neuro1 = _user(db, "neuro1", UserRole.NEURO)
+        neuro2 = _user(db, "neuro2", UserRole.NEURO)
         p_own = _patient(db, created_by=neuro1)
         p_granted = _patient(db, created_by=neuro2)
         _grant(db, p_granted, neuro1, granted_by=neuro2)
@@ -205,8 +206,8 @@ class TestGetAccessiblePatientIds:
         assert p_granted.id in ids
 
     def test_no_access_returns_empty_for_fresh_observer(self, db):
-        neuro = _user(db, "neuro", "Neuropsicólogo")
-        observer = _user(db, "obs", "Observador")
+        neuro = _user(db, "neuro", UserRole.NEURO)
+        observer = _user(db, "obs", UserRole.OBSERVER)
         _patient(db, created_by=neuro)
         ids = self._ids(db, observer)
         # Only legacy patients (none here) would be visible

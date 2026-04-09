@@ -9,6 +9,7 @@ from app.models.protocol import Protocol
 from app.models.execution_plan import ExecutionPlan
 from app.models.user import User
 from app.api.utils.access import get_accessible_patient_ids
+from app.enums import UserRole
 
 
 class StatsService:
@@ -20,7 +21,7 @@ class StatsService:
         week_ago = now - timedelta(days=7)
         month_ago = now - timedelta(days=30)
 
-        if user.role == "Administrador":
+        if user.role == UserRole.ADMIN:
             patient_q = self.db.query(func.count(Patient.id))
             tests_q = self.db.query(func.count(TestSession.id)).filter(TestSession.date >= week_ago)
             completed_q = self.db.query(func.count(ExecutionPlan.id)).filter(
@@ -49,7 +50,7 @@ class StatsService:
 
     def get_recent_plans(self, user: User) -> list:
         q = self.db.query(ExecutionPlan)
-        if user.role != "Administrador":
+        if user.role != UserRole.ADMIN:
             accessible = get_accessible_patient_ids(self.db, user)
             q = q.filter(ExecutionPlan.patient_id.in_(accessible))
         plans = q.order_by(ExecutionPlan.updated_at.desc()).limit(10).all()
@@ -68,7 +69,7 @@ class StatsService:
 
     def get_incomplete_plans(self, user: User) -> dict:
         q = self.db.query(ExecutionPlan).filter(ExecutionPlan.status.in_(["active", "draft"]))
-        if user.role != "Administrador":
+        if user.role != UserRole.ADMIN:
             accessible = get_accessible_patient_ids(self.db, user)
             q = q.filter(ExecutionPlan.patient_id.in_(accessible))
         plans = q.order_by(ExecutionPlan.updated_at.desc()).all()
@@ -87,7 +88,7 @@ class StatsService:
 
     def get_classification_distribution(self, user: User) -> list:
         q = self.db.query(TestSession.calculated_scores)
-        if user.role != "Administrador":
+        if user.role != UserRole.ADMIN:
             accessible = get_accessible_patient_ids(self.db, user)
             q = q.filter(TestSession.patient_id.in_(accessible))
         sessions = q.all()

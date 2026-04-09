@@ -7,6 +7,7 @@ from app.db.base import get_db
 from app.models.user import User
 from app.schemas.user import UserCreate, UserUpdate, UserOut
 from app.auth.dependencies import require_role, get_current_active_user
+from app.enums import UserRole
 from app.services.user_service import UserService
 
 router = APIRouter(prefix="/api/users", tags=["users"])
@@ -37,7 +38,7 @@ async def update_my_profile(
 @router.get("/", response_model=List[UserOut])
 async def list_users(
     db: Session = Depends(get_db),
-    _=Depends(require_role("Administrador")),
+    _=Depends(require_role(UserRole.ADMIN)),
 ):
     return UserService(db).list_users()
 
@@ -47,7 +48,7 @@ async def create_user(
     body: UserCreate,
     request: Request,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("Administrador")),
+    current_user: User = Depends(require_role(UserRole.ADMIN)),
 ):
     return UserService(db).create_user(body, current_user, request)
 
@@ -58,7 +59,7 @@ async def update_user(
     body: UserUpdate,
     request: Request,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("Administrador")),
+    current_user: User = Depends(require_role(UserRole.ADMIN)),
 ):
     return UserService(db).update_user(user_id, body, current_user, request)
 
@@ -68,6 +69,6 @@ async def delete_user(
     user_id: str,
     request: Request,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("Administrador")),
+    current_user: User = Depends(require_role(UserRole.ADMIN)),
 ):
     UserService(db).delete_user(user_id, current_user, request)

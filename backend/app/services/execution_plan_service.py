@@ -12,6 +12,7 @@ from app.models.user import User
 from app.schemas.execution_plan import ExecutionPlanCreate, ExecutionPlanUpdate, ExecutionPlanOut
 from app.api.utils.access import can_access_patient, get_accessible_patient_ids
 from app.api.utils.audit import audit
+from app.enums import UserRole
 
 
 class ExecutionPlanService:
@@ -68,7 +69,7 @@ class ExecutionPlanService:
 
     def get_incomplete_plans(self, user: User) -> list:
         q = self.db.query(ExecutionPlan).filter(ExecutionPlan.status.in_(["active", "draft"]))
-        if user.role != "Administrador":
+        if user.role != UserRole.ADMIN:
             accessible_ids = get_accessible_patient_ids(self.db, user)
             q = q.filter(ExecutionPlan.patient_id.in_(accessible_ids))
         plans = q.order_by(ExecutionPlan.updated_at.desc()).all()

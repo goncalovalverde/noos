@@ -2,13 +2,14 @@ import pytest
 from app.auth.password import hash_password
 from app.auth.jwt import create_access_token
 from app.models.user import User
+from app.enums import UserRole
 
 
 def _make_neuro_manager(db):
     user = User(
         username="neuro_manager",
         hashed_password=hash_password("Test1234!Pass"),
-        role="Neuropsicólogo",
+        role=UserRole.NEURO,
         can_manage_protocols=True,
         is_active=True,
     )

@@ -10,6 +10,7 @@ from app.models.user import User
 from app.schemas.patient import PatientCreate, PatientUpdate, PatientOut
 from app.api.utils.access import can_access_patient
 from app.api.utils.audit import audit
+from app.enums import UserRole
 
 
 class PatientService:
@@ -18,7 +19,7 @@ class PatientService:
 
     def list_patients(self, user: User, page: int = 1, size: int = 20) -> List[PatientOut]:
         q = self.db.query(Patient)
-        if user.role != "Administrador":
+        if user.role != UserRole.ADMIN:
             granted_ids = self.db.query(PatientAccess.patient_id).filter(PatientAccess.user_id == user.id)
             q = q.filter(or_(
                 Patient.created_by_id == None,  # noqa: E711
@@ -79,7 +80,7 @@ class PatientService:
     def get_access(self, patient_id: str, user: User) -> list:
         patient = self._get_or_404(patient_id)
         self._assert_access(patient, user)
-        if user.role != "Administrador" and patient.created_by_id != user.id:
+        if user.role != UserRole.ADMIN and patient.created_by_id != user.id:
             raise HTTPException(403, "Solo el creador puede gestionar el acceso")
         grants = self.db.query(PatientAccess).filter(PatientAccess.patient_id == patient_id).all()
         return [
@@ -95,7 +96,7 @@ class PatientService:
 
     def grant_access(self, patient_id: str, target_user_id: str, user: User, request: Request) -> dict:
         patient = self._get_or_404(patient_id)
-        if user.role != "Administrador" and patient.created_by_id != user.id:
+        if user.role != UserRole.ADMIN and patient.created_by_id != user.id:
             raise HTTPException(403, "Solo el creador puede gestionar el acceso")
         target = self.db.query(User).filter(User.id == target_user_id).first()
         if not target:
@@ -113,7 +114,7 @@ class PatientService:
 
     def revoke_access(self, patient_id: str, target_user_id: str, user: User, request: Request) -> None:
         patient = self._get_or_404(patient_id)
-        if user.role != "Administrador" and patient.created_by_id != user.id:
+        if user.role != UserRole.ADMIN and patient.created_by_id != user.id:
             raise HTTPException(403, "Solo el creador puede gestionar el acceso")
         if target_user_id == patient.created_by_id:
             raise HTTPException(400, "No se puede revocar el acceso al creador")

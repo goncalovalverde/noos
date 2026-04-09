@@ -16,13 +16,14 @@ from app.auth.jwt import (
     decode_refresh_token,
 )
 from app.core.config import settings
+from app.enums import UserRole
 
 
 class TestCreateAccessToken:
     """create_access_token: short-lived, type='access', carries subject claim."""
 
     def test_returns_string(self):
-        token = create_access_token({"sub": "user-1", "role": "Neuropsicólogo"})
+        token = create_access_token({"sub": "user-1", "role": UserRole.NEURO})
         assert isinstance(token, str)
 
     def test_payload_contains_sub(self):
@@ -103,7 +104,7 @@ class TestDecodeAccessToken:
     """decode_access_token: returns payload for valid access tokens, None otherwise."""
 
     def test_valid_access_token_returns_payload(self):
-        token = create_access_token({"sub": "user-1", "role": "Administrador"})
+        token = create_access_token({"sub": "user-1", "role": UserRole.ADMIN})
         payload = decode_access_token(token)
         assert payload is not None
         assert payload["sub"] == "user-1"

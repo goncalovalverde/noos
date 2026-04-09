@@ -5,6 +5,7 @@ from app.db.base import get_db
 from app.models.user import User
 from app.schemas.execution_plan import ExecutionPlanCreate, ExecutionPlanUpdate, ExecutionPlanOut
 from app.auth.dependencies import get_current_active_user, require_role
+from app.enums import UserRole
 from app.services.execution_plan_service import ExecutionPlanService
 
 router = APIRouter(prefix="/api/execution-plans", tags=["execution-plans"])
@@ -15,7 +16,7 @@ async def create_execution_plan(
     body: ExecutionPlanCreate,
     request: Request,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("Administrador", "Neuropsicólogo")),
+    current_user: User = Depends(require_role(UserRole.ADMIN, UserRole.NEURO)),
 ):
     return ExecutionPlanService(db).create_plan(body, current_user, request)
 
@@ -61,6 +62,6 @@ async def update_execution_plan(
     body: ExecutionPlanUpdate,
     request: Request,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("Administrador", "Neuropsicólogo")),
+    current_user: User = Depends(require_role(UserRole.ADMIN, UserRole.NEURO)),
 ):
     return ExecutionPlanService(db).update_plan(plan_id, body, current_user, request)

@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from app.db.base import get_db
 from app.models.user import User
 from app.auth.jwt import decode_access_token
+from app.enums import UserRole
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
@@ -32,7 +33,7 @@ async def get_current_active_user(current_user: User = Depends(get_current_user)
         raise HTTPException(status_code=400, detail="Usuario inactivo")
     return current_user
 
-def require_role(*roles: str):
+def require_role(*roles: UserRole):
     """Factory: returns a FastAPI dependency that checks the user's role."""
     async def check(current_user: User = Depends(get_current_active_user)):
         if current_user.role not in roles:
@@ -45,9 +46,9 @@ def require_role(*roles: str):
 
 def require_protocol_management():
     async def check(current_user: User = Depends(get_current_active_user)):
-        if current_user.role == "Administrador":
+        if current_user.role == UserRole.ADMIN:
             return current_user
-        if current_user.role == "Neuropsicólogo" and current_user.can_manage_protocols:
+        if current_user.role == UserRole.NEURO and current_user.can_manage_protocols:
             return current_user
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

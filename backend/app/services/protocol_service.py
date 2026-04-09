@@ -8,6 +8,7 @@ from app.models.execution_plan import ExecutionPlan
 from app.models.user import User
 from app.schemas.protocol import ProtocolCreate, ProtocolUpdate, ProtocolOut
 from app.api.utils.audit import audit
+from app.enums import UserRole
 
 
 class ProtocolService:
@@ -18,7 +19,7 @@ class ProtocolService:
         q = self.db.query(Protocol)
         if category:
             q = q.filter(Protocol.category == category)
-        if user.role != "Administrador":
+        if user.role != UserRole.ADMIN:
             q = q.filter(or_(Protocol.is_public == True, Protocol.created_by_id == user.id))  # noqa: E712
         protocols = q.order_by(Protocol.name).all()
         result = []

@@ -6,6 +6,7 @@ from app.main import app
 from app.db.base import Base, get_db
 from app.auth.password import hash_password
 from app.auth.jwt import create_access_token
+from app.enums import UserRole
 from app.models.user import User
 from app.models.patient import Patient
 
@@ -59,15 +60,15 @@ def _token_headers(user_id: str, role: str) -> dict:
 
 @pytest.fixture
 def admin_user(db):
-    return _make_user(db, "admin_test", "Administrador", can_manage_protocols=True)
+    return _make_user(db, "admin_test", UserRole.ADMIN, can_manage_protocols=True)
 
 @pytest.fixture
 def neuro_user(db):
-    return _make_user(db, "neuro_test", "Neuropsicólogo")
+    return _make_user(db, "neuro_test", UserRole.NEURO)
 
 @pytest.fixture
 def observer_user(db):
-    return _make_user(db, "observer_test", "Observador")
+    return _make_user(db, "observer_test", UserRole.OBSERVER)
 
 @pytest.fixture
 def admin_headers(admin_user):

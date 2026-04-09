@@ -7,6 +7,7 @@ from app.db.base import get_db
 from app.models.user import User
 from app.schemas.patient import PatientCreate, PatientUpdate, PatientOut
 from app.auth.dependencies import get_current_active_user, require_role
+from app.enums import UserRole
 from app.services.patient_service import PatientService
 
 router = APIRouter(prefix="/api/patients", tags=["patients"])
@@ -31,7 +32,7 @@ async def create_patient(
     body: PatientCreate,
     request: Request,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("Administrador", "Neuropsicólogo")),
+    current_user: User = Depends(require_role(UserRole.ADMIN, UserRole.NEURO)),
 ):
     return PatientService(db).create_patient(body, current_user, request)
 
@@ -82,7 +83,7 @@ async def update_patient(
     body: PatientUpdate,
     request: Request,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("Administrador", "Neuropsicólogo")),
+    current_user: User = Depends(require_role(UserRole.ADMIN, UserRole.NEURO)),
 ):
     return PatientService(db).update_patient(patient_id, body, current_user, request)
 
@@ -92,7 +93,7 @@ async def delete_patient(
     patient_id: str,
     request: Request,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("Administrador")),
+    current_user: User = Depends(require_role(UserRole.ADMIN)),
 ):
     PatientService(db).delete_patient(patient_id, current_user, request)
 

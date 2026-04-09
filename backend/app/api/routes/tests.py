@@ -5,6 +5,7 @@ from app.db.base import get_db
 from app.models.user import User
 from app.schemas.test_session import TestSessionCreate, TestSessionUpdate, TestSessionOut
 from app.auth.dependencies import get_current_active_user, require_role
+from app.enums import UserRole
 from app.services.test_service import TestService
 
 router = APIRouter(prefix="/api/tests", tags=["tests"])
@@ -15,7 +16,7 @@ async def create_test(
     body: TestSessionCreate,
     request: Request,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("Administrador", "Neuropsicólogo")),
+    current_user: User = Depends(require_role(UserRole.ADMIN, UserRole.NEURO)),
 ):
     return TestService(db).create_test(body, current_user, request)
 
@@ -44,7 +45,7 @@ async def update_test(
     body: TestSessionUpdate,
     request: Request,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("Administrador", "Neuropsicólogo")),
+    current_user: User = Depends(require_role(UserRole.ADMIN, UserRole.NEURO)),
 ):
     return TestService(db).update_test(test_id, body, current_user, request)
 
@@ -54,6 +55,6 @@ async def delete_test(
     test_id: str,
     request: Request,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("Administrador")),
+    current_user: User = Depends(require_role(UserRole.ADMIN)),
 ):
     TestService(db).delete_test(test_id, current_user, request)
