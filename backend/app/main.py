@@ -1,6 +1,7 @@
 from contextlib import asynccontextmanager
 import os
 import stat
+from datetime import datetime, timezone
 from pathlib import Path
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -69,6 +70,27 @@ def _seed_admin():
     finally:
         db.close()
 
+def _purge_expired_refresh_tokens():
+    """Delete UsedRefreshToken rows whose expiry has passed.
+
+    These rows are cryptographically worthless once expired — the JWT itself
+    would be rejected by decode_refresh_token() before the denylist is even
+    checked. Purging keeps the table bounded in size.
+
+    Called at startup and opportunistically from POST /auth/refresh.
+    """
+    from app.models.used_refresh_token import UsedRefreshToken
+    db = SessionLocal()
+    try:
+        now = datetime.now(timezone.utc)
+        deleted = db.query(UsedRefreshToken).filter(UsedRefreshToken.expires_at < now).delete()
+        db.commit()
+        if deleted:
+            print(f"🧹 Purged {deleted} expired refresh token(s) from denylist")
+    finally:
+        db.close()
+
+
 def _secure_db_files():
     """Restrict SQLite DB file permissions to owner-only (chmod 600)."""
     db_url = settings.DATABASE_URL
@@ -96,13 +118,17 @@ async def lifespan(app: FastAPI):
     _secure_db_files()
     _run_migrations()
     _seed_admin()
+    _purge_expired_refresh_tokens()
     yield
+
+_is_production = settings.ENVIRONMENT == "production"
 
 app = FastAPI(
     title="Nóos API",
     version="0.1.0",
-    docs_url="/api/docs",
-    redoc_url="/api/redoc",
+    docs_url=None if _is_production else "/api/docs",
+    redoc_url=None if _is_production else "/api/redoc",
+    openapi_url=None if _is_production else "/api/openapi.json",
     lifespan=lifespan,
 )
 

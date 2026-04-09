@@ -70,6 +70,12 @@ async def refresh_token(body: RefreshRequest, request: Request, db: Session = De
     exp_dt = datetime.fromtimestamp(payload["exp"], tz=timezone.utc)
     db.add(UsedRefreshToken(jti=jti, expires_at=exp_dt))
 
+    # Opportunistic purge: remove any other expired JTIs in this same commit.
+    # Keeps the denylist table bounded without a separate scheduled job.
+    db.query(UsedRefreshToken).filter(
+        UsedRefreshToken.expires_at < datetime.now(timezone.utc)
+    ).delete()
+
     new_access = create_access_token({"sub": user.id, "role": user.role})
     new_refresh = create_refresh_token({"sub": user.id, "role": user.role})
     db.commit()
