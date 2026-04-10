@@ -3,6 +3,14 @@ name: Deploy to Orange Pi
 on:
   push:
     branches: [main]
+    paths-ignore:
+      # Documentation and AI agent instruction files — no code changed
+      - "**.md"
+      - ".cursorrules"
+      - ".windsurfrules"
+      - "CLAUDE.md"
+      - "AGENTS.md"
+      - ".github/copilot-instructions.md"
   workflow_dispatch:   # allow manual trigger from GitHub UI
 
 jobs:
