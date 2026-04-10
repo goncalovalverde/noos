@@ -6,6 +6,25 @@ Language: Spanish UI, English code. GDPR-compliant, clinical data (PHI), local d
 
 ---
 
+## 🔴 READ FIRST — Business Logic Reference
+
+**Before making any change, read `BUSINESS_LOGIC.md` in the repo root.**
+
+It is the canonical, always-up-to-date reference for:
+- User roles and permission rules
+- Authentication and JWT flow
+- Patient ownership and access model
+- Protocol and evaluation flows
+- All neuropsychological test types and scoring
+- NEURONORMA normative calculation logic
+- Frontend routes and page responsibilities
+- Security rules, audit events, data models
+
+**When you change any of the above, update `BUSINESS_LOGIC.md` in the same commit.**
+The last section of that file has a "Last updated" line — update it with the date and commit SHA.
+
+---
+
 ## ⚠️ Self-Maintenance Rule
 
 **Any AI agent that makes a change to this codebase MUST update this file and `AGENTS.md` in the same commit.**
