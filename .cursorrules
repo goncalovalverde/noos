@@ -1,0 +1,24 @@
+# Cursor Rules — Nóos Platform
+
+## MANDATORY: Read BUSINESS_LOGIC.md first
+
+Before making any change, read `BUSINESS_LOGIC.md` in the repo root.
+It covers: roles, permissions, auth flow, patient ownership, evaluation flow,
+test types, NEURONORMA scoring, frontend routes, security rules, data models.
+Update it in the same commit whenever you change business logic, rules, or data models.
+
+## Key rules
+
+- Schema changes: Alembic migrations only — never `Base.metadata.create_all()` in app code
+- Every mutating route: call `audit()` before `db.commit()`
+- Every patient route: call `can_access_patient()` — see `app/api/utils/access.py`
+- Frontend errors: always use `extractApiError()` from `@/utils/apiError`
+- Role strings are Spanish: `"Administrador"` / `"Neuropsicólogo"` / `"Observador"`
+- Patients are anonymous (GDPR): no names, DNI, email, phone — only age/education/laterality
+- Business logic belongs in `app/services/`, not in route handlers
+- Rate limiting required on auth endpoints via `@limiter.limit()`
+
+## Full architecture
+
+See `.github/copilot-instructions.md` and `AGENTS.md` for complete patterns,
+non-negotiables, security model, and known technical debt.

@@ -1,16 +1,27 @@
 # AGENTS.md — Nóos Platform Context
 
-> This file provides context for AI coding agents (Claude, Cursor, Codex, etc.).
-> The canonical AI instructions live in `.github/copilot-instructions.md`.
-> This file adds agent-specific workflow guidance.
+> This file provides context for AI coding agents (Claude Code, Cursor, Windsurf, Codex, Aider, etc.).
+> It is read automatically by most AI clients that support agent instruction files.
 
 ---
 
-## ⚠️ Meta-Rule: Keep This File Current
+## 🔴 READ THIS FIRST — Business Logic Reference
 
-**Whenever you make any change to the codebase, you MUST update both:**
-- `AGENTS.md` (this file)
-- `.github/copilot-instructions.md`
+**Before making any change, read [`BUSINESS_LOGIC.md`](./BUSINESS_LOGIC.md) in the repo root.**
+
+It is the canonical, always-up-to-date reference for:
+- User roles and permission matrix
+- Authentication and JWT flow
+- Patient ownership and access model (GDPR)
+- Protocol and evaluation flows
+- All neuropsychological test types and raw data structures
+- NEURONORMA normative calculation and classification thresholds
+- Frontend routes and page responsibilities
+- Security rules, rate limits, audit events, data models
+
+**When you change any of the above, update `BUSINESS_LOGIC.md` in the same commit.**
+
+---
 
 This is not optional. These files are the memory of the project across machines and AI sessions.
 A change committed without updating these files leaves the next agent with stale context.
