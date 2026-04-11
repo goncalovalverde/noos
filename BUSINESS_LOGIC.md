@@ -354,7 +354,7 @@ All known test types and their raw data structures:
 | `WAIS-IV` | `CI_total` (+ subtest scores) | `CI_total` |
 | `BRIEF-A` | multiple subscale scores | sum of all values |
 | `DIVA-5` | `inatención_actual`, `hiperactividad_actual` | sum |
-| `Test-d2-R` | `indice_concentracion` | `indice_concentracion` |
+| `Test-d2-R` | `lineas` (array 14: `{tr,o,c}`), `total_tr`, `total_o`, `total_c`, `tot`, `indice_concentracion`, `tr_plus`, `tr_minus`, `variacion` | `indice_concentracion` (CON = ΣTR−ΣO−2×ΣC) |
 | `FDT` | `elegir_tiempo`, `alternar_tiempo` | sum |
 | `BADS-Zoo` | `puntuacion_perfil` | `puntuacion_perfil` |
 | `BADS-Llave` | `puntuacion_estrategia` | `puntuacion_estrategia` |
@@ -378,6 +378,7 @@ All known test types and their raw data structures:
 - `MocaForm` → MoCA
 - `BtaForm` → BTA
 - `BeckForm` → BDI-II, Beck
+- `D2Form` → Test-d2-R
 - `StaiForm` → STAI
 - `GenericForm` → all other tests (single `puntuacion_bruta` field)
 

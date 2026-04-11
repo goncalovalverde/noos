@@ -40,9 +40,42 @@ class NormativeCalculator:
             return self._calculate_bdi(raw_score)
         if test_type == "STAI":
             return self._calculate_stai(raw_score)
+        if test_type == "Test-d2-R":
+            return self._calculate_d2(raw_score)
         if test_type in self._tables:
             return self._calculate_from_table(test_type, raw_score, age, education_years)
         return self._calculate_simulated(test_type, raw_score, age, education_years)
+
+    def _calculate_d2(self, indice_concentracion: float) -> dict:
+        """
+        Test d2-R (Brickenkamp, Zillmer & Lazo, 2012).
+        CON (Índice de Concentración) = ΣTR − ΣO − 2×ΣC (0–max ~650).
+        No normative table validated for Spain — orientative thresholds
+        based on Brickenkamp (2012) German standardisation (adults 18–79).
+        """
+        con = int(indice_concentracion)
+        if con >= 180:
+            clasificacion = "Muy alto"
+        elif con >= 140:
+            clasificacion = "Alto"
+        elif con >= 100:
+            clasificacion = "Medio"
+        elif con >= 60:
+            clasificacion = "Bajo"
+        else:
+            clasificacion = "Muy bajo"
+
+        return {
+            "puntuacion_escalar": con,
+            "percentil": None,
+            "z_score": None,
+            "clasificacion": clasificacion,
+            "norma_aplicada": {
+                "fuente": "Test d2-R — Brickenkamp, Zillmer & Lazo (2012)",
+                "test": "Test-d2-R",
+                "nota": "Sin tabla normativa española validada. Umbrales orientativos. Ver también TOT y VA en raw_data.",
+            },
+        }
 
     def _calculate_stai(self, puntuacion_estado: float) -> dict:
         """
