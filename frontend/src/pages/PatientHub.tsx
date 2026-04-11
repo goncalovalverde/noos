@@ -174,6 +174,7 @@ function EvaluationRow({ plan, patientId }: { plan: ExecutionPlanSummary; patien
               {clinicalSessions.map((cs, idx) => {
                 const sessionTests = testResults.filter(r => r.clinical_session_id === cs.id)
                 const isLast = idx === clinicalSessions.length - 1
+                const sessionDone = allTestsDone || (isLast && activeTCs.every(tc => completedTypes.has(tc.test_type)))
                 return (
                   <div key={cs.id} className="flex gap-3">
                     {/* Timeline indicator */}
@@ -201,18 +202,20 @@ function EvaluationRow({ plan, patientId }: { plan: ExecutionPlanSummary; patien
                               {sessionTests.length > 0 && ` · ${sessionTests.length} teste${sessionTests.length !== 1 ? 's' : ''}`}
                             </span>
                           </div>
-                          <button
-                            onClick={() => navigate(`/patients/${patientId}/evaluate/${plan.id}`, {
-                              state: {
-                                sessionId: cs.id,
-                                sessionNumber: cs.session_number,
-                                sessionDate: cs.session_date,
-                              }
-                            })}
-                            className="text-[11px] font-medium text-brand-mid hover:underline shrink-0"
-                          >
-                            Continuar
-                          </button>
+                          {!sessionDone && (
+                            <button
+                              onClick={() => navigate(`/patients/${patientId}/evaluate/${plan.id}`, {
+                                state: {
+                                  sessionId: cs.id,
+                                  sessionNumber: cs.session_number,
+                                  sessionDate: cs.session_date,
+                                }
+                              })}
+                              className="text-[11px] font-medium text-brand-mid hover:underline shrink-0"
+                            >
+                              Continuar
+                            </button>
+                          )}
                         </div>
                         {sessionTests.length > 0 ? (
                           <div className="flex flex-wrap gap-1.5">
