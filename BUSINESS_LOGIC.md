@@ -361,6 +361,7 @@ All known test types and their raw data structures:
 | `FCSRT` | `total_inmediato` | `total_inmediato` |
 | `Toulouse-Pieron` | `productividad_neta` | `productividad_neta` |
 | `Perfil-Sensorial` | multiple subscales | sum of all values |
+| `BTA` | `n_secuencias` (array 10), `l_secuencias` (array 10), `puntuacion_n`, `puntuacion_l`, `total` | `total` (0–20) |
 
 **Frontend form components** (`frontend/src/components/evaluation/forms/`):
 - `TmtForm` → TMT-A, TMT-B
@@ -372,6 +373,8 @@ All known test types and their raw data structures:
 - `TorreForm` → Torre-de-Londres
 - `DigitosForm` → Dígitos
 - `WaisSubtestForm` → WAIS-IV
+- `MocaForm` → MoCA
+- `BtaForm` → BTA
 - `GenericForm` → all other tests (single `puntuacion_bruta` field)
 
 ---
