@@ -29,7 +29,7 @@ export default function RegisterSession() {
       clinicalSessionsApi.list(planId),
     ]).then(([planWithResults, sessions]) => {
       setProtocolName(planWithResults.protocol_name ?? null)
-      const active = (planWithResults.test_customizations ?? []).filter(t => !t.skip)
+      const active = (planWithResults.test_customizations ?? [] as TestCustomization[]).filter((t: TestCustomization) => !t.skip)
       setAllTests(active)
       setExistingSessions(sessions)
 
@@ -43,7 +43,7 @@ export default function RegisterSession() {
       setRegisteredMap(regMap)
 
       // Pre-select all unregistered tests
-      const unregistered = new Set(active.filter(t => !regMap.has(t.test_type)).map(t => t.test_type))
+      const unregistered = new Set<string>(active.filter((t: TestCustomization) => !regMap.has(t.test_type)).map((t: TestCustomization) => t.test_type))
       setSelectedTests(unregistered)
     }).catch(() => {
       setError('Erro ao carregar dados do plano.')

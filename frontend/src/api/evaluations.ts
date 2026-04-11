@@ -64,6 +64,7 @@ export interface ClinicalSessionSummary {
 export interface ExecutionPlanWithResults extends ExecutionPlanSummary {
   test_results: TestResultItem[]
   clinical_sessions?: ClinicalSessionSummary[]
+  test_customizations?: TestCustomization[]
 }
 
 export interface IncompletePlan {

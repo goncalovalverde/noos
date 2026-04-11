@@ -36,6 +36,8 @@ function fmtSessionDate(d: string | null | undefined) {
   return new Date(d + 'T12:00:00').toLocaleDateString('pt-PT', { day: '2-digit', month: 'short', year: 'numeric' })
 }
 
+const fmtDate = fmtSessionDate
+
 // Expandable row: loads full results on first open, shows sessions timeline
 function EvaluationRow({ plan, patientId }: { plan: ExecutionPlanSummary; patientId: string }) {
   const navigate = useNavigate()

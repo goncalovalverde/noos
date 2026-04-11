@@ -127,6 +127,7 @@ class ExecutionPlanService:
                 }
                 for cs in clinical_sessions
             ],
+            "test_customizations": plan._get_customizations(),
         }
 
     def get_plan(self, plan_id: str, user: User) -> ExecutionPlanOut:

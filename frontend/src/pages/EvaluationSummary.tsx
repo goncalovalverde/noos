@@ -9,7 +9,7 @@ import {
   Radar,
   ResponsiveContainer,
 } from 'recharts'
-import { evaluationsApi, type ExecutionPlanWithResults, type TestResultItem } from '@/api/evaluations'
+import { evaluationsApi, type ExecutionPlanWithResults, type TestResultItem, type TestCustomization } from '@/api/evaluations'
 import type { Patient } from '@/types/patient'
 import { patientsApi } from '@/api/patients'
 
@@ -82,8 +82,8 @@ export default function EvaluationSummary() {
 
   // Protocol tests not yet in results at all
   const registeredTypes = new Set(sessions.map(s => s.test_type))
-  const protocolTestTypes = (planResults?.test_customizations ?? []).filter(t => !t.skip).map(t => t.test_type)
-  const pendingTestTypes = protocolTestTypes.filter(tt => !registeredTypes.has(tt))
+  const protocolTestTypes = (planResults?.test_customizations ?? [] as TestCustomization[]).filter((t: TestCustomization) => !t.skip).map((t: TestCustomization) => t.test_type)
+  const pendingTestTypes = protocolTestTypes.filter((tt: string) => !registeredTypes.has(tt))
 
   function fmtClinDate(d: string | null | undefined) {
     if (!d) return '—'
@@ -121,7 +121,7 @@ export default function EvaluationSummary() {
                 <p className="text-sm text-gray-500 mt-0.5">{protocolName}</p>
               )}
               <p className="text-sm text-gray-400 mt-0.5">
-                {clinicalSessions.length} sess{clinicalSessions.length !== 1 ? 'ões' : 'ão'} · {sessions.length} de {(planResults?.test_customizations ?? []).filter(t => !t.skip).length} testes registados
+                {clinicalSessions.length} sess{clinicalSessions.length !== 1 ? 'ões' : 'ão'} · {sessions.length} de {(planResults?.test_customizations ?? [] as TestCustomization[]).filter((t: TestCustomization) => !t.skip).length} testes registados
               </p>
             </div>
           </div>
