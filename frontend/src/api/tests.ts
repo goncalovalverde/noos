@@ -6,6 +6,7 @@ export interface TestCreate {
   test_type: string
   execution_plan_id?: string
   protocol_id?: string
+  clinical_session_id?: string
   raw_data: Record<string, unknown>
   qualitative_data?: Record<string, unknown>
 }

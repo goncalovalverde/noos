@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
-import { X, Loader2, CheckCircle2 } from 'lucide-react'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
+import { X, Loader2, CheckCircle2, Calendar } from 'lucide-react'
 import { evaluationsApi, type TestCustomization } from '@/api/evaluations'
+import { clinicalSessionsApi, type ClinicalSession } from '@/api/clinicalSessions'
 import { testsApi } from '@/api/tests'
 import { patientsApi } from '@/api/patients'
 import type { Patient } from '@/types/patient'
@@ -17,6 +18,15 @@ const CLASSIFICATION_COLORS: Record<string, string> = {
 export default function EvaluationSession() {
   const { id: patientId, planId } = useParams<{ id: string; planId: string }>()
   const navigate = useNavigate()
+  const location = useLocation()
+
+  // Session context — passed from EvaluationSetup, or loaded from API on refresh
+  const navState = location.state as { sessionId?: string; sessionNumber?: number; sessionDate?: string } | null
+  const [session, setSession] = useState<ClinicalSession | null>(
+    navState?.sessionId
+      ? { id: navState.sessionId, execution_plan_id: planId ?? '', session_number: navState.sessionNumber ?? 1, session_date: navState.sessionDate ?? '', notes: null, created_at: '' }
+      : null
+  )
 
   const [_patient, setPatient] = useState<Patient | null>(null)
   const [tests, setTests] = useState<TestCustomization[]>([])
@@ -46,6 +56,16 @@ export default function EvaluationSession() {
     }).finally(() => setLoading(false))
   }, [patientId, planId])
 
+  // If session wasn't passed via nav state (e.g. page refresh), load the most recent session
+  useEffect(() => {
+    if (session || !planId) return
+    clinicalSessionsApi.list(planId).then(sessions => {
+      if (sessions.length > 0) {
+        setSession(sessions[sessions.length - 1])
+      }
+    }).catch(() => { /* no sessions yet — session stays null */ })
+  }, [planId, session])
+
   const currentTest = tests[currentIdx]
   const isLast = currentIdx >= tests.length - 1
 
@@ -66,6 +86,7 @@ export default function EvaluationSession() {
         patient_id: patientId,
         execution_plan_id: planId,
         test_type: currentTest.test_type,
+        clinical_session_id: session?.id,
         raw_data: rawData,
         qualitative_data: qualitativeData,
       })
@@ -113,6 +134,17 @@ export default function EvaluationSession() {
       <header className="bg-white border-b border-gray-200 px-6 py-3 sticky top-0 z-10">
         <div className="max-w-3xl mx-auto flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 min-w-0">
+            {session && (
+              <span className="flex items-center gap-1 text-xs font-medium text-brand-mid bg-purple-50 border border-purple-100 rounded-full px-2.5 py-1 shrink-0">
+                <Calendar className="w-3 h-3" />
+                Sessão {session.session_number}
+                {session.session_date && (
+                  <span className="text-brand-muted ml-1">
+                    {new Date(session.session_date + 'T12:00:00').toLocaleDateString('pt-PT', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                  </span>
+                )}
+              </span>
+            )}
             <span className="text-sm text-brand-muted">
               Test {currentIdx + 1} de {tests.length} — {currentTest.test_type}
             </span>
