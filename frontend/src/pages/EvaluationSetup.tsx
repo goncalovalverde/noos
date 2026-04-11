@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { ChevronLeft, ClipboardList, PlayCircle, CalendarDays, ListChecks, Plus, X, Layers } from 'lucide-react'
+import { ChevronLeft, ClipboardList, ListChecks, Plus, X, ArrowRight } from 'lucide-react'
 import { protocolsApi, type Protocol } from '@/api/protocols'
 import { evaluationsApi, type TestCustomization } from '@/api/evaluations'
-import { clinicalSessionsApi } from '@/api/clinicalSessions'
 import { extractApiError } from '@/utils/apiError'
 
 const ALL_TEST_TYPES = [
@@ -19,7 +18,6 @@ export default function EvaluationSetup() {
 
   const [protocols, setProtocols] = useState<Protocol[]>([])
   const [selectedProtocol, setSelectedProtocol] = useState<Protocol | null>(null)
-  const [performedDate, setPerformedDate] = useState<string>('')
   const [loading, setLoading] = useState(true)
   const [starting, setStarting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -62,28 +60,14 @@ export default function EvaluationSetup() {
     setStarting(true)
     setError(null)
     try {
-      const today = new Date().toISOString().split('T')[0]
-      const sessionDate = performedDate || today
-      const performed_at = new Date(sessionDate).toISOString()
+      const plan = await evaluationsApi.create(patientId, selectedProtocol.id, 'paper')
 
-      const plan = await evaluationsApi.create(patientId, selectedProtocol.id, 'paper', performed_at)
-
-      // Apply customizations if the protocol allows them and the user made changes
       if (selectedProtocol.allow_customization) {
         await evaluationsApi.update(plan.id, { test_customizations: customTests })
       }
       await evaluationsApi.update(plan.id, { status: 'active' })
 
-      // Create session 1 for this plan — all tests entered now will belong to it
-      const session = await clinicalSessionsApi.create(plan.id, { session_date: sessionDate })
-
-      navigate(`/patients/${patientId}/evaluate/${plan.id}`, {
-        state: {
-          sessionId: session.id,
-          sessionNumber: session.session_number,
-          sessionDate: session.session_date,
-        },
-      })
+      navigate(`/patients/${patientId}/evaluate/${plan.id}/new-session`)
     } catch (err: unknown) {
       setError(extractApiError(err, 'Error al iniciar la evaluación. Inténtalo de nuevo.'))
     } finally {
@@ -103,7 +87,7 @@ export default function EvaluationSetup() {
           Volver al paciente
         </Link>
         <span className="text-brand-muted">·</span>
-        <span className="text-sm font-medium text-brand-ink">Nueva Evaluación</span>
+        <span className="text-sm font-medium text-brand-ink">Nova Avaliação</span>
       </header>
 
       <div className="max-w-3xl mx-auto px-6 py-8 space-y-6">
@@ -145,37 +129,7 @@ export default function EvaluationSetup() {
           )}
         </div>
 
-        {/* Step 2: Session 1 date */}
-        <div className="bg-white rounded-card shadow-card p-6">
-          <div className="flex items-center gap-2 mb-1">
-            <CalendarDays className="w-5 h-5 text-brand-mid" />
-            <h2 className="text-base font-semibold text-brand-ink">Sessão 1 — data da visita</h2>
-          </div>
-          <p className="text-xs text-brand-muted mb-4 ml-7">
-            Os testes registados agora ficarão associados a esta sessão. Pode adicionar sessões subsequentes depois.
-          </p>
-          <div>
-            <label className="block text-sm font-medium text-brand-ink mb-1">
-              Quando foi realizada esta sessão com o paciente?
-            </label>
-            <p className="text-xs text-brand-muted mb-3">Pode ser hoje ou uma data anterior. Se deixar vazio usa-se a data de hoje.</p>
-            <input
-              type="date"
-              value={performedDate}
-              max={new Date().toISOString().split('T')[0]}
-              onChange={e => setPerformedDate(e.target.value)}
-              className="w-56 px-3 py-2 border border-gray-200 rounded-input text-sm focus:outline-none focus:ring-2 focus:ring-brand-mid"
-            />
-          </div>
-          <div className="mt-4 flex items-start gap-2 bg-purple-50 border border-purple-100 rounded-lg px-3 py-2.5">
-            <Layers className="w-4 h-4 text-brand-mid mt-0.5 shrink-0" />
-            <p className="text-xs text-brand-muted">
-              Se o protocolo for executado em mais do que uma sessão, poderá registar as sessões seguintes a partir do perfil do paciente.
-            </p>
-          </div>
-        </div>
-
-        {/* Step 3: Customize tests (only when protocol allows it) */}
+        {/* Step 2: Customize tests (only when protocol allows it) */}
         {selectedProtocol?.allow_customization && customTests.length > 0 && (
           <div className="bg-white rounded-card shadow-card p-6">
             <div className="flex items-center justify-between mb-4">
@@ -268,8 +222,9 @@ export default function EvaluationSetup() {
               disabled={starting || activeCount === 0}
               className="flex items-center gap-2 bg-brand-mid text-white font-medium px-8 py-3 rounded-btn hover:bg-brand-dark transition-colors disabled:opacity-60 text-base"
             >
-              <PlayCircle className="w-5 h-5" />
-              {starting ? 'Iniciando…' : 'Iniciar sessão 1'}
+              {starting ? 'A criar…' : (
+                <>Continuar para sessão <ArrowRight className="w-4 h-4" /></>
+              )}
             </button>
           </div>
         )}
