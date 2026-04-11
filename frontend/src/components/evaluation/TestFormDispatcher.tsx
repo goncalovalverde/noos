@@ -1,3 +1,4 @@
+import BeckForm from './forms/BeckForm'
 import BtaForm from './forms/BtaForm'
 import TmtForm from './forms/TmtForm'
 import TavecForm from './forms/TavecForm'
@@ -67,6 +68,7 @@ export default function TestFormDispatcher({ testType, mode, onSave, onSkip, sav
       />
     )
   if (testType === 'BTA') return <BtaForm {...commonProps} />
+  if (testType === 'BDI-II' || testType === 'Beck') return <BeckForm {...commonProps} />
   if (testType === 'Torre-Londres') return <TorreForm {...commonProps} />
   if (testType === 'Stroop') return <StroopForm {...commonProps} />
   if (testType === 'MoCA') return <MocaForm {...commonProps} />

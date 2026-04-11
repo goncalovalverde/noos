@@ -36,9 +36,40 @@ class NormativeCalculator:
     def calculate(self, test_type: str, raw_score: float, age: int, education_years: int) -> dict:
         if test_type == "MoCA":
             return self._calculate_moca(raw_score, education_years)
+        if test_type in ("BDI-II", "Beck"):
+            return self._calculate_bdi(raw_score)
         if test_type in self._tables:
             return self._calculate_from_table(test_type, raw_score, age, education_years)
         return self._calculate_simulated(test_type, raw_score, age, education_years)
+
+    def _calculate_bdi(self, total: float) -> dict:
+        """
+        BDI-II (Beck, Steer & Brown, 1996).
+        Total 0–63. No NEURONORMA table — uses clinical cutoffs.
+        """
+        score = int(total)
+        if score <= 13:
+            clasificacion = "Depresión mínima"
+        elif score <= 19:
+            clasificacion = "Depresión leve"
+        elif score <= 28:
+            clasificacion = "Depresión moderada"
+        else:
+            clasificacion = "Depresión grave"
+
+        return {
+            "puntuacion_escalar": score,
+            "percentil": None,
+            "z_score": None,
+            "clasificacion": clasificacion,
+            "norma_aplicada": {
+                "fuente": "BDI-II — Beck, Steer & Brown (1996)",
+                "test": "BDI-II",
+                "punto_corte_leve": 14,
+                "punto_corte_moderada": 20,
+                "punto_corte_grave": 29,
+            },
+        }
 
     def _calculate_moca(self, total_bruto: float, education_years: int) -> dict:
         """

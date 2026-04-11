@@ -362,6 +362,7 @@ All known test types and their raw data structures:
 | `Toulouse-Pieron` | `productividad_neta` | `productividad_neta` |
 | `Perfil-Sensorial` | multiple subscales | sum of all values |
 | `BTA` | `n_secuencias` (array 10), `l_secuencias` (array 10), `puntuacion_n`, `puntuacion_l`, `total` | `total` (0–20) |
+| `BDI-II` | 21 item keys (tristeza, pesimismo, …), `total` | `total` (0–63) |
 
 **Frontend form components** (`frontend/src/components/evaluation/forms/`):
 - `TmtForm` → TMT-A, TMT-B
@@ -375,6 +376,7 @@ All known test types and their raw data structures:
 - `WaisSubtestForm` → WAIS-IV
 - `MocaForm` → MoCA
 - `BtaForm` → BTA
+- `BeckForm` → BDI-II, Beck
 - `GenericForm` → all other tests (single `puntuacion_bruta` field)
 
 ---
