@@ -18,11 +18,11 @@ export interface ClinicalSession {
 
 export const clinicalSessionsApi = {
   create: async (planId: string, body: ClinicalSessionCreate): Promise<ClinicalSession> => {
-    const { data } = await apiClient.post<ClinicalSession>(`/plans/${planId}/sessions`, body)
+    const { data } = await apiClient.post<ClinicalSession>(`/plans/${planId}/sessions/`, body)
     return data
   },
   list: async (planId: string): Promise<ClinicalSession[]> => {
-    const { data } = await apiClient.get<ClinicalSession[]>(`/plans/${planId}/sessions`)
+    const { data } = await apiClient.get<ClinicalSession[]>(`/plans/${planId}/sessions/`)
     return data
   },
   get: async (planId: string, sessionId: string): Promise<ClinicalSession> => {
