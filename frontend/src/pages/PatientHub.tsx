@@ -174,7 +174,8 @@ function EvaluationRow({ plan, patientId }: { plan: ExecutionPlanSummary; patien
               {clinicalSessions.map((cs, idx) => {
                 const sessionTests = testResults.filter(r => r.clinical_session_id === cs.id)
                 const isLast = idx === clinicalSessions.length - 1
-                const sessionDone = allTestsDone || (isLast && activeTCs.every(tc => completedTypes.has(tc.test_type)))
+                // Continuar only makes sense on the last session, and only when there are still pending tests
+                const showContinuar = isLast && !allTestsDone
                 return (
                   <div key={cs.id} className="flex gap-3">
                     {/* Timeline indicator */}
@@ -202,7 +203,7 @@ function EvaluationRow({ plan, patientId }: { plan: ExecutionPlanSummary; patien
                               {sessionTests.length > 0 && ` · ${sessionTests.length} teste${sessionTests.length !== 1 ? 's' : ''}`}
                             </span>
                           </div>
-                          {!sessionDone && (
+                          {showContinuar && (
                             <button
                               onClick={() => navigate(`/patients/${patientId}/evaluate/${plan.id}`, {
                                 state: {
