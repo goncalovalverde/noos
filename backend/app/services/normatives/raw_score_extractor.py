@@ -26,6 +26,7 @@ def extract_raw_score(test_type: str, raw_data: Dict[str, Any]) -> float:
         "MoCA":              lambda d: float(d.get("total_bruto", 0)),
         "BTA":               lambda d: float(d.get("total", 0)),
         "BDI-II":            lambda d: float(d.get("total", 0)),
+        "STAI":              lambda d: float(d.get("puntuacion_estado", 0)),
     }
 
     if test_type not in extractors:

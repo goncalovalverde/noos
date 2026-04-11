@@ -38,9 +38,40 @@ class NormativeCalculator:
             return self._calculate_moca(raw_score, education_years)
         if test_type in ("BDI-II", "Beck"):
             return self._calculate_bdi(raw_score)
+        if test_type == "STAI":
+            return self._calculate_stai(raw_score)
         if test_type in self._tables:
             return self._calculate_from_table(test_type, raw_score, age, education_years)
         return self._calculate_simulated(test_type, raw_score, age, education_years)
+
+    def _calculate_stai(self, puntuacion_estado: float) -> dict:
+        """
+        STAI — Spielberger, Gorsuch & Lushene (1970).
+        Adaptación española: Buela-Casal, Guillén-Riquelme & Seisdedos Cubero (2011).
+        Uses Estado score (0–60) as primary. Rasgo stored separately in raw_data.
+        No NEURONORMA table — orientative cutoffs (norms vary by age/sex).
+        """
+        score = int(puntuacion_estado)
+        if score <= 20:
+            clasificacion = "Ansiedad baja"
+        elif score <= 30:
+            clasificacion = "Ansiedad media"
+        elif score <= 44:
+            clasificacion = "Ansiedad alta"
+        else:
+            clasificacion = "Ansiedad muy alta"
+
+        return {
+            "puntuacion_escalar": score,
+            "percentil": None,
+            "z_score": None,
+            "clasificacion": clasificacion,
+            "norma_aplicada": {
+                "fuente": "STAI — Spielberger et al. (1970) / Buela-Casal et al. (2011)",
+                "test": "STAI",
+                "nota": "Puntuación Estado. Ver también puntuacion_rasgo en raw_data.",
+            },
+        }
 
     def _calculate_bdi(self, total: float) -> dict:
         """

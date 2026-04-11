@@ -363,6 +363,7 @@ All known test types and their raw data structures:
 | `Perfil-Sensorial` | multiple subscales | sum of all values |
 | `BTA` | `n_secuencias` (array 10), `l_secuencias` (array 10), `puntuacion_n`, `puntuacion_l`, `total` | `total` (0–20) |
 | `BDI-II` | 21 item keys (tristeza, pesimismo, …), `total` | `total` (0–63) |
+| `STAI` | `estado_items` (array 20), `rasgo_items` (array 20), `puntuacion_estado`, `puntuacion_rasgo`, `total` | `puntuacion_estado` (0–60) |
 
 **Frontend form components** (`frontend/src/components/evaluation/forms/`):
 - `TmtForm` → TMT-A, TMT-B
@@ -377,6 +378,7 @@ All known test types and their raw data structures:
 - `MocaForm` → MoCA
 - `BtaForm` → BTA
 - `BeckForm` → BDI-II, Beck
+- `StaiForm` → STAI
 - `GenericForm` → all other tests (single `puntuacion_bruta` field)
 
 ---
