@@ -6,6 +6,9 @@ interface Props {
   onSave: (raw: Record<string, unknown>, qual?: Record<string, unknown>) => Promise<void>
   onSkip?: () => void
   saving: boolean
+  initialData?: Record<string, unknown>
+  initialQual?: Record<string, unknown>
+  saveLabel?: string
 }
 
 // BDI-II — 21 items, each 0-3 (Beck, Steer & Brown, 1996)
@@ -231,9 +234,9 @@ const CLASSIFICATION = (score: number) => {
   return { label: 'Grave', color: 'text-red-600', bg: 'bg-red-50' }
 }
 
-export default function BeckForm({ mode: _mode, onSave, onSkip, saving }: Props) {
-  const [scores, setScores] = useState<Record<string, number>>(
-    Object.fromEntries(ITEMS.map(i => [i.id, 0]))
+export default function BeckForm({ mode: _mode, onSave, onSkip, saving, initialData, initialQual, saveLabel }: Props) {
+  const [scores, setScores] = useState<Record<string, number>>(() =>
+    Object.fromEntries(ITEMS.map(i => [i.id, (initialData?.[i.id] as number) ?? 0]))
   )
 
   const total = Object.values(scores).reduce((a, b) => a + b, 0)
@@ -254,6 +257,8 @@ export default function BeckForm({ mode: _mode, onSave, onSkip, saving }: Props)
       saving={saving}
       rawData={raw}
       isValid={true}
+      initialQual={initialQual}
+      saveLabel={saveLabel}
     >
       {/* Live total */}
       <div className={`flex items-center justify-between border rounded-xl px-4 py-3 -mt-1 ${cls.bg} border-opacity-50`}

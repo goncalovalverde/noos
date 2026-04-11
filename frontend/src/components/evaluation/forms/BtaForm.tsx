@@ -6,6 +6,9 @@ interface Props {
   onSave: (raw: Record<string, unknown>, qual?: Record<string, unknown>) => Promise<void>
   onSkip?: () => void
   saving: boolean
+  initialData?: Record<string, unknown>
+  initialQual?: Record<string, unknown>
+  saveLabel?: string
 }
 
 // BTA — 10 sequences of increasing length (4–13 items)
@@ -61,9 +64,15 @@ function SeqRow({
   )
 }
 
-export default function BtaForm({ mode: _mode, onSave, onSkip, saving }: Props) {
-  const [seqN, setSeqN] = useState<boolean[]>(Array(10).fill(false))
-  const [seqL, setSeqL] = useState<boolean[]>(Array(10).fill(false))
+export default function BtaForm({ mode: _mode, onSave, onSkip, saving, initialData, initialQual, saveLabel }: Props) {
+  const [seqN, setSeqN] = useState<boolean[]>(() => {
+    const stored = initialData?.n_secuencias as number[] | undefined
+    return stored ? stored.map(v => v === 1) : Array(10).fill(false)
+  })
+  const [seqL, setSeqL] = useState<boolean[]>(() => {
+    const stored = initialData?.l_secuencias as number[] | undefined
+    return stored ? stored.map(v => v === 1) : Array(10).fill(false)
+  })
 
   const puntuacionN = seqN.filter(Boolean).length
   const puntuacionL = seqL.filter(Boolean).length
@@ -91,6 +100,8 @@ export default function BtaForm({ mode: _mode, onSave, onSkip, saving }: Props) 
       saving={saving}
       rawData={raw}
       isValid={true}
+      initialQual={initialQual}
+      saveLabel={saveLabel}
     >
       {/* Live total */}
       <div className="flex items-center justify-between bg-[#faf5ff] border border-[#ede9fe] rounded-xl px-4 py-3 -mt-1">

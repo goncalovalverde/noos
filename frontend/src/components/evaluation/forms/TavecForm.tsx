@@ -6,6 +6,9 @@ interface Props {
   onSave: (raw: Record<string, unknown>, qual?: Record<string, unknown>) => Promise<void>
   onSkip?: () => void
   saving: boolean
+  initialData?: Record<string, unknown>
+  initialQual?: Record<string, unknown>
+  saveLabel?: string
 }
 
 type TavecKey = 'ensayo_1' | 'ensayo_2' | 'ensayo_3' | 'ensayo_4' | 'ensayo_5' |
@@ -19,10 +22,15 @@ const INITIAL: Record<TavecKey, string> = {
 }
 
 
-export default function TavecForm({ mode: _mode, onSave, onSkip, saving }: Props) {
-  const [values, setValues] = useState(INITIAL)
-  const [intrusionesTotal, setIntrusionesTotal] = useState('')
-  const [perseveracionesTotal, setPerseveracionesTotal] = useState('')
+export default function TavecForm({ mode: _mode, onSave, onSkip, saving, initialData, initialQual, saveLabel }: Props) {
+  const [values, setValues] = useState<Record<TavecKey, string>>(() => {
+    if (!initialData) return INITIAL
+    return Object.fromEntries(
+      Object.keys(INITIAL).map(k => [k, initialData[k] != null ? String(initialData[k]) : ''])
+    ) as Record<TavecKey, string>
+  })
+  const [intrusionesTotal, setIntrusionesTotal] = useState(() => initialData?.intrusiones_total != null ? String(initialData.intrusiones_total) : '')
+  const [perseveracionesTotal, setPerseveracionesTotal] = useState(() => initialData?.perseveraciones_total != null ? String(initialData.perseveraciones_total) : '')
 
   const set = (k: TavecKey) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setValues(prev => ({ ...prev, [k]: e.target.value }))
@@ -46,6 +54,8 @@ export default function TavecForm({ mode: _mode, onSave, onSkip, saving }: Props
       saving={saving}
       rawData={raw}
       isValid={isValid}
+      initialQual={initialQual}
+      saveLabel={saveLabel}
     >
       <div>
         <p className="text-sm font-medium text-brand-ink mb-2">

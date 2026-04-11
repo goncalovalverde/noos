@@ -6,6 +6,9 @@ interface Props {
   onSave: (raw: Record<string, unknown>, qual?: Record<string, unknown>) => Promise<void>
   onSkip?: () => void
   saving: boolean
+  initialData?: Record<string, unknown>
+  initialQual?: Record<string, unknown>
+  saveLabel?: string
 }
 
 // STAI — Spielberger, Gorsuch & Lushene (1970)
@@ -136,12 +139,17 @@ function SectionHeader({ title, subtitle, score, answered }: {
   )
 }
 
-export default function StaiForm({ mode: _mode, onSave, onSkip, saving }: Props) {
-  const initE = Object.fromEntries(ITEMS_E.map(i => [i.id, 0]))
-  const initR = Object.fromEntries(ITEMS_R.map(i => [i.id, 0]))
-
-  const [valE, setValE] = useState<Record<string, number>>(initE)
-  const [valR, setValR] = useState<Record<string, number>>(initR)
+export default function StaiForm({ mode: _mode, onSave, onSkip, saving, initialData, initialQual, saveLabel }: Props) {
+  const [valE, setValE] = useState<Record<string, number>>(() => {
+    const arr = initialData?.estado_items as number[] | undefined
+    if (!arr) return Object.fromEntries(ITEMS_E.map(i => [i.id, 0]))
+    return Object.fromEntries(ITEMS_E.map((item, idx) => [item.id, arr[idx] ?? 0]))
+  })
+  const [valR, setValR] = useState<Record<string, number>>(() => {
+    const arr = initialData?.rasgo_items as number[] | undefined
+    if (!arr) return Object.fromEntries(ITEMS_R.map(i => [i.id, 0]))
+    return Object.fromEntries(ITEMS_R.map((item, idx) => [item.id, arr[idx] ?? 0]))
+  })
   const [activeTab, setActiveTab] = useState<'E' | 'R'>('E')
 
   const scoreE = computeScore(ITEMS_E, valE)
@@ -166,6 +174,8 @@ export default function StaiForm({ mode: _mode, onSave, onSkip, saving }: Props)
       saving={saving}
       rawData={raw}
       isValid={true}
+      initialQual={initialQual}
+      saveLabel={saveLabel}
     >
       {/* Summary bar */}
       <div className="grid grid-cols-2 gap-3">

@@ -20,10 +20,13 @@ interface Props {
   onSave: (raw: Record<string, unknown>, qual?: Record<string, unknown>) => Promise<void>
   onSkip?: () => void
   saving: boolean
+  initialData?: Record<string, unknown>
+  initialQual?: Record<string, unknown>
+  saveLabel?: string
 }
 
-export default function TestFormDispatcher({ testType, mode, onSave, onSkip, saving }: Props) {
-  const commonProps = { mode, onSave, onSkip, saving }
+export default function TestFormDispatcher({ testType, mode, onSave, onSkip, saving, initialData, initialQual, saveLabel }: Props) {
+  const commonProps = { mode, onSave, onSkip, saving, initialData, initialQual, saveLabel }
 
   if (testType === 'TMT-A' || testType === 'TMT-B')
     return <TmtForm testType={testType as 'TMT-A' | 'TMT-B'} {...commonProps} />

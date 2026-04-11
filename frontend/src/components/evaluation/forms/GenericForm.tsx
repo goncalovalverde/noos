@@ -7,10 +7,13 @@ interface Props {
   onSave: (raw: Record<string, unknown>, qual?: Record<string, unknown>) => Promise<void>
   onSkip?: () => void
   saving: boolean
+  initialData?: Record<string, unknown>
+  initialQual?: Record<string, unknown>
+  saveLabel?: string
 }
 
-export default function GenericForm({ testType, mode: _mode, onSave, onSkip, saving }: Props) {
-  const [value, setValue] = useState('')
+export default function GenericForm({ testType, mode: _mode, onSave, onSkip, saving, initialData, initialQual, saveLabel }: Props) {
+  const [value, setValue] = useState(() => initialData?.puntuacion_bruta != null ? String(initialData.puntuacion_bruta) : '')
   const raw = { puntuacion_bruta: Number(value) || 0 }
   const isValid = value !== ''
 
@@ -23,6 +26,8 @@ export default function GenericForm({ testType, mode: _mode, onSave, onSkip, sav
       saving={saving}
       rawData={raw}
       isValid={isValid}
+      initialQual={initialQual}
+      saveLabel={saveLabel}
     >
       <div>
         <label htmlFor="generic-score" className="block text-sm font-medium text-brand-ink mb-1">

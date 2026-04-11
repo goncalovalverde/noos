@@ -6,14 +6,17 @@ interface Props {
   onSave: (raw: Record<string, unknown>, qual?: Record<string, unknown>) => Promise<void>
   onSkip?: () => void
   saving: boolean
+  initialData?: Record<string, unknown>
+  initialQual?: Record<string, unknown>
+  saveLabel?: string
 }
 
-export default function FluidezFasForm({ mode: _mode, onSave, onSkip, saving }: Props) {
-  const [f, setF] = useState('')
-  const [a, setA] = useState('')
-  const [s, setS] = useState('')
-  const [intrusiones, setIntrusiones] = useState('')
-  const [perseveraciones, setPerseveraciones] = useState('')
+export default function FluidezFasForm({ mode: _mode, onSave, onSkip, saving, initialData, initialQual, saveLabel }: Props) {
+  const [f, setF] = useState(() => initialData?.letra_f != null ? String(initialData.letra_f) : '')
+  const [a, setA] = useState(() => initialData?.letra_a != null ? String(initialData.letra_a) : '')
+  const [s, setS] = useState(() => initialData?.letra_s != null ? String(initialData.letra_s) : '')
+  const [intrusiones, setIntrusiones] = useState(() => initialData?.intrusiones != null ? String(initialData.intrusiones) : '')
+  const [perseveraciones, setPerseveraciones] = useState(() => initialData?.perseveraciones != null ? String(initialData.perseveraciones) : '')
 
   const total = (Number(f) || 0) + (Number(a) || 0) + (Number(s) || 0)
   const raw = {
@@ -34,6 +37,8 @@ export default function FluidezFasForm({ mode: _mode, onSave, onSkip, saving }: 
       saving={saving}
       rawData={raw}
       isValid={isValid}
+      initialQual={initialQual}
+      saveLabel={saveLabel}
     >
       <p className="text-sm text-brand-muted">
         Total: <strong className="text-brand-dark">{total}</strong> palabras

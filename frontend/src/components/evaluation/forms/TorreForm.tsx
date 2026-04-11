@@ -6,6 +6,9 @@ interface Props {
   onSave: (raw: Record<string, unknown>, qual?: Record<string, unknown>) => Promise<void>
   onSkip?: () => void
   saving: boolean
+  initialData?: Record<string, unknown>
+  initialQual?: Record<string, unknown>
+  saveLabel?: string
 }
 
 const MIN_MOVES: Record<number, number> = {
@@ -15,13 +18,15 @@ const MIN_MOVES: Record<number, number> = {
 
 const PROBLEMS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] as const
 
-export default function TorreForm({ mode: _mode, onSave, onSkip, saving }: Props) {
-  const [movements, setMovements] = useState<Record<number, string>>(
-    Object.fromEntries(PROBLEMS.map(p => [p, '']))
-  )
-  const [times, setTimes] = useState<Record<number, string>>(
-    Object.fromEntries(PROBLEMS.map(p => [p, '']))
-  )
+export default function TorreForm({ mode: _mode, onSave, onSkip, saving, initialData, initialQual, saveLabel }: Props) {
+  const [movements, setMovements] = useState<Record<number, string>>(() => {
+    const mc = initialData?.movement_counts as (number | null)[] | undefined
+    return Object.fromEntries(PROBLEMS.map(p => [p, mc?.[p - 1] != null ? String(mc![p - 1]) : '']))
+  })
+  const [times, setTimes] = useState<Record<number, string>>(() => {
+    const ts = initialData?.time_seconds as (number | null)[] | undefined
+    return Object.fromEntries(PROBLEMS.map(p => [p, ts?.[p - 1] != null ? String(ts![p - 1]) : '']))
+  })
 
   const setMovement = (problem: number) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setMovements(prev => ({ ...prev, [problem]: e.target.value }))
@@ -57,6 +62,8 @@ export default function TorreForm({ mode: _mode, onSave, onSkip, saving }: Props
       saving={saving}
       rawData={raw}
       isValid={isValid}
+      initialQual={initialQual}
+      saveLabel={saveLabel}
     >
       {/* Table */}
       <div className="overflow-x-auto">

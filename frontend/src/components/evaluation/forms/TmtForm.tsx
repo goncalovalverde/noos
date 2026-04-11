@@ -7,6 +7,9 @@ interface Props {
   onSave: (raw: Record<string, unknown>, qual?: Record<string, unknown>) => Promise<void>
   onSkip?: () => void
   saving: boolean
+  initialData?: Record<string, unknown>
+  initialQual?: Record<string, unknown>
+  saveLabel?: string
 }
 
 const TMT_DESCRIPTIONS: Record<string, string> = {
@@ -14,9 +17,9 @@ const TMT_DESCRIPTIONS: Record<string, string> = {
   'TMT-B': 'Alternar entre números y letras (1-A-2-B...) lo más rápido posible.',
 }
 
-export default function TmtForm({ testType, mode: _mode, onSave, onSkip, saving }: Props) {
-  const [tiempo, setTiempo] = useState('')
-  const [errores, setErrores] = useState('')
+export default function TmtForm({ testType, mode: _mode, onSave, onSkip, saving, initialData, initialQual, saveLabel }: Props) {
+  const [tiempo, setTiempo] = useState(() => initialData?.tiempo_segundos != null ? String(initialData.tiempo_segundos) : '')
+  const [errores, setErrores] = useState(() => initialData?.errores != null ? String(initialData.errores) : '')
 
   const raw = { tiempo_segundos: Number(tiempo) }
   const isValid = tiempo !== '' && Number(tiempo) > 0
@@ -30,6 +33,8 @@ export default function TmtForm({ testType, mode: _mode, onSave, onSkip, saving 
       saving={saving}
       rawData={raw}
       isValid={isValid}
+      initialQual={initialQual}
+      saveLabel={saveLabel}
     >
       <div>
         <label htmlFor="tmt-tiempo" className="block text-sm font-medium text-brand-ink mb-1">

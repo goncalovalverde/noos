@@ -115,6 +115,9 @@ export default function EditTestPage() {
           mode="paper"
           onSave={handleSave}
           saving={saving}
+          saveLabel="Guardar"
+          initialData={testResult.raw_data}
+          initialQual={testResult.qualitative_data ?? undefined}
         />
       </main>
 

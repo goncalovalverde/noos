@@ -6,6 +6,9 @@ interface Props {
   onSave: (raw: Record<string, unknown>, qual?: Record<string, unknown>) => Promise<void>
   onSkip?: () => void
   saving: boolean
+  initialData?: Record<string, unknown>
+  initialQual?: Record<string, unknown>
+  saveLabel?: string
 }
 
 // Test d2-R (Brickenkamp, Zillmer & Lazo, 2012)
@@ -46,8 +49,12 @@ function ColorBadge({ value, label }: { value: number; label: string }) {
   )
 }
 
-export default function D2Form({ mode: _mode, onSave, onSkip, saving }: Props) {
-  const [lines, setLines] = useState<LineData[]>(Array.from({ length: NUM_LINES }, emptyLine))
+export default function D2Form({ mode: _mode, onSave, onSkip, saving, initialData, initialQual, saveLabel }: Props) {
+  const [lines, setLines] = useState<LineData[]>(() => {
+    const stored = initialData?.lineas as Array<{ tr: number; o: number; c: number }> | undefined
+    if (!stored) return Array.from({ length: NUM_LINES }, emptyLine)
+    return stored.map(l => ({ tr: String(l.tr), o: String(l.o), c: String(l.c) }))
+  })
 
   const updateLine = (idx: number, field: keyof LineData, value: string) => {
     setLines(prev => prev.map((l, i) => i === idx ? { ...l, [field]: value } : l))
@@ -94,6 +101,8 @@ export default function D2Form({ mode: _mode, onSave, onSkip, saving }: Props) {
       saving={saving}
       rawData={raw}
       isValid={isValid}
+      initialQual={initialQual}
+      saveLabel={saveLabel}
     >
       {/* Summary scores */}
       <div className="grid grid-cols-3 gap-3">

@@ -7,6 +7,9 @@ interface Props {
   onSave: (raw: Record<string, unknown>, qual?: Record<string, unknown>) => Promise<void>
   onSkip?: () => void
   saving: boolean
+  initialData?: Record<string, unknown>
+  initialQual?: Record<string, unknown>
+  saveLabel?: string
 }
 
 const DESCRIPTIONS: Record<string, string> = {
@@ -23,11 +26,11 @@ const ESTRATEGIA_OPTIONS = [
   { value: 'V', label: 'V - Contaminación' },
 ]
 
-export default function ReyForm({ testType, mode: _mode, onSave, onSkip, saving }: Props) {
-  const [puntuacion, setPuntuacion] = useState('')
-  const [tiempoEjecucion, setTiempoEjecucion] = useState('')
-  const [tiempoDemora, setTiempoDemora] = useState('')
-  const [estrategia, setEstrategia] = useState('')
+export default function ReyForm({ testType, mode: _mode, onSave, onSkip, saving, initialData, initialQual, saveLabel }: Props) {
+  const [puntuacion, setPuntuacion] = useState(() => initialData?.puntuacion_bruta != null ? String(initialData.puntuacion_bruta) : '')
+  const [tiempoEjecucion, setTiempoEjecucion] = useState(() => initialData?.tiempo_segundos != null ? String(initialData.tiempo_segundos) : '')
+  const [tiempoDemora, setTiempoDemora] = useState(() => initialData?.tiempo_demora_minutos != null ? String(initialData.tiempo_demora_minutos) : '')
+  const [estrategia, setEstrategia] = useState(() => initialData?.estrategia != null ? String(initialData.estrategia) : '')
 
   const isCopia = testType === 'Rey-Copia'
 
@@ -49,6 +52,8 @@ export default function ReyForm({ testType, mode: _mode, onSave, onSkip, saving 
       saving={saving}
       rawData={raw}
       isValid={isValid}
+      initialQual={initialQual}
+      saveLabel={saveLabel}
     >
       {/* Primary score */}
       <div>

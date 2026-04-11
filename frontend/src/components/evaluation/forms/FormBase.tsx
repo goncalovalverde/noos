@@ -10,6 +10,8 @@ interface Props {
   saving: boolean
   rawData: Record<string, unknown>
   isValid?: boolean
+  saveLabel?: string
+  initialQual?: Record<string, unknown>
 }
 
 const CHECKLIST_ITEMS = [
@@ -20,9 +22,9 @@ const CHECKLIST_ITEMS = [
   { key: 'interrupciones', label: 'Interrupciones durante el test' },
 ]
 
-export default function FormBase({ testType, description, children, onSave, onSkip, saving, rawData, isValid = true }: Props) {
-  const [observaciones, setObservaciones] = useState('')
-  const [checklist, setChecklist] = useState<Record<string, boolean>>({})
+export default function FormBase({ testType, description, children, onSave, onSkip, saving, rawData, isValid = true, saveLabel, initialQual }: Props) {
+  const [observaciones, setObservaciones] = useState(() => (initialQual?.observaciones as string) ?? '')
+  const [checklist, setChecklist] = useState<Record<string, boolean>>(() => (initialQual?.checklist as Record<string, boolean>) ?? {})
 
   const handleSave = () => {
     onSave(rawData, { observaciones, checklist })
@@ -85,8 +87,8 @@ export default function FormBase({ testType, description, children, onSave, onSk
           disabled={saving || !isValid}
           className="flex items-center gap-2 bg-brand-mid text-white text-sm font-medium px-6 py-2 rounded-btn hover:bg-brand-dark transition-colors disabled:opacity-60"
         >
-          {saving ? 'Guardando…' : 'Guardar y continuar'}
-          <ChevronRight className="w-4 h-4" />
+          {saving ? 'Guardando…' : (saveLabel ?? 'Guardar y continuar')}
+          {!saveLabel && <ChevronRight className="w-4 h-4" />}
         </button>
       </div>
     </div>

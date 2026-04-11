@@ -6,15 +6,18 @@ interface Props {
   onSave: (raw: Record<string, unknown>, qual?: Record<string, unknown>) => Promise<void>
   onSkip?: () => void
   saving: boolean
+  initialData?: Record<string, unknown>
+  initialQual?: Record<string, unknown>
+  saveLabel?: string
 }
 
-export default function StroopForm({ mode: _mode, onSave, onSkip, saving }: Props) {
-  const [palabras, setPalabras] = useState('')
-  const [colores, setColores] = useState('')
-  const [interferencia, setInterferencia] = useState('')
-  const [erroresPalabras, setErroresPalabras] = useState('')
-  const [erroresColores, setErroresColores] = useState('')
-  const [erroresInterferencia, setErroresInterferencia] = useState('')
+export default function StroopForm({ mode: _mode, onSave, onSkip, saving, initialData, initialQual, saveLabel }: Props) {
+  const [palabras, setPalabras] = useState(() => initialData?.palabras != null ? String(initialData.palabras) : '')
+  const [colores, setColores] = useState(() => initialData?.colores != null ? String(initialData.colores) : '')
+  const [interferencia, setInterferencia] = useState(() => initialData?.interferencia != null ? String(initialData.interferencia) : '')
+  const [erroresPalabras, setErroresPalabras] = useState(() => initialData?.errores_palabras != null ? String(initialData.errores_palabras) : '')
+  const [erroresColores, setErroresColores] = useState(() => initialData?.errores_colores != null ? String(initialData.errores_colores) : '')
+  const [erroresInterferencia, setErroresInterferencia] = useState(() => initialData?.errores_interferencia != null ? String(initialData.errores_interferencia) : '')
 
   const P = palabras !== '' ? Number(palabras) : null
   const C = colores !== '' ? Number(colores) : null
@@ -46,6 +49,8 @@ export default function StroopForm({ mode: _mode, onSave, onSkip, saving }: Prop
       saving={saving}
       rawData={raw}
       isValid={isValid}
+      initialQual={initialQual}
+      saveLabel={saveLabel}
     >
       {/* Primary scores */}
       <div className="grid grid-cols-3 gap-4">

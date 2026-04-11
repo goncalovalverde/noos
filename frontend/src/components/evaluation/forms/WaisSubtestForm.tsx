@@ -16,6 +16,9 @@ interface Props {
   onSave: (raw: Record<string, unknown>, qual?: Record<string, unknown>) => Promise<void>
   onSkip?: () => void
   saving: boolean
+  initialData?: Record<string, unknown>
+  initialQual?: Record<string, unknown>
+  saveLabel?: string
 }
 
 interface SubtestConfig {
@@ -76,12 +79,18 @@ const SUBTEST_CONFIG: Record<WaisTestType, SubtestConfig> = {
   },
 }
 
-export default function WaisSubtestForm({ testType, mode: _mode, onSave, onSkip, saving }: Props) {
+export default function WaisSubtestForm({ testType, mode: _mode, onSave, onSkip, saving, initialData, initialQual, saveLabel }: Props) {
   const config = SUBTEST_CONFIG[testType]
 
-  const [pe, setPe] = useState('')
-  const [puntuacion, setPuntuacion] = useState('')
-  const [extras, setExtras] = useState<Record<string, string>>({})
+  const [pe, setPe] = useState(() => initialData?.puntuacion_escalar_wais != null ? String(initialData.puntuacion_escalar_wais) : '')
+  const [puntuacion, setPuntuacion] = useState(() => initialData?.puntuacion_bruta != null ? String(initialData.puntuacion_bruta) : '')
+  const [extras, setExtras] = useState<Record<string, string>>(() => {
+    const init: Record<string, string> = {}
+    config.extraFields.forEach(f => {
+      if (initialData?.[f.key] != null) init[f.key] = String(initialData[f.key])
+    })
+    return init
+  })
 
   const setExtra = (key: string) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setExtras(prev => ({ ...prev, [key]: e.target.value }))
@@ -108,6 +117,8 @@ export default function WaisSubtestForm({ testType, mode: _mode, onSave, onSkip,
       saving={saving}
       rawData={raw}
       isValid={isValid}
+      initialQual={initialQual}
+      saveLabel={saveLabel}
     >
       {/* WAIS-IV scaled score (PE) — primary normative field */}
       <div>

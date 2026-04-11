@@ -6,6 +6,9 @@ interface Props {
   onSave: (raw: Record<string, unknown>, qual?: Record<string, unknown>) => Promise<void>
   onSkip?: () => void
   saving: boolean
+  initialData?: Record<string, unknown>
+  initialQual?: Record<string, unknown>
+  saveLabel?: string
 }
 
 function Toggle({ value, onChange }: { value: number; onChange: (v: number) => void }) {
@@ -92,41 +95,41 @@ function Domain({ title, max, current }: { title: string; max: number; current: 
   )
 }
 
-export default function MocaForm({ mode: _mode, onSave, onSkip, saving }: Props) {
-  const [trail, setTrail] = useState(0)
-  const [cubo, setCubo] = useState(0)
-  const [relojContorno, setRelojContorno] = useState(0)
-  const [relojNumeros, setRelojNumeros] = useState(0)
-  const [relojManecillas, setRelojManecillas] = useState(0)
+export default function MocaForm({ mode: _mode, onSave, onSkip, saving, initialData, initialQual, saveLabel }: Props) {
+  const [trail, setTrail] = useState(() => (initialData?.visuoespacial_trail as number) ?? 0)
+  const [cubo, setCubo] = useState(() => (initialData?.visuoespacial_cubo as number) ?? 0)
+  const [relojContorno, setRelojContorno] = useState(() => (initialData?.visuoespacial_reloj_contorno as number) ?? 0)
+  const [relojNumeros, setRelojNumeros] = useState(() => (initialData?.visuoespacial_reloj_numeros as number) ?? 0)
+  const [relojManecillas, setRelojManecillas] = useState(() => (initialData?.visuoespacial_reloj_manecillas as number) ?? 0)
 
-  const [animal1, setAnimal1] = useState(0)
-  const [animal2, setAnimal2] = useState(0)
-  const [animal3, setAnimal3] = useState(0)
+  const [animal1, setAnimal1] = useState(() => (initialData?.denominacion_1 as number) ?? 0)
+  const [animal2, setAnimal2] = useState(() => (initialData?.denominacion_2 as number) ?? 0)
+  const [animal3, setAnimal3] = useState(() => (initialData?.denominacion_3 as number) ?? 0)
 
-  const [digitosDir, setDigitosDir] = useState(0)
-  const [digitosInv, setDigitosInv] = useState(0)
-  const [vigilancia, setVigilancia] = useState(0)
-  const [restaSerial, setRestaSerial] = useState(0)
+  const [digitosDir, setDigitosDir] = useState(() => (initialData?.atencion_digitos_directos as number) ?? 0)
+  const [digitosInv, setDigitosInv] = useState(() => (initialData?.atencion_digitos_inversos as number) ?? 0)
+  const [vigilancia, setVigilancia] = useState(() => (initialData?.atencion_vigilancia as number) ?? 0)
+  const [restaSerial, setRestaSerial] = useState(() => (initialData?.atencion_resta_serial as number) ?? 0)
 
-  const [frase1, setFrase1] = useState(0)
-  const [frase2, setFrase2] = useState(0)
-  const [fluidez, setFluidez] = useState(0)
+  const [frase1, setFrase1] = useState(() => (initialData?.lenguaje_frase1 as number) ?? 0)
+  const [frase2, setFrase2] = useState(() => (initialData?.lenguaje_frase2 as number) ?? 0)
+  const [fluidez, setFluidez] = useState(() => (initialData?.lenguaje_fluidez as number) ?? 0)
 
-  const [abst1, setAbst1] = useState(0)
-  const [abst2, setAbst2] = useState(0)
+  const [abst1, setAbst1] = useState(() => (initialData?.abstraccion_1 as number) ?? 0)
+  const [abst2, setAbst2] = useState(() => (initialData?.abstraccion_2 as number) ?? 0)
 
-  const [rec1, setRec1] = useState(0)
-  const [rec2, setRec2] = useState(0)
-  const [rec3, setRec3] = useState(0)
-  const [rec4, setRec4] = useState(0)
-  const [rec5, setRec5] = useState(0)
+  const [rec1, setRec1] = useState(() => (initialData?.recuerdo_1 as number) ?? 0)
+  const [rec2, setRec2] = useState(() => (initialData?.recuerdo_2 as number) ?? 0)
+  const [rec3, setRec3] = useState(() => (initialData?.recuerdo_3 as number) ?? 0)
+  const [rec4, setRec4] = useState(() => (initialData?.recuerdo_4 as number) ?? 0)
+  const [rec5, setRec5] = useState(() => (initialData?.recuerdo_5 as number) ?? 0)
 
-  const [orFecha, setOrFecha] = useState(0)
-  const [orMes, setOrMes] = useState(0)
-  const [orAnio, setOrAnio] = useState(0)
-  const [orDia, setOrDia] = useState(0)
-  const [orLugar, setOrLugar] = useState(0)
-  const [orCiudad, setOrCiudad] = useState(0)
+  const [orFecha, setOrFecha] = useState(() => (initialData?.orientacion_fecha as number) ?? 0)
+  const [orMes, setOrMes] = useState(() => (initialData?.orientacion_mes as number) ?? 0)
+  const [orAnio, setOrAnio] = useState(() => (initialData?.orientacion_anio as number) ?? 0)
+  const [orDia, setOrDia] = useState(() => (initialData?.orientacion_dia_semana as number) ?? 0)
+  const [orLugar, setOrLugar] = useState(() => (initialData?.orientacion_lugar as number) ?? 0)
+  const [orCiudad, setOrCiudad] = useState(() => (initialData?.orientacion_ciudad as number) ?? 0)
 
   const visTotal = trail + cubo + relojContorno + relojNumeros + relojManecillas
   const denTotal = animal1 + animal2 + animal3
@@ -180,6 +183,8 @@ export default function MocaForm({ mode: _mode, onSave, onSkip, saving }: Props)
       saving={saving}
       rawData={raw}
       isValid={true}
+      initialQual={initialQual}
+      saveLabel={saveLabel}
     >
       <div className="flex items-center justify-between bg-[#faf5ff] border border-[#ede9fe] rounded-xl px-4 py-3 -mt-1">
         <div>

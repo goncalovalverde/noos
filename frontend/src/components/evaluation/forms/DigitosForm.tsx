@@ -9,6 +9,9 @@ interface Props {
   onSave: (raw: Record<string, unknown>, qual?: Record<string, unknown>) => Promise<void>
   onSkip?: () => void
   saving: boolean
+  initialData?: Record<string, unknown>
+  initialQual?: Record<string, unknown>
+  saveLabel?: string
 }
 
 const DESCRIPTIONS: Record<DigitosTestType, string> = {
@@ -30,10 +33,10 @@ function maxPossibleAciertos(spanMaximo: number, minSpan = 2): number {
   return (spanMaximo - minSpan + 1) * 2
 }
 
-export default function DigitosForm({ testType, mode: _mode, onSave, onSkip, saving }: Props) {
-  const [pe, setPe] = useState('')
-  const [spanMaximo, setSpanMaximo] = useState('')
-  const [totalAciertos, setTotalAciertos] = useState('')
+export default function DigitosForm({ testType, mode: _mode, onSave, onSkip, saving, initialData, initialQual, saveLabel }: Props) {
+  const [pe, setPe] = useState(() => initialData?.puntuacion_escalar_wais != null ? String(initialData.puntuacion_escalar_wais) : '')
+  const [spanMaximo, setSpanMaximo] = useState(() => initialData?.span_maximo != null ? String(initialData.span_maximo) : '')
+  const [totalAciertos, setTotalAciertos] = useState(() => initialData?.total_aciertos != null ? String(initialData.total_aciertos) : '')
 
   const maxSpan = MAX_SPAN[testType]
   const spanNum = Number(spanMaximo)
@@ -60,6 +63,8 @@ export default function DigitosForm({ testType, mode: _mode, onSave, onSkip, sav
       saving={saving}
       rawData={raw}
       isValid={isValid}
+      initialQual={initialQual}
+      saveLabel={saveLabel}
     >
       {/* WAIS-IV scaled score (PE) — primary normative field */}
       <div>

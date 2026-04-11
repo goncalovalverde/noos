@@ -6,13 +6,16 @@ interface Props {
   onSave: (raw: Record<string, unknown>, qual?: Record<string, unknown>) => Promise<void>
   onSkip?: () => void
   saving: boolean
+  initialData?: Record<string, unknown>
+  initialQual?: Record<string, unknown>
+  saveLabel?: string
 }
 
-export default function FluidezSemanticaForm({ mode: _mode, onSave, onSkip, saving }: Props) {
-  const [animales, setAnimales] = useState('')
-  const [frutas, setFrutas] = useState('')
-  const [libreCategoria, setLibreCategoria] = useState('')
-  const [libreNombre, setLibreNombre] = useState('')
+export default function FluidezSemanticaForm({ mode: _mode, onSave, onSkip, saving, initialData, initialQual, saveLabel }: Props) {
+  const [animales, setAnimales] = useState(() => initialData?.animales != null ? String(initialData.animales) : '')
+  const [frutas, setFrutas] = useState(() => initialData?.frutas != null ? String(initialData.frutas) : '')
+  const [libreCategoria, setLibreCategoria] = useState(() => initialData?.categoria_libre != null ? String(initialData.categoria_libre) : '')
+  const [libreNombre, setLibreNombre] = useState(() => initialData?.nombre_categoria_libre != null ? String(initialData.nombre_categoria_libre) : '')
 
   const raw = {
     animales: animales !== '' ? Number(animales) : null,
@@ -32,6 +35,8 @@ export default function FluidezSemanticaForm({ mode: _mode, onSave, onSkip, savi
       saving={saving}
       rawData={raw}
       isValid={isValid}
+      initialQual={initialQual}
+      saveLabel={saveLabel}
     >
       <div className="grid grid-cols-1 gap-4">
         <div>
