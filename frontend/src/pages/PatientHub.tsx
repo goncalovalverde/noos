@@ -78,6 +78,10 @@ function EvaluationRow({ plan, patientId }: { plan: ExecutionPlanSummary; patien
   const testResults = details?.test_results ?? []
   const nextSessionNum = clinicalSessions.length + 1
 
+  const activeTCs = (details?.test_customizations ?? []).filter(t => !t.skip)
+  const completedTypes = new Set(testResults.map(r => r.test_type))
+  const allTestsDone = details !== null && activeTCs.length > 0 && activeTCs.every(tc => completedTypes.has(tc.test_type))
+
   return (
     <div className="border-b border-gray-100 last:border-0">
       {/* Summary row */}
@@ -235,7 +239,8 @@ function EvaluationRow({ plan, patientId }: { plan: ExecutionPlanSummary; patien
                 )
               })}
 
-              {/* Register new session row */}
+              {/* Register new session row — only if tests still pending */}
+              {!allTestsDone && (
               <div className="flex gap-3">
                 <div className="flex flex-col items-center shrink-0" style={{ width: 24 }}>
                   <div className="w-6 h-6 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center text-sm font-bold shrink-0">
@@ -255,6 +260,7 @@ function EvaluationRow({ plan, patientId }: { plan: ExecutionPlanSummary; patien
                   </button>
                 </div>
               </div>
+              )}
 
               {/* Summary link */}
               <div className="flex justify-end pt-1">
