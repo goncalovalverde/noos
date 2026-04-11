@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Loader2, Plus, Zap, ChevronDown, ChevronRight, ClipboardList, Calendar, FileText, FileDown, PlayCircle, Lock, UserPlus, X, History, ClipboardEdit, Save, CheckCircle2, Trash2, AlertTriangle } from 'lucide-react'
+import { ArrowLeft, Loader2, Plus, Zap, ChevronDown, ChevronRight, ClipboardList, Calendar, FileText, FileDown, PlayCircle, Lock, UserPlus, X, History, ClipboardEdit, Save, CheckCircle2, Trash2, AlertTriangle, CheckCircle } from 'lucide-react'
 import { useAuthStore } from '@/store/auth'
 import { patientsApi, type AccessGrant, type PatientCreate } from '@/api/patients'
 import { evaluationsApi, type ExecutionPlanSummary, type ExecutionPlanWithResults } from '@/api/evaluations'
@@ -31,13 +31,14 @@ function ClassificationBadge({ value }: { value: string }) {
   return <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${cls}`}>{value}</span>
 }
 
-function fmtDate(d: string | null | undefined) {
+function fmtSessionDate(d: string | null | undefined) {
   if (!d) return '—'
-  return new Date(d).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })
+  return new Date(d + 'T12:00:00').toLocaleDateString('pt-PT', { day: '2-digit', month: 'short', year: 'numeric' })
 }
 
-// Expandable row: loads full results on first open
+// Expandable row: loads full results on first open, shows sessions timeline
 function EvaluationRow({ plan, patientId }: { plan: ExecutionPlanSummary; patientId: string }) {
+  const navigate = useNavigate()
   const [open, setOpen] = useState(false)
   const [details, setDetails] = useState<ExecutionPlanWithResults | null>(null)
   const [loading, setLoading] = useState(false)
@@ -70,6 +71,10 @@ function EvaluationRow({ plan, patientId }: { plan: ExecutionPlanSummary; patien
 
   const datesAreSame = plan.performed_at && plan.created_at &&
     fmtDate(plan.performed_at) === fmtDate(plan.created_at)
+
+  const clinicalSessions = details?.clinical_sessions ?? []
+  const testResults = details?.test_results ?? []
+  const nextSessionNum = clinicalSessions.length + 1
 
   return (
     <div className="border-b border-gray-100 last:border-0">
@@ -116,10 +121,7 @@ function EvaluationRow({ plan, patientId }: { plan: ExecutionPlanSummary; patien
             <span>{plan.test_count}/{plan.total_tests} tests</span>
           </div>
         </div>
-
-        {/* Export buttons — outside the toggle button to avoid nested buttons */}
       </button>
-      <div className="absolute right-5 top-1/2 -translate-y-1/2 flex gap-1.5 pointer-events-none opacity-0 group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity" />
 
       {/* Action buttons row */}
       <div className="flex items-center gap-1.5 px-5 pb-3 -mt-1">
@@ -153,44 +155,115 @@ function EvaluationRow({ plan, patientId }: { plan: ExecutionPlanSummary; patien
         </button>
       </div>
 
-      {/* Expanded: test results */}
+      {/* Expanded: sessions timeline */}
       {open && (
-        <div className="px-5 pb-4">
+        <div className="px-5 pb-5">
           {loading ? (
             <div className="flex items-center gap-2 py-3 text-sm text-brand-muted">
-              <Loader2 className="w-4 h-4 animate-spin" /> Cargando resultados…
+              <Loader2 className="w-4 h-4 animate-spin" /> A carregar sessões…
             </div>
-          ) : details && details.test_results.length > 0 ? (
-            <table className="w-full text-sm border border-gray-100 rounded-lg overflow-hidden">
-              <thead>
-                <tr className="bg-gray-50 border-b border-gray-100">
-                  <th className="text-left px-4 py-2 font-semibold text-brand-ink">Test</th>
-                  <th className="text-center px-4 py-2 font-semibold text-brand-ink">PE</th>
-                  <th className="text-center px-4 py-2 font-semibold text-brand-ink">Percentil</th>
-                  <th className="text-left px-4 py-2 font-semibold text-brand-ink">Clasificación</th>
-                </tr>
-              </thead>
-              <tbody>
-                {details.test_results.map(r => (
-                  <tr key={r.id} className="border-b border-gray-50 hover:bg-gray-50">
-                    <td className="px-4 py-2.5 font-medium text-brand-ink">{r.test_type}</td>
-                    <td className="px-4 py-2.5 text-center font-semibold text-brand-mid">
-                      {r.calculated_scores?.puntuacion_escalar ?? '—'}
-                    </td>
-                    <td className="px-4 py-2.5 text-center text-gray-600">
-                      {r.calculated_scores?.percentil != null ? `P${r.calculated_scores.percentil}` : '—'}
-                    </td>
-                    <td className="px-4 py-2.5">
-                      {r.calculated_scores?.clasificacion
-                        ? <ClassificationBadge value={r.calculated_scores.clasificacion} />
-                        : <span className="text-gray-400">—</span>}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
           ) : (
-            <p className="text-sm text-gray-400 py-2">Sin resultados registrados aún.</p>
+            <div className="space-y-3">
+              {/* Sessions timeline */}
+              {clinicalSessions.map((cs, idx) => {
+                const sessionTests = testResults.filter(r => r.clinical_session_id === cs.id)
+                const isLast = idx === clinicalSessions.length - 1
+                return (
+                  <div key={cs.id} className="flex gap-3">
+                    {/* Timeline indicator */}
+                    <div className="flex flex-col items-center shrink-0" style={{ width: 24 }}>
+                      <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
+                        sessionTests.length > 0
+                          ? 'bg-green-100 text-green-700'
+                          : 'bg-gray-100 text-gray-500'
+                      }`}>
+                        {sessionTests.length > 0
+                          ? <CheckCircle className="w-3.5 h-3.5" />
+                          : cs.session_number}
+                      </div>
+                      {!isLast && <div className="w-px flex-1 bg-gray-200 mt-1" style={{ minHeight: 16 }} />}
+                    </div>
+
+                    {/* Session card */}
+                    <div className="flex-1 mb-1">
+                      <div className="bg-gray-50 border border-gray-100 rounded-lg p-3">
+                        <div className="flex items-center justify-between gap-2 mb-2">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-semibold text-[#270D38]">Sessão {cs.session_number}</span>
+                            <span className="text-xs text-gray-400">
+                              {fmtSessionDate(cs.session_date)}
+                              {sessionTests.length > 0 && ` · ${sessionTests.length} teste${sessionTests.length !== 1 ? 's' : ''}`}
+                            </span>
+                          </div>
+                          <button
+                            onClick={() => navigate(`/patients/${patientId}/evaluate/${plan.id}`, {
+                              state: {
+                                sessionId: cs.id,
+                                sessionNumber: cs.session_number,
+                                sessionDate: cs.session_date,
+                              }
+                            })}
+                            className="text-[11px] font-medium text-brand-mid hover:underline shrink-0"
+                          >
+                            Continuar
+                          </button>
+                        </div>
+                        {sessionTests.length > 0 ? (
+                          <div className="flex flex-wrap gap-1.5">
+                            {sessionTests.map(r => (
+                              <div key={r.id} className="flex items-center gap-1.5 bg-white border border-gray-100 rounded-md px-2 py-1">
+                                <span className="text-xs font-medium text-[#270D38]">{r.test_type}</span>
+                                {r.calculated_scores?.puntuacion_escalar != null && (
+                                  <span className="text-[10px] text-brand-mid font-semibold">
+                                    PE{r.calculated_scores.puntuacion_escalar}
+                                  </span>
+                                )}
+                                {r.calculated_scores?.clasificacion && (
+                                  <ClassificationBadge value={r.calculated_scores.clasificacion} />
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-xs text-gray-400">Sem testes registados</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+
+              {/* Register new session row */}
+              <div className="flex gap-3">
+                <div className="flex flex-col items-center shrink-0" style={{ width: 24 }}>
+                  <div className="w-6 h-6 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center text-sm font-bold shrink-0">
+                    +
+                  </div>
+                </div>
+                <div className="flex-1">
+                  <button
+                    onClick={() => navigate(`/patients/${patientId}/evaluate/${plan.id}/new-session`)}
+                    className="w-full flex items-center gap-3 text-left px-3 py-2.5 bg-purple-50 border border-dashed border-purple-200 rounded-lg hover:bg-purple-100 transition-colors"
+                  >
+                    <Plus className="w-4 h-4 text-brand-mid shrink-0" />
+                    <div>
+                      <p className="text-sm font-medium text-brand-mid">Registar Sessão {nextSessionNum}</p>
+                      <p className="text-xs text-brand-muted">Adicionar testes de uma nova visita clínica</p>
+                    </div>
+                  </button>
+                </div>
+              </div>
+
+              {/* Summary link */}
+              <div className="flex justify-end pt-1">
+                <Link
+                  to={`/patients/${patientId}/evaluate/${plan.id}/summary`}
+                  className="text-xs font-medium text-brand-mid hover:underline"
+                >
+                  Ver sumário completo →
+                </Link>
+              </div>
+            </div>
           )}
         </div>
       )}

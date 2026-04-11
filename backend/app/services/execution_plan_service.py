@@ -10,6 +10,7 @@ from app.models.protocol import Protocol
 from app.models.patient import Patient
 from app.models.test_session import TestSession
 from app.models.user import User
+from app.models.clinical_session import ClinicalSession
 from app.schemas.execution_plan import ExecutionPlanCreate, ExecutionPlanUpdate, ExecutionPlanOut
 from app.api.utils.access import can_access_patient, get_accessible_patient_ids
 from app.api.utils.audit import audit
@@ -95,6 +96,9 @@ class ExecutionPlanService:
         sessions = self.db.query(TestSession).filter(
             TestSession.execution_plan_id == plan_id
         ).order_by(TestSession.date).all()
+        clinical_sessions = self.db.query(ClinicalSession).filter(
+            ClinicalSession.execution_plan_id == plan_id
+        ).order_by(ClinicalSession.session_number).all()
         return {
             "id": plan.id,
             "patient_id": plan.patient_id,
@@ -110,8 +114,18 @@ class ExecutionPlanService:
                     "raw_data": s.get_raw_data(),
                     "calculated_scores": s.get_calculated_scores(),
                     "qualitative_data": s.get_qualitative_data(),
+                    "clinical_session_id": s.clinical_session_id,
                 }
                 for s in sessions
+            ],
+            "clinical_sessions": [
+                {
+                    "id": cs.id,
+                    "session_number": cs.session_number,
+                    "session_date": str(cs.session_date) if cs.session_date else None,
+                    "notes": cs.notes,
+                }
+                for cs in clinical_sessions
             ],
         }
 

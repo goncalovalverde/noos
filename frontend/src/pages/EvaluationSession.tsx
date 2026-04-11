@@ -20,8 +20,8 @@ export default function EvaluationSession() {
   const navigate = useNavigate()
   const location = useLocation()
 
-  // Session context — passed from EvaluationSetup, or loaded from API on refresh
-  const navState = location.state as { sessionId?: string; sessionNumber?: number; sessionDate?: string } | null
+  // Session context — passed from EvaluationSetup or RegisterSession, or loaded from API on refresh
+  const navState = location.state as { sessionId?: string; sessionNumber?: number; sessionDate?: string; selectedTestTypes?: string[] } | null
   const [session, setSession] = useState<ClinicalSession | null>(
     navState?.sessionId
       ? { id: navState.sessionId, execution_plan_id: planId ?? '', session_number: navState.sessionNumber ?? 1, session_date: navState.sessionDate ?? '', notes: null, created_at: '' }
@@ -48,10 +48,15 @@ export default function EvaluationSession() {
       setPatient(_p)
       setAllowCustomization(plan.allow_customization ?? true)
       const activTests = plan.test_customizations.filter(t => !t.skip)
-      setTests(activTests)
+      // If specific test types were selected in RegisterSession, restrict to those
+      const selectedTypes = navState?.selectedTestTypes
+      const filteredTests = selectedTypes && selectedTypes.length > 0
+        ? activTests.filter(t => selectedTypes.includes(t.test_type))
+        : activTests
+      setTests(filteredTests)
       // Resume: start at first test not yet saved
       const doneTypes = new Set(results.test_results.map(r => r.test_type))
-      const firstPending = activTests.findIndex(t => !doneTypes.has(t.test_type))
+      const firstPending = filteredTests.findIndex(t => !doneTypes.has(t.test_type))
       setCurrentIdx(firstPending >= 0 ? firstPending : 0)
     }).finally(() => setLoading(false))
   }, [patientId, planId])

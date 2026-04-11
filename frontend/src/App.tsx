@@ -11,6 +11,7 @@ import Profile from '@/pages/Profile'
 import EvaluationSetup from '@/pages/EvaluationSetup'
 import EvaluationSession from '@/pages/EvaluationSession'
 import EvaluationSummary from '@/pages/EvaluationSummary'
+import RegisterSession from '@/pages/RegisterSession'
 import IncompleteEvaluations from '@/pages/IncompleteEvaluations'
 
 export default function App() {
@@ -28,6 +29,7 @@ export default function App() {
           <Route path="/patients/:id" element={<PatientHub />} />
           <Route path="/patients/:id/evaluate" element={<EvaluationSetup />} />
           <Route path="/patients/:id/evaluate/:planId" element={<EvaluationSession />} />
+          <Route path="/patients/:id/evaluate/:planId/new-session" element={<RegisterSession />} />
           <Route path="/patients/:id/evaluate/:planId/summary" element={<EvaluationSummary />} />
           <Route path="/evaluaciones/incompletas" element={<IncompleteEvaluations />} />
           <Route path="/protocols" element={<ProtocolLibrary />} />

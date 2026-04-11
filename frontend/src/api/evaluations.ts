@@ -51,10 +51,19 @@ export interface TestResultItem {
     norma_aplicada?: Record<string, unknown>
   } | null
   qualitative_data: Record<string, unknown> | null
+  clinical_session_id?: string | null
+}
+
+export interface ClinicalSessionSummary {
+  id: string
+  session_number: number
+  session_date: string | null
+  notes: string | null
 }
 
 export interface ExecutionPlanWithResults extends ExecutionPlanSummary {
   test_results: TestResultItem[]
+  clinical_sessions?: ClinicalSessionSummary[]
 }
 
 export interface IncompletePlan {
