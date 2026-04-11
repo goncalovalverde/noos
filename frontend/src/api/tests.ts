@@ -16,6 +16,10 @@ export const testsApi = {
     const { data } = await apiClient.post<TestSessionOut>('/tests/', body)
     return data
   },
+  get: async (id: string): Promise<TestSessionOut> => {
+    const { data } = await apiClient.get<TestSessionOut>(`/tests/${id}`)
+    return data
+  },
   update: async (id: string, raw_data: Record<string, unknown>, qualitative_data?: Record<string, unknown>): Promise<TestSessionOut> => {
     const { data } = await apiClient.patch<TestSessionOut>(`/tests/${id}`, { raw_data, qualitative_data })
     return data

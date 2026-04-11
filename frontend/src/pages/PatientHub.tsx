@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Loader2, Plus, Zap, ChevronDown, ChevronRight, ClipboardList, Calendar, FileText, FileDown, PlayCircle, Lock, UserPlus, X, History, ClipboardEdit, Save, CheckCircle2, Trash2, AlertTriangle, CheckCircle } from 'lucide-react'
+import { ArrowLeft, Loader2, Plus, Zap, ChevronDown, ChevronRight, ClipboardList, Calendar, FileText, FileDown, PlayCircle, Lock, UserPlus, X, History, ClipboardEdit, Save, CheckCircle2, Trash2, AlertTriangle, CheckCircle, Pencil, RefreshCw } from 'lucide-react'
 import { useAuthStore } from '@/store/auth'
 import { patientsApi, type AccessGrant, type PatientCreate } from '@/api/patients'
 import { evaluationsApi, type ExecutionPlanSummary, type ExecutionPlanWithResults } from '@/api/evaluations'
@@ -216,7 +216,10 @@ function EvaluationRow({ plan, patientId }: { plan: ExecutionPlanSummary; patien
                         </div>
                         {sessionTests.length > 0 ? (
                           <div className="flex flex-wrap gap-1.5">
-                            {sessionTests.map(r => (
+                            {sessionTests.map(r => {
+                              const isAmended = r.updated_at && r.date &&
+                                new Date(r.updated_at).getTime() - new Date(r.date).getTime() > 60_000
+                              return (
                               <div key={r.id} className="flex items-center gap-1.5 bg-white border border-gray-100 rounded-md px-2 py-1">
                                 <span className="text-xs font-medium text-[#270D38]">{r.test_type}</span>
                                 {r.calculated_scores?.puntuacion_escalar != null && (
@@ -227,8 +230,22 @@ function EvaluationRow({ plan, patientId }: { plan: ExecutionPlanSummary; patien
                                 {r.calculated_scores?.clasificacion && (
                                   <ClassificationBadge value={r.calculated_scores.clasificacion} />
                                 )}
+                                {isAmended && (
+                                  <span className="flex items-center gap-0.5 text-[9px] font-semibold uppercase tracking-wide text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-1.5 py-0.5">
+                                    <RefreshCw className="w-2.5 h-2.5" />
+                                    Act.
+                                  </span>
+                                )}
+                                <button
+                                  onClick={() => navigate(`/patients/${patientId}/evaluate/${plan.id}/edit-test/${r.id}`)}
+                                  title="Editar resultado"
+                                  className="ml-0.5 text-gray-300 hover:text-brand-mid transition-colors"
+                                >
+                                  <Pencil className="w-3 h-3" />
+                                </button>
                               </div>
-                            ))}
+                              )
+                            })}
                           </div>
                         ) : (
                           <p className="text-xs text-gray-400">Sem testes registados</p>

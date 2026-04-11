@@ -42,6 +42,7 @@ export interface TestResultItem {
   id: string
   test_type: string
   date: string
+  updated_at?: string
   raw_data: Record<string, unknown>
   calculated_scores: {
     puntuacion_escalar?: number
