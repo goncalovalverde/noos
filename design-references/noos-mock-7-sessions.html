@@ -1,0 +1,1334 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Nóos — Mock 7: Sesiones Clínicas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Work Sans', sans-serif; background: #F6F5F2; color: #270D38; overflow: hidden; }
+
+/* ── Demo nav ── */
+.demo-nav {
+  position: fixed; top: 0; left: 0; right: 0; height: 44px; z-index: 1000;
+  background: #1a0d24; display: flex; align-items: center; padding: 0 16px; gap: 8px;
+}
+.demo-nav-title { font-size: 11px; color: rgba(255,255,255,.4); font-weight: 500; letter-spacing: .6px; text-transform: uppercase; margin-right: 8px; }
+.nb {
+  padding: 5px 13px; border-radius: 9999px; font-size: 12px; font-weight: 500;
+  color: rgba(255,255,255,.5); cursor: pointer; border: 1px solid transparent;
+  transition: all .15s; white-space: nowrap;
+}
+.nb:hover { color: rgba(255,255,255,.85); border-color: rgba(255,255,255,.2); }
+.nb.act { background: rgba(255,255,255,.15); color: white; border-color: rgba(255,255,255,.25); }
+.nb-sep { width: 1px; height: 18px; background: rgba(255,255,255,.12); margin: 0 4px; }
+
+/* ── View wrapper ── */
+.view {
+  display: none; flex-direction: column;
+  height: calc(100vh - 44px); margin-top: 44px;
+  overflow: hidden;
+}
+.view.on { display: flex; }
+
+/* ══════════════════════════════════════════
+   SHARED TOPBAR
+══════════════════════════════════════════ */
+.topbar {
+  height: 58px; background: #4B164F; color: white;
+  display: flex; align-items: center; padding: 0 24px; gap: 16px; flex-shrink: 0;
+}
+.tb-brand { display: flex; align-items: center; gap: 8px; }
+.tb-dot { width: 26px; height: 26px; background: #B738F2; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; }
+.tb-name { font-size: 15px; font-weight: 600; }
+.tb-div { width: 1px; height: 22px; background: rgba(255,255,255,.18); }
+.tb-pat {
+  display: flex; align-items: center; gap: 8px;
+  background: rgba(255,255,255,.1); border-radius: 9999px; padding: 4px 12px 4px 6px;
+}
+.tb-av { width: 24px; height: 24px; border-radius: 50%; background: #9839D1; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; }
+.tb-id { font-size: 12px; font-weight: 500; }
+.tb-meta { font-size: 11px; color: rgba(255,255,255,.55); }
+.tb-proto { font-size: 13px; color: rgba(255,255,255,.7); }
+.tb-proto strong { color: white; font-weight: 600; }
+
+/* session counter chip */
+.sc {
+  display: flex; align-items: center; gap: 6px;
+  border-radius: 9999px; padding: 4px 12px;
+  font-size: 12px; font-weight: 600;
+}
+.sc-s1 { background: rgba(183,56,242,.25); color: #e5b3ff; }
+.sc-s2 { background: rgba(245,158,11,.22); color: #fde68a; }
+.sc-dot { width: 7px; height: 7px; border-radius: 50%; }
+.sc-dot-s1 { background: #B738F2; }
+.sc-dot-s2 { background: #fbbf24; animation: pulse 1.8s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.35} }
+
+.tb-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+.timer {
+  display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600;
+  color: rgba(255,255,255,.85); background: rgba(255,255,255,.1); border-radius: 9999px; padding: 5px 13px;
+}
+.t-dot { width: 7px; height: 7px; border-radius: 50%; background: #4ade80; animation: pulse 1.5s infinite; }
+.btn-pause {
+  background: transparent; color: rgba(255,255,255,.7); border: 1px solid rgba(255,255,255,.25);
+  border-radius: 9999px; padding: 6px 14px; font-size: 12px; font-weight: 500; cursor: pointer;
+  font-family: 'Work Sans', sans-serif; display: flex; align-items: center; gap: 5px;
+}
+.btn-pause:hover { background: rgba(255,255,255,.1); color: white; }
+.btn-close-sess {
+  background: #f59e0b; color: #431407; border: none;
+  border-radius: 9999px; padding: 6px 16px; font-size: 12px; font-weight: 600; cursor: pointer;
+  font-family: 'Work Sans', sans-serif; display: flex; align-items: center; gap: 6px;
+}
+.btn-close-sess:hover { background: #d97706; }
+
+/* ══════════════════════════════════════════
+   PROGRESS STRIP
+══════════════════════════════════════════ */
+.prog-strip {
+  background: white; border-bottom: 1px solid rgba(0,0,0,.07);
+  padding: 12px 24px 10px; flex-shrink: 0;
+}
+.prog-pills { display: flex; align-items: center; gap: 5px; }
+.pp {
+  height: 28px; border-radius: 9999px; padding: 0 11px;
+  font-size: 11px; font-weight: 500; display: flex; align-items: center; gap: 5px;
+  white-space: nowrap; cursor: pointer;
+}
+.pp-done    { background: #9839D1; color: white; }
+.pp-cur     { background: #270D38; color: white; }
+.pp-pend    { background: #ede9f0; color: #7E7E7E; }
+.pp-skip    { background: #f1f5f9; color: #94a3b8; text-decoration: line-through; }
+.pp-defer   { background: #fef3c7; color: #a16207; border: 1px solid #fde68a; }
+.pp-s2-done { background: #d1d5db; color: #6b7280; }
+.pp-s2-def  { background: #fef3c7; color: #a16207; border: 1px solid #fde68a; }
+.pp-s2-cur  { background: #f59e0b; color: white; }
+.pp svg { flex-shrink: 0; }
+.sess-sep { width: 2px; height: 22px; background: #d1d5db; border-radius: 2px; margin: 0 3px; flex-shrink: 0; }
+.prog-lbl {
+  display: flex; align-items: center; gap: 5px; margin-top: 7px;
+}
+.pl { font-size: 10px; color: #7E7E7E; white-space: nowrap; padding: 0 3px; }
+.pl-done { color: #9839D1; font-weight: 500; }
+.pl-cur { color: #270D38; font-weight: 600; }
+.pl-sep { color: #d1d5db; padding: 0 4px; }
+.pl-s2-cur { color: #d97706; font-weight: 600; }
+.pl-s2-def { color: #d97706; }
+.pl-pend { color: #94a3b8; }
+
+/* ══════════════════════════════════════════
+   SESSION BANNER (S2)
+══════════════════════════════════════════ */
+.sess-banner {
+  background: #fffbeb; border-bottom: 1px solid #fde68a;
+  padding: 9px 24px; display: flex; align-items: center; gap: 10px;
+  font-size: 12px; color: #92400e; flex-shrink: 0;
+}
+.sess-banner svg { flex-shrink: 0; }
+.sess-banner strong { font-weight: 600; }
+
+/* ══════════════════════════════════════════
+   EVAL LAYOUT (views 2, 5)
+══════════════════════════════════════════ */
+.eval-area {
+  flex: 1; display: flex; gap: 0; overflow: hidden;
+}
+.test-card-wrap { flex: 1; overflow-y: auto; padding: 24px; }
+.test-card {
+  background: white; border-radius: 12px;
+  box-shadow: 0 1px 4px rgba(0,0,0,.09); padding: 24px;
+  max-width: 680px;
+}
+.tst-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: #f3e8ff; color: #7c3aed;
+  border-radius: 9999px; padding: 4px 11px; font-size: 11px; font-weight: 500; margin-bottom: 10px;
+}
+.tst-badge-amber { background: #fef3c7; color: #a16207; }
+.tst-title { font-size: 20px; font-weight: 600; color: #270D38; margin-bottom: 6px; }
+.tst-sub { font-size: 13px; color: #7E7E7E; line-height: 1.5; margin-bottom: 16px; }
+.def-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: #fff7ed; border: 1px solid #fed7aa; color: #c2410c;
+  border-radius: 6px; padding: 5px 10px; font-size: 11px; font-weight: 500; margin-bottom: 18px;
+}
+
+/* form elements */
+.fsec { margin-bottom: 20px; }
+.fsec-title { font-size: 11px; font-weight: 600; color: #7E7E7E; text-transform: uppercase; letter-spacing: .6px; margin-bottom: 10px; }
+.fg { display: flex; gap: 12px; flex-wrap: wrap; }
+.ff { display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 140px; }
+.ff label { font-size: 13px; font-weight: 500; color: #270D38; }
+.ff-hint { font-size: 11px; color: #7E7E7E; }
+.ff input, .ff .iu input { 
+  border: 1.5px solid #e5e7eb; border-radius: 8px; padding: 9px 12px;
+  font-size: 14px; font-family: 'Work Sans', sans-serif; color: #270D38;
+  background: white; outline: none; width: 100%;
+}
+.ff input:focus, .iu input:focus { border-color: #9839D1; }
+.iu { display: flex; align-items: center; gap: 0; }
+.iu input { border-radius: 8px 0 0 8px; }
+.iu-lbl { background: #f3f4f6; border: 1.5px solid #e5e7eb; border-left: none; border-radius: 0 8px 8px 0; padding: 9px 10px; font-size: 12px; color: #7E7E7E; white-space: nowrap; }
+textarea {
+  width: 100%; border: 1.5px solid #e5e7eb; border-radius: 8px; padding: 10px 12px;
+  font-size: 13px; font-family: 'Work Sans', sans-serif; color: #270D38;
+  resize: vertical; min-height: 72px; outline: none;
+}
+textarea:focus { border-color: #9839D1; }
+.tgrid { display: flex; gap: 8px; }
+.tc { flex: 1; display: flex; flex-direction: column; gap: 5px; }
+.tc-lbl { font-size: 11px; color: #7E7E7E; font-weight: 500; }
+.tc input { border: 1.5px solid #e5e7eb; border-radius: 8px; padding: 9px 8px; font-size: 14px; font-family: 'Work Sans', sans-serif; text-align: center; outline: none; width: 100%; }
+.tc input:focus { border-color: #9839D1; }
+
+/* form actions */
+.form-acts { display: flex; align-items: center; gap: 8px; margin-top: 24px; padding-top: 18px; border-top: 1px solid #f1f3f5; }
+.btn-skip { background: none; color: #94a3b8; border: none; font-size: 13px; font-weight: 500; cursor: pointer; padding: 8px 10px; font-family: 'Work Sans', sans-serif; }
+.btn-skip:hover { color: #64748b; }
+.btn-defer {
+  display: flex; align-items: center; gap: 6px;
+  background: none; border: 1.5px solid #fbbf24; color: #a16207;
+  border-radius: 9999px; padding: 7px 14px; font-size: 12px; font-weight: 500; cursor: pointer;
+  font-family: 'Work Sans', sans-serif;
+}
+.btn-defer:hover { background: #fffbeb; }
+.btn-prev {
+  display: flex; align-items: center; gap: 4px; margin-left: auto;
+  background: white; color: #270D38; border: 1.5px solid #e5e7eb;
+  border-radius: 9999px; padding: 7px 14px; font-size: 13px; font-weight: 500; cursor: pointer;
+  font-family: 'Work Sans', sans-serif;
+}
+.btn-prev:hover { border-color: #9839D1; color: #9839D1; }
+.btn-next {
+  display: flex; align-items: center; gap: 5px;
+  background: #9839D1; color: white; border: none;
+  border-radius: 9999px; padding: 8px 18px; font-size: 13px; font-weight: 600; cursor: pointer;
+  font-family: 'Work Sans', sans-serif;
+}
+.btn-next:hover { background: #7c2fb5; }
+
+/* ══════════════════════════════════════════
+   INFO PANEL
+══════════════════════════════════════════ */
+.info-panel {
+  width: 280px; flex-shrink: 0; background: #faf9f8;
+  border-left: 1px solid rgba(0,0,0,.07); overflow-y: auto;
+  padding: 18px 16px; display: flex; flex-direction: column; gap: 12px;
+}
+.ic { background: white; border-radius: 10px; box-shadow: 0 1px 3px rgba(0,0,0,.07); padding: 14px; }
+.ic-title { font-size: 11px; font-weight: 600; color: #7E7E7E; text-transform: uppercase; letter-spacing: .6px; margin-bottom: 10px; }
+.vrow { display: flex; justify-content: space-between; align-items: baseline; padding: 4px 0; border-bottom: 1px solid #f3f4f6; font-size: 12px; }
+.vrow:last-child { border-bottom: none; }
+.vk { color: #7E7E7E; }
+.vv { color: #270D38; font-weight: 500; }
+.vv-a { color: #9839D1; font-weight: 600; }
+.vv-p { color: #7c3aed; font-weight: 500; }
+.nchip { display: inline-flex; align-items: center; background: #f3e8ff; border-radius: 6px; padding: 4px 8px; margin-bottom: 8px; }
+.nchip-t { font-size: 11px; color: #7c3aed; font-weight: 500; }
+.instr-step { display: flex; gap: 10px; margin-bottom: 8px; }
+.instr-num {
+  width: 20px; height: 20px; border-radius: 50%; background: #f3e8ff;
+  color: #7c3aed; font-size: 10px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px;
+}
+.instr-txt { font-size: 11px; color: #4b5563; line-height: 1.5; }
+.planned-list { display: flex; flex-direction: column; gap: 5px; }
+.pl-item {
+  display: flex; align-items: center; gap: 7px; font-size: 11px; color: #270D38; padding: 4px 0;
+}
+.pli-hist { color: #6b7280; }
+.pl-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.pld-done { background: #22c55e; }
+.pld-pend { background: #d1d5db; }
+.pld-defer { background: #fbbf24; }
+
+/* ══════════════════════════════════════════
+   VIEW 1 — PROTOCOL EDITOR
+══════════════════════════════════════════ */
+.app-shell { display: flex; flex: 1; overflow: hidden; height: 100%; }
+
+.sidebar {
+  width: 220px; background: #4B164F; flex-shrink: 0;
+  display: flex; flex-direction: column; padding-top: 16px; gap: 2px;
+}
+.sb-logo { display: flex; align-items: center; gap: 8px; padding: 8px 16px 16px; }
+.sb-logo-dot { width: 28px; height: 28px; background: #B738F2; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; }
+.sb-logo-name { font-size: 15px; font-weight: 600; color: white; }
+.sb-item {
+  display: flex; align-items: center; gap: 10px; padding: 9px 16px;
+  font-size: 13px; font-weight: 500; color: rgba(255,255,255,.6); cursor: pointer;
+  border-radius: 8px; margin: 0 8px;
+}
+.sb-item:hover { background: rgba(255,255,255,.08); color: rgba(255,255,255,.85); }
+.sb-item.act { background: rgba(255,255,255,.15); color: white; }
+.sb-icon { width: 18px; height: 18px; flex-shrink: 0; }
+.sb-section { font-size: 10px; font-weight: 600; color: rgba(255,255,255,.3); text-transform: uppercase; letter-spacing: .8px; padding: 14px 16px 5px; }
+
+/* main content */
+.main-content { flex: 1; overflow-y: auto; padding: 28px 32px; }
+.page-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 24px; }
+.page-title { font-size: 22px; font-weight: 600; color: #270D38; }
+.page-sub { font-size: 13px; color: #7E7E7E; margin-top: 4px; }
+.status-row { display: flex; align-items: center; gap: 8px; }
+.sdot { width: 7px; height: 7px; border-radius: 50%; }
+.sd { background: #fbbf24; }
+.sv { background: #22c55e; }
+.status-lbl { font-size: 12px; color: #7E7E7E; }
+.btn-pri {
+  display: flex; align-items: center; gap: 6px;
+  background: #9839D1; color: white; border: none; border-radius: 9999px;
+  padding: 8px 20px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: 'Work Sans', sans-serif;
+}
+.btn-pri:hover { background: #7c2fb5; }
+
+/* protocol meta cards */
+.cards-row { display: flex; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
+.meta-card {
+  background: white; border-radius: 12px; box-shadow: 0 1px 4px rgba(0,0,0,.09);
+  padding: 18px 20px; flex: 1; min-width: 180px;
+}
+.mc-label { font-size: 11px; font-weight: 600; color: #7E7E7E; text-transform: uppercase; letter-spacing: .6px; margin-bottom: 8px; }
+.mc-value { font-size: 20px; font-weight: 600; color: #270D38; }
+.mc-sub { font-size: 12px; color: #7E7E7E; margin-top: 3px; }
+.mc-tag {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: #f3e8ff; color: #7c3aed; border-radius: 6px; padding: 4px 10px;
+  font-size: 12px; font-weight: 500; margin-top: 8px;
+}
+
+/* sessions distribution card — the NEW element */
+.sess-dist-card {
+  background: white; border-radius: 12px; box-shadow: 0 1px 4px rgba(0,0,0,.09);
+  padding: 20px 24px; margin-bottom: 24px;
+}
+.sdc-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+.sdc-title { font-size: 15px; font-weight: 600; color: #270D38; }
+.sdc-sub { font-size: 12px; color: #7E7E7E; line-height: 1.5; margin-bottom: 16px; }
+.toggle {
+  width: 38px; height: 22px; border-radius: 11px; background: #9839D1;
+  position: relative; cursor: pointer; transition: background .2s; flex-shrink: 0;
+}
+.toggle.off { background: #d1d5db; }
+.toggle::after {
+  content: ''; position: absolute; top: 3px; left: 3px;
+  width: 16px; height: 16px; border-radius: 50%; background: white;
+  transition: left .2s; box-shadow: 0 1px 3px rgba(0,0,0,.2);
+}
+.toggle:not(.off)::after { left: 19px; }
+
+.sess-pills-legend { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.sl { display: flex; align-items: center; gap: 5px; font-size: 11px; color: #7E7E7E; }
+.sl-dot { width: 8px; height: 8px; border-radius: 50%; }
+.sl-s1 { background: #9839D1; }
+.sl-s2 { background: #f59e0b; }
+.sl-q  { background: #d1d5db; border: 1px solid #9ca3af; }
+.sl-none { background: #e5e7eb; }
+
+/* test list */
+.section-hdr { font-size: 11px; font-weight: 600; color: #7E7E7E; text-transform: uppercase; letter-spacing: .6px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; }
+.test-list { display: flex; flex-direction: column; gap: 6px; }
+.test-row {
+  background: white; border-radius: 10px; box-shadow: 0 1px 3px rgba(0,0,0,.07);
+  display: flex; align-items: center; padding: 12px 16px; gap: 12px;
+}
+.tr-drag { color: #d1d5db; flex-shrink: 0; cursor: grab; }
+.tr-name { font-size: 13px; font-weight: 500; color: #270D38; flex: 1; }
+.tr-cat { font-size: 11px; color: #7E7E7E; }
+.tr-dur { font-size: 11px; color: #9839D1; font-weight: 500; background: #f3e8ff; border-radius: 9999px; padding: 2px 8px; }
+
+/* session pill selector — hidden unless .sess-plan-on */
+.sp-wrap { display: none; align-items: center; gap: 4px; }
+.sess-plan-on .sp-wrap { display: flex; }
+.sp {
+  width: 28px; height: 22px; border-radius: 6px; border: 1.5px solid #e5e7eb;
+  font-size: 10px; font-weight: 600; display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: #9ca3af;
+}
+.sp:hover { border-color: #9839D1; color: #9839D1; }
+.sp.act.sp-s1 { background: #9839D1; border-color: #9839D1; color: white; }
+.sp.act.sp-s2 { background: #f59e0b; border-color: #f59e0b; color: white; }
+.sp.act.sp-q  { background: #f3f4f6; border-color: #6b7280; color: #374151; }
+
+/* ══════════════════════════════════════════
+   VIEW 3 — MODAL (Close Session)
+══════════════════════════════════════════ */
+.modal-wrap { position: relative; flex: 1; overflow: hidden; }
+.modal-bg-dim {
+  position: absolute; inset: 0; z-index: 0;
+  filter: brightness(.4) saturate(.5);
+  pointer-events: none;
+}
+/* frozen V2 content inside dim layer — reuse eval layout */
+.modal-center {
+  position: absolute; inset: 0; z-index: 10;
+  display: flex; align-items: center; justify-content: center;
+}
+.modal-box {
+  background: white; border-radius: 16px;
+  box-shadow: 0 8px 40px rgba(0,0,0,.28);
+  padding: 32px; width: 520px; max-width: 90vw;
+}
+.mb-title { font-size: 20px; font-weight: 700; color: #270D38; margin-bottom: 6px; }
+.mb-sub { font-size: 13px; color: #7E7E7E; line-height: 1.5; margin-bottom: 24px; }
+.mb-stat { display: flex; gap: 20px; background: #f8f7f5; border-radius: 10px; padding: 14px 16px; margin-bottom: 20px; }
+.mbs-item { text-align: center; }
+.mbs-val { font-size: 22px; font-weight: 700; color: #270D38; }
+.mbs-lbl { font-size: 11px; color: #7E7E7E; }
+.mb-opts { display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px; }
+.mb-opt {
+  border: 2px solid #e5e7eb; border-radius: 12px; padding: 14px 16px; cursor: pointer;
+  display: flex; align-items: flex-start; gap: 12px; transition: border-color .15s;
+}
+.mb-opt:hover { border-color: #c4b5fd; }
+.mb-opt.sel { border-color: #9839D1; background: #faf5ff; }
+.mb-opt.sel-amber { border-color: #f59e0b; background: #fffbeb; }
+.mb-radio {
+  width: 18px; height: 18px; border-radius: 50%; border: 2px solid #d1d5db;
+  flex-shrink: 0; margin-top: 1px; display: flex; align-items: center; justify-content: center;
+}
+.mb-opt.sel .mb-radio { border-color: #9839D1; background: #9839D1; }
+.mb-opt.sel-amber .mb-radio { border-color: #f59e0b; background: #f59e0b; }
+.mb-radio-dot { width: 6px; height: 6px; border-radius: 50%; background: white; display: none; }
+.mb-opt.sel .mb-radio-dot, .mb-opt.sel-amber .mb-radio-dot { display: block; }
+.mb-opt-title { font-size: 14px; font-weight: 600; color: #270D38; margin-bottom: 3px; }
+.mb-opt-sub { font-size: 12px; color: #7E7E7E; line-height: 1.4; }
+.mb-acts { display: flex; gap: 10px; justify-content: flex-end; }
+.btn-cancel-modal {
+  background: white; color: #7E7E7E; border: 1.5px solid #e5e7eb;
+  border-radius: 9999px; padding: 9px 20px; font-size: 13px; font-weight: 500; cursor: pointer; font-family: 'Work Sans', sans-serif;
+}
+.btn-cancel-modal:hover { border-color: #9ca3af; color: #270D38; }
+.btn-confirm-modal {
+  background: #f59e0b; color: #431407; border: none;
+  border-radius: 9999px; padding: 9px 22px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: 'Work Sans', sans-serif;
+}
+.btn-confirm-modal:hover { background: #d97706; }
+
+/* ══════════════════════════════════════════
+   VIEW 4 — PATIENT HUB
+══════════════════════════════════════════ */
+.hub-shell { display: flex; flex: 1; overflow: hidden; height: 100%; }
+.hub-sidebar {
+  width: 64px; background: #4B164F; flex-shrink: 0;
+  display: flex; flex-direction: column; align-items: center; padding: 12px 0; gap: 8px;
+}
+.hub-sb-dot { width: 32px; height: 32px; background: #B738F2; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; margin-bottom: 8px; }
+.hub-sb-icon {
+  width: 40px; height: 40px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  color: rgba(255,255,255,.5); cursor: pointer;
+}
+.hub-sb-icon:hover { background: rgba(255,255,255,.1); color: rgba(255,255,255,.85); }
+.hub-sb-icon.act { background: rgba(255,255,255,.15); color: white; }
+
+.hub-main { flex: 1; overflow-y: auto; padding: 28px 32px; }
+.hub-pat-hdr {
+  display: flex; align-items: center; gap: 16px; margin-bottom: 24px;
+  background: white; border-radius: 12px; box-shadow: 0 1px 4px rgba(0,0,0,.09); padding: 18px 22px;
+}
+.hub-av { width: 48px; height: 48px; border-radius: 50%; background: #9839D1; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; color: white; }
+.hub-pat-name { font-size: 18px; font-weight: 600; color: #270D38; }
+.hub-pat-meta { font-size: 12px; color: #7E7E7E; margin-top: 3px; }
+.hub-tabs { display: flex; gap: 0; border-bottom: 1px solid #e5e7eb; margin-bottom: 24px; }
+.hub-tab {
+  padding: 9px 18px; font-size: 13px; font-weight: 500; color: #7E7E7E; cursor: pointer;
+  border-bottom: 2px solid transparent; margin-bottom: -1px;
+}
+.hub-tab.act { color: #9839D1; border-color: #9839D1; }
+
+/* session timeline */
+.sess-timeline { display: flex; flex-direction: column; gap: 0; margin-bottom: 24px; }
+.stn { display: flex; gap: 16px; }
+.stn-left { display: flex; flex-direction: column; align-items: center; width: 32px; flex-shrink: 0; }
+.stn-node {
+  width: 32px; height: 32px; border-radius: 50%; border: 2px solid transparent;
+  display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700;
+  flex-shrink: 0; z-index: 1;
+}
+.stn-done { background: #d1fae5; border-color: #22c55e; color: #15803d; }
+.stn-pending { background: #fef3c7; border-color: #f59e0b; color: #a16207; }
+.stn-future { background: #f3f4f6; border-color: #d1d5db; color: #9ca3af; border-style: dashed; }
+.stn-line { flex: 1; width: 2px; background: #e5e7eb; margin: 3px 0; }
+.stn-line-dashed { flex: 1; width: 2px; border-left: 2px dashed #e5e7eb; margin: 3px 0; }
+.stn-body {
+  background: white; border-radius: 12px; box-shadow: 0 1px 4px rgba(0,0,0,.09);
+  padding: 16px 18px; flex: 1; margin-bottom: 12px;
+}
+.stn-title { font-size: 14px; font-weight: 600; color: #270D38; margin-bottom: 4px; }
+.stn-meta { font-size: 12px; color: #7E7E7E; margin-bottom: 10px; }
+.stn-results { display: flex; flex-wrap: wrap; gap: 6px; }
+.res-pill {
+  display: flex; align-items: center; gap: 5px;
+  background: #f3e8ff; color: #270D38; border-radius: 9999px; padding: 4px 10px; font-size: 11px; font-weight: 500;
+}
+.res-pill.rp-good { background: #dcfce7; color: #15803d; }
+.res-pill.rp-warn { background: #fef3c7; color: #a16207; }
+.res-pill.rp-info { background: #e0e7ff; color: #3730a3; }
+.stn-pend-tests { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
+.tp { background: #f3f4f6; border-radius: 9999px; padding: 4px 10px; font-size: 11px; color: #7E7E7E; }
+.tp-amber { background: #fef3c7; color: #a16207; }
+
+/* CTA card */
+.cta-card {
+  background: white; border-radius: 12px; box-shadow: 0 1px 4px rgba(0,0,0,.09);
+  padding: 22px 24px; display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  border-left: 4px solid #f59e0b;
+}
+.cta-text .cta-title { font-size: 15px; font-weight: 600; color: #270D38; margin-bottom: 4px; }
+.cta-text .cta-sub { font-size: 12px; color: #7E7E7E; line-height: 1.5; }
+.btn-start-s2 {
+  display: flex; align-items: center; gap: 8px; white-space: nowrap;
+  background: #f59e0b; color: #431407; border: none; border-radius: 9999px;
+  padding: 10px 22px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: 'Work Sans', sans-serif;
+  flex-shrink: 0;
+}
+.btn-start-s2:hover { background: #d97706; }
+</style>
+</head>
+<body>
+
+<!-- ── Demo nav ── -->
+<nav class="demo-nav">
+  <span class="demo-nav-title">Mock 7</span>
+  <button class="nb act" id="nb1" onclick="showView(1)">① Protocolo + sessões</button>
+  <button class="nb" id="nb2" onclick="showView(2)">② Avaliação S1 (TMT-B)</button>
+  <button class="nb" id="nb3" onclick="showView(3)">③ Fechar sessão clínica</button>
+  <button class="nb" id="nb4" onclick="showView(4)">④ Hub paciente entre sessões</button>
+  <button class="nb" id="nb5" onclick="showView(5)">⑤ Avaliação S2 (TAVEC)</button>
+</nav>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     VIEW 1 — PROTOCOL EDITOR con distribución de sesiones
+════════════════════════════════════════════════════════ -->
+<div class="view on" id="view1">
+  <div class="app-shell">
+
+    <!-- sidebar -->
+    <nav class="sidebar">
+      <div class="sb-logo">
+        <div class="sb-logo-dot">N</div>
+        <span class="sb-logo-name">Nóos</span>
+      </div>
+      <span class="sb-section">Principal</span>
+      <div class="sb-item">
+        <svg class="sb-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        Inicio
+      </div>
+      <div class="sb-item">
+        <svg class="sb-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Pacientes
+      </div>
+      <div class="sb-item act">
+        <svg class="sb-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        Protocolos
+      </div>
+      <span class="sb-section">Configuración</span>
+      <div class="sb-item">
+        <svg class="sb-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+        Normativas
+      </div>
+      <div class="sb-item">
+        <svg class="sb-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+        Ajustes
+      </div>
+    </nav>
+
+    <!-- main -->
+    <main class="main-content">
+      <div class="page-header">
+        <div>
+          <div class="page-title">NEURONORMA Estándar</div>
+          <div class="page-sub">Protocolo de evaluación neuropsicológica completa · 8 tests · ~110 min</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px">
+          <div class="status-row">
+            <div class="sdot sd"></div>
+            <span id="v1-estatus" class="status-lbl" style="display:flex;align-items:center;gap:6px">Borrador — cambios sin guardar</span>
+          </div>
+          <button class="btn-pri" onclick="markSaved()">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17,21 17,13 7,13 7,21"/><polyline points="7,3 7,8 15,8"/></svg>
+            Guardar protocolo
+          </button>
+        </div>
+      </div>
+
+      <!-- meta cards -->
+      <div class="cards-row">
+        <div class="meta-card">
+          <div class="mc-label">Tests</div>
+          <div class="mc-value">8</div>
+          <div class="mc-sub">en este protocolo</div>
+        </div>
+        <div class="meta-card">
+          <div class="mc-label">Duración estimada</div>
+          <div class="mc-value">~110 min</div>
+          <div class="mc-sub">sesión tipo</div>
+        </div>
+        <div class="meta-card">
+          <div class="mc-label">Normativa</div>
+          <div class="mc-value" style="font-size:15px;margin-top:4px">NEURONORMA</div>
+          <div class="mc-tag">
+            <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            España · 2012
+          </div>
+        </div>
+        <div class="meta-card">
+          <div class="mc-label">Evaluaciones activas</div>
+          <div class="mc-value">3</div>
+          <div class="mc-sub">en curso</div>
+        </div>
+      </div>
+
+      <!-- ★ SESSION DISTRIBUTION CARD — nova funcionalidade ★ -->
+      <div class="sess-dist-card">
+        <div class="sdc-header">
+          <div>
+            <div class="sdc-title">Distribución por sesiones clínicas</div>
+          </div>
+          <div id="sessDistToggle" class="toggle" onclick="toggleSessDist()" title="Activar planificación de sesiones"></div>
+        </div>
+        <div class="sdc-sub">
+          Opcionalmente, indica en qué sesión clínica se administra cada test.<br>
+          Si no lo sabes de antemano, puedes marcarlo durante la evaluación o dejarlo sin asignar.
+        </div>
+        <div class="sess-pills-legend">
+          <div class="sl"><div class="sl-dot sl-s1"></div>S1 — Sesión 1</div>
+          <div class="sl"><div class="sl-dot sl-s2"></div>S2 — Sesión 2</div>
+          <div class="sl"><div class="sl-dot sl-q"></div>? — Sin asignar</div>
+        </div>
+      </div>
+
+      <!-- test list -->
+      <div class="section-hdr">
+        <span>Tests del protocolo</span>
+        <span style="color:#9839D1;cursor:pointer;font-weight:500;font-size:12px">+ Añadir test</span>
+      </div>
+      <div class="test-list" id="v1-tests-wrap">
+
+        <div class="test-row">
+          <div class="tr-drag">⠿</div>
+          <div style="flex:1">
+            <div class="tr-name">TMT-A <span class="tr-cat">· Atención y velocidad de procesamiento</span></div>
+          </div>
+          <div class="tr-dur">5 min</div>
+          <div class="sp-wrap">
+            <div class="sp sp-s1 act" onclick="setSess(this,'s1')" title="Sesión 1">S1</div>
+            <div class="sp sp-s2" onclick="setSess(this,'s2')" title="Sesión 2">S2</div>
+            <div class="sp sp-q" onclick="setSess(this,'q')" title="Sin asignar">?</div>
+          </div>
+        </div>
+
+        <div class="test-row">
+          <div class="tr-drag">⠿</div>
+          <div style="flex:1">
+            <div class="tr-name">TMT-B <span class="tr-cat">· Función ejecutiva · Flexibilidad mental</span></div>
+          </div>
+          <div class="tr-dur">8 min</div>
+          <div class="sp-wrap">
+            <div class="sp sp-s1 act" onclick="setSess(this,'s1')" title="Sesión 1">S1</div>
+            <div class="sp sp-s2" onclick="setSess(this,'s2')" title="Sesión 2">S2</div>
+            <div class="sp sp-q" onclick="setSess(this,'q')" title="Sin asignar">?</div>
+          </div>
+        </div>
+
+        <div class="test-row">
+          <div class="tr-drag">⠿</div>
+          <div style="flex:1">
+            <div class="tr-name">TAVEC <span class="tr-cat">· Memoria verbal · Aprendizaje y recuerdo</span></div>
+          </div>
+          <div class="tr-dur">25 min</div>
+          <div class="sp-wrap">
+            <div class="sp sp-s1" onclick="setSess(this,'s1')" title="Sesión 1">S1</div>
+            <div class="sp sp-s2 act" onclick="setSess(this,'s2')" title="Sesión 2">S2</div>
+            <div class="sp sp-q" onclick="setSess(this,'q')" title="Sin asignar">?</div>
+          </div>
+        </div>
+
+        <div class="test-row">
+          <div class="tr-drag">⠿</div>
+          <div style="flex:1">
+            <div class="tr-name">FAS <span class="tr-cat">· Lenguaje · Fluidez verbal fonológica</span></div>
+          </div>
+          <div class="tr-dur">5 min</div>
+          <div class="sp-wrap">
+            <div class="sp sp-s1" onclick="setSess(this,'s1')" title="Sesión 1">S1</div>
+            <div class="sp sp-s2 act" onclick="setSess(this,'s2')" title="Sesión 2">S2</div>
+            <div class="sp sp-q" onclick="setSess(this,'q')" title="Sin asignar">?</div>
+          </div>
+        </div>
+
+        <div class="test-row">
+          <div class="tr-drag">⠿</div>
+          <div style="flex:1">
+            <div class="tr-name">Rey-C (Copia) <span class="tr-cat">· Función visuoconstructiva</span></div>
+          </div>
+          <div class="tr-dur">15 min</div>
+          <div class="sp-wrap">
+            <div class="sp sp-s1" onclick="setSess(this,'s1')" title="Sesión 1">S1</div>
+            <div class="sp sp-s2" onclick="setSess(this,'s2')" title="Sesión 2">S2</div>
+            <div class="sp sp-q act" onclick="setSess(this,'q')" title="Sin asignar">?</div>
+          </div>
+        </div>
+
+        <div class="test-row">
+          <div class="tr-drag">⠿</div>
+          <div style="flex:1">
+            <div class="tr-name">Rey-M (Memoria) <span class="tr-cat">· Memoria visual</span></div>
+          </div>
+          <div class="tr-dur">15 min</div>
+          <div class="sp-wrap">
+            <div class="sp sp-s1" onclick="setSess(this,'s1')" title="Sesión 1">S1</div>
+            <div class="sp sp-s2" onclick="setSess(this,'s2')" title="Sesión 2">S2</div>
+            <div class="sp sp-q act" onclick="setSess(this,'q')" title="Sin asignar">?</div>
+          </div>
+        </div>
+
+        <div class="test-row">
+          <div class="tr-drag">⠿</div>
+          <div style="flex:1">
+            <div class="tr-name">Semántica <span class="tr-cat">· Lenguaje · Fluidez verbal semántica</span></div>
+          </div>
+          <div class="tr-dur">5 min</div>
+          <div class="sp-wrap">
+            <div class="sp sp-s1 act" onclick="setSess(this,'s1')" title="Sesión 1">S1</div>
+            <div class="sp sp-s2" onclick="setSess(this,'s2')" title="Sesión 2">S2</div>
+            <div class="sp sp-q" onclick="setSess(this,'q')" title="Sin asignar">?</div>
+          </div>
+        </div>
+
+        <div class="test-row">
+          <div class="tr-drag">⠿</div>
+          <div style="flex:1">
+            <div class="tr-name">Dígitos <span class="tr-cat">· Memoria de trabajo · Span numérico</span></div>
+          </div>
+          <div class="tr-dur">10 min</div>
+          <div class="sp-wrap">
+            <div class="sp sp-s1 act" onclick="setSess(this,'s1')" title="Sesión 1">S1</div>
+            <div class="sp sp-s2" onclick="setSess(this,'s2')" title="Sesión 2">S2</div>
+            <div class="sp sp-q" onclick="setSess(this,'q')" title="Sin asignar">?</div>
+          </div>
+        </div>
+
+      </div><!-- /v1-tests-wrap -->
+    </main>
+  </div>
+</div><!-- /view1 -->
+
+
+<!-- ═══════════════════════════════════════════════════════
+     VIEW 2 — EVALUATION SESSION 1 (TMT-B)
+════════════════════════════════════════════════════════ -->
+<div class="view" id="view2">
+
+  <!-- topbar -->
+  <div class="topbar">
+    <div class="tb-brand"><div class="tb-dot">N</div><span class="tb-name">Nóos</span></div>
+    <div class="tb-div"></div>
+    <div class="tb-pat">
+      <div class="tb-av">MG</div>
+      <span class="tb-id">P-2847</span>
+      <span class="tb-meta">· 68a · 12a educ.</span>
+    </div>
+    <div class="tb-div"></div>
+    <div class="tb-proto"><strong>NEURONORMA Estándar</strong></div>
+
+    <div class="tb-right">
+      <!-- session chip -->
+      <div class="sc sc-s1"><div class="sc-dot sc-dot-s1"></div>Sesión 1</div>
+      <div class="timer"><div class="t-dot"></div>38:14</div>
+      <button class="btn-pause">
+        <svg width="11" height="11" fill="currentColor" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+        Pausar
+      </button>
+      <button class="btn-close-sess" onclick="showView(3)">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16,17 21,12 16,7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Cerrar sesión clínica
+      </button>
+    </div>
+  </div>
+
+  <!-- progress strip -->
+  <div class="prog-strip">
+    <div class="prog-pills">
+      <div class="pp pp-done">
+        <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20,6 9,17 4,12"/></svg>
+        TMT-A
+      </div>
+      <div class="pp pp-cur">TMT-B</div>
+      <div class="pp pp-pend">Semántica</div>
+      <div class="pp pp-pend">Dígitos</div>
+      <div class="sess-sep" title="Separador de sesión — S2 a continuación"></div>
+      <div class="pp pp-defer">
+        <svg width="9" height="9" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="17,1 21,5 17,9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/></svg>
+        TAVEC ↩
+      </div>
+      <div class="pp pp-defer">
+        <svg width="9" height="9" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="17,1 21,5 17,9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/></svg>
+        FAS ↩
+      </div>
+      <div class="pp pp-pend">Rey-C</div>
+      <div class="pp pp-pend">Rey-M</div>
+    </div>
+    <div class="prog-lbl">
+      <span class="pl pl-done">TMT-A ✓</span>
+      <span class="pl pl-cur">TMT-B ◀ ahora</span>
+      <span class="pl pl-pend">Semántica</span>
+      <span class="pl pl-pend">Dígitos</span>
+      <span class="pl pl-sep">│ S2</span>
+      <span class="pl pl-pend">TAVEC ↩</span>
+      <span class="pl pl-pend">FAS ↩</span>
+      <span class="pl pl-pend">Rey-C</span>
+      <span class="pl pl-pend">Rey-M</span>
+    </div>
+  </div>
+
+  <!-- eval area -->
+  <div class="eval-area">
+    <div class="test-card-wrap">
+      <div class="test-card">
+        <div class="tst-badge">
+          <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>
+          Función ejecutiva · Flexibilidad mental
+        </div>
+        <div class="tst-title">Trail Making Test — <span style="color:#9839D1">Parte B</span></div>
+        <div class="tst-sub">Conectar alternando números y letras (1-A-2-B…). Registrar tiempo en segundos y número de errores cometidos.</div>
+
+        <div class="fsec" style="margin-top:20px">
+          <div class="fsec-title">Resultados</div>
+          <div class="fg">
+            <div class="ff">
+              <label>Tiempo de ejecución</label>
+              <div class="ff-hint">Segundos (máx. 300s = tiempo límite)</div>
+              <div class="iu">
+                <input type="number" value="94" placeholder="0" />
+                <span class="iu-lbl">seg.</span>
+              </div>
+            </div>
+            <div class="ff">
+              <label>Errores cometidos</label>
+              <div class="ff-hint">Número total de errores</div>
+              <div class="iu">
+                <input type="number" value="2" placeholder="0" />
+                <span class="iu-lbl">err.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="fsec" style="margin-bottom:0">
+          <div class="fsec-title">Notas del clínico</div>
+          <textarea placeholder="Observaciones del comportamiento durante la prueba…">Ligera impulsividad en los primeros ítems, se autocorrigió.</textarea>
+        </div>
+
+        <div class="form-acts">
+          <button class="btn-skip">Omitir</button>
+          <button class="btn-defer" title="Marcar para administrar en Sesión 2">
+            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="17,1 21,5 17,9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/></svg>
+            Dejar para Sesión 2
+          </button>
+          <button class="btn-prev" onclick="showView(1)">
+            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>
+            Anterior
+          </button>
+          <button class="btn-next">
+            Guardar y continuar
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- info panel -->
+    <div class="info-panel">
+      <div class="ic">
+        <div class="ic-title">Esta sesión (S1)</div>
+        <div class="vrow"><span class="vk">Tests planificados</span><span class="vv">4 tests</span></div>
+        <div class="vrow"><span class="vk">Completados</span><span class="vv-a">1 de 4</span></div>
+        <div class="vrow"><span class="vk">Diferidos para S2</span><span class="vv-a">TAVEC · FAS</span></div>
+        <div class="vrow"><span class="vk">Tiempo transcurrido</span><span class="vv">38:14</span></div>
+        <div class="vrow"><span class="vk">Estimado restante</span><span class="vv">~25 min</span></div>
+      </div>
+      <div class="ic">
+        <div class="ic-title">Resultado anterior — TMT-A</div>
+        <div class="vrow"><span class="vk">Tiempo</span><span class="vv">41 seg.</span></div>
+        <div class="vrow"><span class="vk">Puntuación escalar</span><span class="vv-a">PE 13</span></div>
+        <div class="vrow"><span class="vk">Percentil</span><span class="vv-a">P87 Superior</span></div>
+      </div>
+      <div class="ic">
+        <div class="ic-title">Normativa NEURONORMA</div>
+        <div class="nchip"><span class="nchip-t">📊 NEURONORMA España</span></div>
+        <div class="vrow"><span class="vk">Rango edad</span><span class="vv-p">65–74 años</span></div>
+        <div class="vrow"><span class="vk">Educación</span><span class="vv-p">8–12 años</span></div>
+        <div class="vrow"><span class="vk">Dirección</span><span class="vv">↓ Menor tiempo = mejor</span></div>
+      </div>
+      <div class="ic">
+        <div class="ic-title">Procedimiento TMT-B</div>
+        <div class="instr-step"><div class="instr-num">1</div><div class="instr-txt">Mostrar hoja B. Asegurarse de que el paciente entiende la tarea (ejemplo previo).</div></div>
+        <div class="instr-step"><div class="instr-num">2</div><div class="instr-txt">Dar la señal de inicio y activar el cronómetro. No dar pistas.</div></div>
+        <div class="instr-step"><div class="instr-num">3</div><div class="instr-txt">Si comete un error, señalar y pedir corrección inmediata sin detener el cronómetro.</div></div>
+        <div class="instr-step"><div class="instr-num">4</div><div class="instr-txt">Detener al llegar a 25 o a los 300 segundos. Registrar tiempo y errores.</div></div>
+      </div>
+    </div>
+  </div>
+</div><!-- /view2 -->
+
+
+<!-- ═══════════════════════════════════════════════════════
+     VIEW 3 — CLOSE SESSION MODAL
+════════════════════════════════════════════════════════ -->
+<div class="view" id="view3" style="position:relative">
+  <div class="modal-wrap">
+
+    <!-- dimmed background: frozen V2 content -->
+    <div class="modal-bg-dim">
+      <div class="topbar" style="height:58px">
+        <div class="tb-brand"><div class="tb-dot">N</div><span class="tb-name">Nóos</span></div>
+        <div class="tb-div"></div>
+        <div class="tb-pat"><div class="tb-av">MG</div><span class="tb-id">P-2847</span><span class="tb-meta">· 68a</span></div>
+        <div class="tb-right">
+          <div class="sc sc-s1"><div class="sc-dot sc-dot-s1"></div>Sesión 1</div>
+          <div class="timer"><div class="t-dot"></div>38:14</div>
+        </div>
+      </div>
+      <div style="display:flex;flex:1;overflow:hidden">
+        <div style="flex:1;padding:24px;overflow:hidden">
+          <div style="background:white;border-radius:12px;padding:24px;max-width:680px;opacity:.6">
+            <div style="height:18px;background:#e5e7eb;border-radius:4px;width:60%;margin-bottom:10px"></div>
+            <div style="height:13px;background:#f3f4f6;border-radius:4px;width:90%;margin-bottom:6px"></div>
+            <div style="height:13px;background:#f3f4f6;border-radius:4px;width:75%;margin-bottom:20px"></div>
+            <div style="display:flex;gap:12px">
+              <div style="flex:1;height:72px;background:#f9fafb;border-radius:8px;border:1.5px solid #e5e7eb"></div>
+              <div style="flex:1;height:72px;background:#f9fafb;border-radius:8px;border:1.5px solid #e5e7eb"></div>
+            </div>
+          </div>
+        </div>
+        <div style="width:280px;background:#faf9f8;border-left:1px solid rgba(0,0,0,.07)"></div>
+      </div>
+    </div>
+
+    <!-- modal -->
+    <div class="modal-center">
+      <div class="modal-box">
+        <div class="mb-title">¿Cerrar la sesión clínica?</div>
+        <div class="mb-sub">El paciente se va por hoy. Puedes retomar en otra visita.<br>Los tests no completados quedarán pendientes para la próxima sesión.</div>
+
+        <div class="mb-stat">
+          <div class="mbs-item">
+            <div class="mbs-val">1</div>
+            <div class="mbs-lbl">Completado</div>
+          </div>
+          <div class="mbs-item">
+            <div class="mbs-val" style="color:#9839D1">1</div>
+            <div class="mbs-lbl">En curso</div>
+          </div>
+          <div class="mbs-item">
+            <div class="mbs-val" style="color:#f59e0b">2</div>
+            <div class="mbs-lbl">Diferidos S2</div>
+          </div>
+          <div class="mbs-item">
+            <div class="mbs-val" style="color:#94a3b8">2</div>
+            <div class="mbs-lbl">Pendientes</div>
+          </div>
+        </div>
+
+        <div class="mb-opts">
+          <div class="mb-opt sel" id="mb-opt-a" onclick="selectOpt('a')">
+            <div class="mb-radio"><div class="mb-radio-dot"></div></div>
+            <div>
+              <div class="mb-opt-title">Guardar S1 y continuar en otra sesión</div>
+              <div class="mb-opt-sub">Los resultados de TMT-A quedan guardados. Los tests pendientes y diferidos se programan para Sesión 2.</div>
+            </div>
+          </div>
+          <div class="mb-opt" id="mb-opt-b" onclick="selectOpt('b')">
+            <div class="mb-radio"><div class="mb-radio-dot"></div></div>
+            <div>
+              <div class="mb-opt-title">Pausar y retomar mañana (misma sesión)</div>
+              <div class="mb-opt-sub">El estado actual queda guardado. Al retomar, continuará en el mismo punto — sin crear una nueva sesión clínica.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mb-acts">
+          <button class="btn-cancel-modal" onclick="showView(2)">Cancelar</button>
+          <button class="btn-confirm-modal" onclick="showView(4)">
+            Cerrar sesión clínica
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" style="margin-left:5px;vertical-align:middle"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div><!-- /view3 -->
+
+
+<!-- ═══════════════════════════════════════════════════════
+     VIEW 4 — PATIENT HUB (between sessions)
+════════════════════════════════════════════════════════ -->
+<div class="view" id="view4">
+  <div class="hub-shell">
+
+    <!-- collapsed sidebar -->
+    <nav class="hub-sidebar">
+      <div class="hub-sb-dot">N</div>
+      <div class="hub-sb-icon">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+      </div>
+      <div class="hub-sb-icon act">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+      </div>
+      <div class="hub-sb-icon">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      </div>
+    </nav>
+
+    <main class="hub-main">
+
+      <!-- patient header -->
+      <div class="hub-pat-hdr">
+        <div class="hub-av">MG</div>
+        <div style="flex:1">
+          <div class="hub-pat-name">Paciente P-2847 <span style="font-size:13px;font-weight:400;color:#7E7E7E">· MG</span></div>
+          <div class="hub-pat-meta">68 años · 12 años educación · Diestro · ♂</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="background:#fef3c7;border:1px solid #fde68a;border-radius:9999px;padding:5px 14px;font-size:12px;font-weight:600;color:#a16207;display:flex;align-items:center;gap:6px">
+            <div style="width:7px;height:7px;border-radius:50%;background:#f59e0b"></div>
+            Sesión 2 pendiente
+          </div>
+          <button class="btn-pri" style="background:#f59e0b;color:#431407" onclick="showView(5)">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg>
+            Iniciar Sesión 2
+          </button>
+        </div>
+      </div>
+
+      <!-- tabs -->
+      <div class="hub-tabs">
+        <div class="hub-tab act">Evaluación · NEURONORMA Estándar</div>
+        <div class="hub-tab">Informes</div>
+        <div class="hub-tab">Historial</div>
+      </div>
+
+      <!-- session timeline -->
+      <div class="section-hdr" style="margin-bottom:16px">Progreso de sesiones clínicas</div>
+
+      <div class="sess-timeline">
+
+        <!-- S1 — completed -->
+        <div class="stn">
+          <div class="stn-left">
+            <div class="stn-node stn-done">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20,6 9,17 4,12"/></svg>
+            </div>
+            <div class="stn-line"></div>
+          </div>
+          <div class="stn-body">
+            <div class="stn-title">Sesión 1 — Completada</div>
+            <div class="stn-meta">3 marzo 2026 · 48 minutos · 2 tests completados · 2 diferidos</div>
+            <div class="stn-results">
+              <div class="res-pill rp-good">TMT-A · P87 Superior</div>
+              <div class="res-pill rp-warn">TMT-B · P25 Limítrofe</div>
+              <div class="res-pill rp-info">Ratio B/A = 2.9</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- S2 — pending -->
+        <div class="stn">
+          <div class="stn-left">
+            <div class="stn-node stn-pending">2</div>
+            <div class="stn-line-dashed"></div>
+          </div>
+          <div class="stn-body" style="border:1.5px solid #fde68a">
+            <div class="stn-title" style="color:#a16207">Sesión 2 — Pendiente</div>
+            <div class="stn-meta">Tests planificados · ~90 min estimados</div>
+            <div style="margin-bottom:8px;font-size:11px;font-weight:600;color:#7E7E7E;text-transform:uppercase;letter-spacing:.5px">Diferidos de S1</div>
+            <div class="stn-pend-tests">
+              <div class="tp tp-amber">↩ TAVEC</div>
+              <div class="tp tp-amber">↩ FAS</div>
+            </div>
+            <div style="margin-top:10px;margin-bottom:8px;font-size:11px;font-weight:600;color:#7E7E7E;text-transform:uppercase;letter-spacing:.5px">Planificados para S2</div>
+            <div class="stn-pend-tests">
+              <div class="tp">Semántica</div>
+              <div class="tp">Dígitos</div>
+              <div class="tp">Rey-C</div>
+              <div class="tp">Rey-M</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- S3+ — optional / unknown -->
+        <div class="stn">
+          <div class="stn-left">
+            <div class="stn-node stn-future">?</div>
+          </div>
+          <div class="stn-body" style="border:1px dashed #d1d5db;background:#fafafa">
+            <div class="stn-title" style="color:#9ca3af">Sesión 3 (opcional)</div>
+            <div class="stn-meta" style="color:#9ca3af">Solo si se generan diferidos en la Sesión 2 o se necesitan tests adicionales.</div>
+          </div>
+        </div>
+
+      </div><!-- /sess-timeline -->
+
+      <!-- CTA -->
+      <div class="cta-card">
+        <div class="cta-text">
+          <div class="cta-title">Retomar evaluación — Sesión 2</div>
+          <div class="cta-sub">2 tests diferidos de S1 + 4 tests planificados para esta sesión.<br>Estimado: ~90 minutos.</div>
+        </div>
+        <button class="btn-start-s2" onclick="showView(5)">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg>
+          Iniciar Sesión 2
+        </button>
+      </div>
+
+    </main>
+  </div>
+</div><!-- /view4 -->
+
+
+<!-- ═══════════════════════════════════════════════════════
+     VIEW 5 — EVALUATION SESSION 2 (TAVEC — deferred)
+════════════════════════════════════════════════════════ -->
+<div class="view" id="view5">
+
+  <!-- topbar — amber session chip -->
+  <div class="topbar">
+    <div class="tb-brand"><div class="tb-dot">N</div><span class="tb-name">Nóos</span></div>
+    <div class="tb-div"></div>
+    <div class="tb-pat">
+      <div class="tb-av">MG</div>
+      <span class="tb-id">P-2847</span>
+      <span class="tb-meta">· 68a · 12a educ.</span>
+    </div>
+    <div class="tb-div"></div>
+    <div class="tb-proto"><strong>NEURONORMA Estándar</strong></div>
+
+    <div class="tb-right">
+      <!-- amber S2 chip -->
+      <div class="sc sc-s2"><div class="sc-dot sc-dot-s2"></div>Sesión 2</div>
+      <div class="timer"><div class="t-dot"></div>00:04</div>
+      <button class="btn-pause">
+        <svg width="11" height="11" fill="currentColor" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+        Pausar
+      </button>
+      <button class="btn-close-sess" onclick="showView(3)">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16,17 21,12 16,7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Cerrar sesión clínica
+      </button>
+    </div>
+  </div>
+
+  <!-- retomando banner -->
+  <div class="sess-banner">
+    <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="17,1 21,5 17,9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/></svg>
+    <span><strong>Retomando Sesión 2</strong> — Comenzando por tests diferidos de la Sesión 1 (3 mar 2026). TMT-B: PE8 · P25 Limítrofe.</span>
+  </div>
+
+  <!-- progress strip — S2 view -->
+  <div class="prog-strip">
+    <div class="prog-pills">
+      <!-- S1 done tests (gray) -->
+      <div class="pp pp-s2-done">
+        <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20,6 9,17 4,12"/></svg>
+        TMT-A
+      </div>
+      <div class="pp pp-s2-done">
+        <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20,6 9,17 4,12"/></svg>
+        TMT-B
+      </div>
+      <div class="sess-sep" title="Fin de Sesión 1"></div>
+      <!-- S2: current (deferred from S1) -->
+      <div class="pp pp-s2-cur">
+        <svg width="9" height="9" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="17,1 21,5 17,9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/></svg>
+        TAVEC ↩
+      </div>
+      <div class="pp pp-s2-def">
+        <svg width="9" height="9" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="17,1 21,5 17,9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/></svg>
+        FAS ↩
+      </div>
+      <div class="pp pp-pend">Semántica</div>
+      <div class="pp pp-pend">Dígitos</div>
+      <div class="pp pp-pend">Rey-C</div>
+      <div class="pp pp-pend">Rey-M</div>
+    </div>
+    <div class="prog-lbl">
+      <span class="pl pl-done">TMT-A ✓ S1</span>
+      <span class="pl pl-done">TMT-B ✓ S1</span>
+      <span class="pl pl-sep">│ S2</span>
+      <span class="pl pl-s2-cur">TAVEC ↩ ◀ ahora</span>
+      <span class="pl pl-s2-def">FAS ↩</span>
+      <span class="pl pl-pend">Semántica</span>
+      <span class="pl pl-pend">Dígitos</span>
+      <span class="pl pl-pend">Rey-C</span>
+      <span class="pl pl-pend">Rey-M</span>
+    </div>
+  </div>
+
+  <!-- eval area — TAVEC (deferred from S1) -->
+  <div class="eval-area">
+    <div class="test-card-wrap">
+      <div class="test-card">
+        <div class="tst-badge tst-badge-amber">
+          <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="17,1 21,5 17,9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/></svg>
+          Memoria verbal · Aprendizaje
+        </div>
+        <div class="tst-title">TAVEC — <span style="color:#f59e0b">Aprendizaje Verbal</span></div>
+        <div class="def-badge">
+          <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="17,1 21,5 17,9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/></svg>
+          Diferido de Sesión 1
+        </div>
+        <div class="tst-sub" style="margin-top:6px">Aprendizaje de 16 palabras en 5 ensayos consecutivos. Registrar el número de palabras correctas en cada ensayo.</div>
+
+        <div class="fsec" style="margin-top:18px">
+          <div class="fsec-title">Ensayos de aprendizaje — Lista A (16 palabras)</div>
+          <div class="tgrid">
+            <div class="tc"><div class="tc-lbl">Ensayo 1</div><input type="number" value="6"/></div>
+            <div class="tc"><div class="tc-lbl">Ensayo 2</div><input type="number" value="9"/></div>
+            <div class="tc"><div class="tc-lbl">Ensayo 3</div><input type="number" value="11"/></div>
+            <div class="tc"><div class="tc-lbl">Ensayo 4</div><input type="number" placeholder=""/></div>
+            <div class="tc"><div class="tc-lbl">Ensayo 5</div><input type="number" placeholder=""/></div>
+          </div>
+        </div>
+
+        <div class="fsec">
+          <div class="fsec-title">Lista interferente B · y recuerdos</div>
+          <div class="fg">
+            <div class="ff">
+              <label>Aciertos Lista B</label>
+              <div class="ff-hint">Lista interferente</div>
+              <div class="iu"><input type="number" placeholder="0"/><span class="iu-lbl">pal.</span></div>
+            </div>
+            <div class="ff">
+              <label>Recuerdo inmediato (RI)</label>
+              <div class="ff-hint">Tras Lista B, sin relearning</div>
+              <div class="iu"><input type="number" placeholder="0"/><span class="iu-lbl">pal.</span></div>
+            </div>
+          </div>
+          <div class="fg" style="margin-top:10px">
+            <div class="ff">
+              <label>Recuerdo diferido (RD)</label>
+              <div class="ff-hint">~20 min después del RI</div>
+              <div class="iu"><input type="number" placeholder="0"/><span class="iu-lbl">pal.</span></div>
+            </div>
+            <div class="ff">
+              <label>Reconocimiento</label>
+              <div class="ff-hint">Total aciertos (máx. 16)</div>
+              <div class="iu"><input type="number" placeholder="0"/><span class="iu-lbl">/16</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="fsec" style="margin-bottom:0">
+          <div class="fsec-title">Notas del clínico</div>
+          <textarea placeholder="Observaciones adicionales (opcional)…"></textarea>
+        </div>
+
+        <div class="form-acts">
+          <button class="btn-skip">Omitir</button>
+          <button class="btn-defer">
+            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="17,1 21,5 17,9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7,23 3,19 7,15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+            Dejar para Sesión 3
+          </button>
+          <button class="btn-prev" onclick="showView(4)">
+            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>
+            Anterior
+          </button>
+          <button class="btn-next">
+            Guardar y continuar
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- info panel -->
+    <div class="info-panel">
+      <div class="ic">
+        <div class="ic-title">Esta sesión (S2)</div>
+        <div class="vrow"><span class="vk">Tests planificados</span><span class="vv">6 tests</span></div>
+        <div class="vrow"><span class="vk">Completados</span><span class="vv-a">0 de 6</span></div>
+        <div class="vrow"><span class="vk">Diferidos de S1</span><span class="vv-a">TAVEC · FAS</span></div>
+        <div class="vrow"><span class="vk">Tiempo transcurrido</span><span class="vv">00:04</span></div>
+      </div>
+      <div class="ic">
+        <div class="ic-title">Sesión 1 — 3 mar 2026</div>
+        <div class="planned-list" style="margin-bottom:8px">
+          <div class="pl-item pli-hist"><div class="pl-dot pld-done"></div>TMT-A · PE13 · P87 Superior</div>
+          <div class="pl-item pli-hist"><div class="pl-dot pld-done"></div>TMT-B · PE8 · P25 Limítrofe</div>
+        </div>
+        <div style="padding:7px 9px;background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;font-size:11px;color:#92400e;line-height:1.5">
+          <strong>Ratio B/A = 2.9</strong> — vigilar función ejecutiva
+        </div>
+      </div>
+      <div class="ic">
+        <div class="ic-title">Normativa NEURONORMA</div>
+        <div class="nchip"><span class="nchip-t">📊 NEURONORMA España</span></div>
+        <div class="vrow"><span class="vk">Rango edad</span><span class="vv-p">65–74 años</span></div>
+        <div class="vrow"><span class="vk">Educación</span><span class="vv-p">8–12 años</span></div>
+        <div class="vrow"><span class="vk">Dirección</span><span class="vv">↑ Mayor = mejor</span></div>
+        <div class="vrow"><span class="vk">Pontuação</span><span class="vv">Total ensayos 1-5</span></div>
+      </div>
+      <div class="ic">
+        <div class="ic-title">Procedimiento TAVEC</div>
+        <div class="instr-step"><div class="instr-num">1</div><div class="instr-txt">Leer Lista A (16 palabras) a 1 seg/palabra. Pedir recuerdo libre.</div></div>
+        <div class="instr-step"><div class="instr-num">2</div><div class="instr-txt">Repetir 5 veces. Registrar palabras correctas en cada ensayo.</div></div>
+        <div class="instr-step"><div class="instr-num">3</div><div class="instr-txt">Administrar Lista B (interferente). Pedir recuerdo libre.</div></div>
+        <div class="instr-step"><div class="instr-num">4</div><div class="instr-txt">RI de Lista A sin relearning. RD ~20 min después + reconocimiento.</div></div>
+      </div>
+    </div>
+  </div>
+</div><!-- /view5 -->
+
+
+<script>
+function showView(n) {
+  for (let i = 1; i <= 5; i++) {
+    const v = document.getElementById('view' + i);
+    if (!v) continue;
+    v.style.display = 'none';
+    v.classList.remove('on');
+    const b = document.getElementById('nb' + i);
+    if (b) b.classList.remove('act');
+  }
+  const target = document.getElementById('view' + n);
+  if (target) { target.style.display = 'flex'; target.classList.add('on'); }
+  const btn = document.getElementById('nb' + n);
+  if (btn) btn.classList.add('act');
+}
+
+function toggleSessDist() {
+  const tog = document.getElementById('sessDistToggle');
+  const wrap = document.getElementById('v1-tests-wrap');
+  const isOn = !tog.classList.contains('off');
+  if (isOn) { tog.classList.add('off'); wrap.classList.remove('sess-plan-on'); }
+  else       { tog.classList.remove('off'); wrap.classList.add('sess-plan-on'); }
+}
+
+function setSess(el, type) {
+  el.parentElement.querySelectorAll('.sp').forEach(s => s.classList.remove('act'));
+  el.classList.add('act');
+}
+
+function selectOpt(id) {
+  const a = document.getElementById('mb-opt-a');
+  const b = document.getElementById('mb-opt-b');
+  if (a) a.classList.toggle('sel', id === 'a');
+  if (b) b.classList.toggle('sel', id === 'b');
+}
+
+function markSaved() {
+  const el = document.getElementById('v1-estatus');
+  if (el) el.innerHTML = '<div class="sdot sv" style="display:inline-block;margin-right:6px"></div>Todos los cambios guardados';
+}
+
+// Init
+document.getElementById('v1-tests-wrap').classList.add('sess-plan-on');
+</script>
+</body>
+</html>

@@ -5,4 +5,5 @@ from app.models.patient_access import PatientAccess
 from app.models.test_session import TestSession
 from app.models.protocol import Protocol, ProtocolTest, PatientProtocol
 from app.models.execution_plan import ExecutionPlan
+from app.models.clinical_session import ClinicalSession
 from app.models.used_refresh_token import UsedRefreshToken

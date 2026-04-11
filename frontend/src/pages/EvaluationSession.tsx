@@ -6,7 +6,6 @@ import { testsApi } from '@/api/tests'
 import { patientsApi } from '@/api/patients'
 import type { Patient } from '@/types/patient'
 import TestFormDispatcher from '@/components/evaluation/TestFormDispatcher'
-import SessionTimer from '@/components/evaluation/SessionTimer'
 
 const CLASSIFICATION_COLORS: Record<string, string> = {
   'Superior':   'text-[#15803d]',
@@ -22,7 +21,6 @@ export default function EvaluationSession() {
   const [_patient, setPatient] = useState<Patient | null>(null)
   const [tests, setTests] = useState<TestCustomization[]>([])
   const [currentIdx, setCurrentIdx] = useState(0)
-  const [mode, setMode] = useState<string>('live')
   const [allowCustomization, setAllowCustomization] = useState(true)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -38,7 +36,6 @@ export default function EvaluationSession() {
       evaluationsApi.getWithResults(planId),
     ]).then(([_p, plan, results]) => {
       setPatient(_p)
-      setMode(plan.mode)
       setAllowCustomization(plan.allow_customization ?? true)
       const activTests = plan.test_customizations.filter(t => !t.skip)
       setTests(activTests)
@@ -141,13 +138,10 @@ export default function EvaluationSession() {
 
       {/* Main content */}
       <main className="flex-1 max-w-3xl mx-auto w-full px-6 py-8">
-        {/* Timer (live mode only) */}
-        {mode === 'live' && <SessionTimer key={currentTest.test_type} />}
-
-        {/* Test form */}
+      {/* Test form */}
         <TestFormDispatcher
           testType={currentTest.test_type}
-          mode={mode as 'live' | 'paper'}
+          mode="paper"
           onSave={handleSave}
           onSkip={allowCustomization ? handleSkip : undefined}
           saving={saving}

@@ -16,7 +16,7 @@ class ExecutionPlan(Base):
     protocol_id = Column(String, ForeignKey("protocols.id", ondelete="SET NULL"), nullable=True)
     test_customizations = Column(Text, nullable=True)   # JSON array
     status = Column(String, default="draft", index=True) # draft | active | completed | abandoned
-    mode = Column(String, default="live")                # live | paper
+    mode = Column(String, default="paper")               # paper (live deprecated)
     is_saved_variant = Column(Boolean, default=False)
     variant_name = Column(String, nullable=True)
     performed_at = Column(DateTime, nullable=True)
@@ -25,6 +25,11 @@ class ExecutionPlan(Base):
 
     patient = relationship("Patient", back_populates="execution_plans")
     protocol = relationship("Protocol", back_populates="execution_plans")
+    clinical_sessions = relationship(
+        "ClinicalSession", back_populates="execution_plan",
+        cascade="all, delete-orphan",
+        order_by="ClinicalSession.session_number",
+    )
 
     def _get_customizations(self) -> List[Dict[str, Any]]:
         return json.loads(self.test_customizations) if self.test_customizations else []

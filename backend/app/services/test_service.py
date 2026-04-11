@@ -31,6 +31,7 @@ class TestService:
             test_type=body.test_type,
             protocol_id=body.protocol_id,
             execution_plan_id=body.execution_plan_id,
+            clinical_session_id=body.clinical_session_id,
         )
         session.set_raw_data(body.raw_data)
         if body.qualitative_data:

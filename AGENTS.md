@@ -128,6 +128,11 @@ Deployed locally at clinics — GDPR applies, PHI rules are strict, data never l
 | Auth store (frontend) | `frontend/src/store/auth.ts` |
 | API error handling | `frontend/src/utils/apiError.ts` |
 | Axios client + refresh | `frontend/src/api/client.ts` |
+| Clinical session model | `backend/app/models/clinical_session.py` |
+| Clinical session service | `backend/app/services/clinical_session_service.py` |
+| Clinical session routes | `backend/app/api/routes/clinical_sessions.py` |
+| Clinical session schemas | `backend/app/schemas/clinical_session.py` |
+| Sessions UX mockup | `design-references/noos-mock-8-sessions-paper.html` |
 
 ---
 

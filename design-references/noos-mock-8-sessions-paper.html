@@ -1,0 +1,1349 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Nóos — Mock 8: Sessões em Papel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Work Sans', sans-serif; background: #F6F5F2; color: #270D38; overflow: hidden; }
+
+/* ── Demo nav ── */
+.demo-nav {
+  position: fixed; top: 0; left: 0; right: 0; height: 44px; z-index: 1000;
+  background: #1a0d24; display: flex; align-items: center; padding: 0 16px; gap: 6px;
+}
+.demo-label { font-size: 11px; color: rgba(255,255,255,.35); font-weight: 500;
+  letter-spacing: .6px; text-transform: uppercase; margin-right: 6px; white-space: nowrap; }
+.nb {
+  padding: 5px 13px; border-radius: 9999px; font-size: 12px; font-weight: 500;
+  color: rgba(255,255,255,.45); cursor: pointer; border: 1px solid transparent;
+  transition: all .15s; white-space: nowrap; background: none;
+  font-family: 'Work Sans', sans-serif;
+}
+.nb:hover { color: rgba(255,255,255,.8); border-color: rgba(255,255,255,.18); }
+.nb.act { background: rgba(255,255,255,.13); color: white; border-color: rgba(255,255,255,.22); }
+
+/* ── Views ── */
+.view {
+  display: none; flex-direction: column;
+  height: calc(100vh - 44px); margin-top: 44px;
+  overflow: hidden;
+}
+.view.on { display: flex; }
+
+/* ══════════════════════════════════
+   SHARED TOPBAR (entry screens)
+══════════════════════════════════ */
+.topbar {
+  height: 58px; background: #4B164F; color: white;
+  display: flex; align-items: center; padding: 0 24px; gap: 14px; flex-shrink: 0;
+}
+.tb-dot { width: 28px; height: 28px; background: #B738F2; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; }
+.tb-name { font-size: 16px; font-weight: 600; }
+.tb-div { width: 1px; height: 22px; background: rgba(255,255,255,.18); }
+.tb-pat {
+  display: flex; align-items: center; gap: 8px;
+  background: rgba(255,255,255,.1); border-radius: 9999px; padding: 4px 13px 4px 6px;
+}
+.tb-av { width: 26px; height: 26px; border-radius: 50%; background: #9839D1;
+  display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; }
+.tb-id { font-size: 13px; font-weight: 500; }
+.tb-meta { font-size: 11px; color: rgba(255,255,255,.55); }
+.tb-proto { font-size: 13px; color: rgba(255,255,255,.75); }
+.tb-proto strong { color: white; font-weight: 600; }
+.tb-sess-chip {
+  background: rgba(255,255,255,.1); border-radius: 9999px;
+  padding: 4px 13px; font-size: 12px; font-weight: 500; color: rgba(255,255,255,.9);
+}
+.tb-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+.btn-tb-ghost {
+  background: rgba(255,255,255,.1); color: rgba(255,255,255,.8);
+  border: 1px solid rgba(255,255,255,.2); border-radius: 9999px;
+  padding: 6px 15px; font-size: 12px; font-weight: 500; cursor: pointer;
+  font-family: 'Work Sans', sans-serif; display: flex; align-items: center; gap: 6px;
+}
+.btn-tb-ghost:hover { background: rgba(255,255,255,.18); color: white; }
+
+/* ══════════════════════════════════
+   SHARED: cards, buttons, form
+══════════════════════════════════ */
+.card {
+  background: white; border-radius: 12px;
+  box-shadow: 0 1px 4px rgba(0,0,0,.09); border: 1px solid rgba(0,0,0,.06);
+}
+.sec-hdr {
+  font-size: 11px; font-weight: 600; color: #7E7E7E;
+  text-transform: uppercase; letter-spacing: .6px; margin-bottom: 12px;
+}
+.btn-pri {
+  display: inline-flex; align-items: center; gap: 7px;
+  background: #9839D1; color: white; border: none; border-radius: 9999px;
+  padding: 10px 22px; font-size: 13px; font-weight: 600; cursor: pointer;
+  font-family: 'Work Sans', sans-serif;
+}
+.btn-pri:hover { background: #7c2fb5; }
+.btn-pri:disabled { background: #d1d5db; color: #9ca3af; cursor: not-allowed; }
+.btn-amber {
+  display: inline-flex; align-items: center; gap: 7px;
+  background: #f59e0b; color: #431407; border: none; border-radius: 9999px;
+  padding: 10px 22px; font-size: 13px; font-weight: 700; cursor: pointer;
+  font-family: 'Work Sans', sans-serif;
+}
+.btn-amber:hover { background: #d97706; }
+.btn-outline {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: white; color: #270D38; border: 1.5px solid #e5e7eb; border-radius: 9999px;
+  padding: 9px 18px; font-size: 13px; font-weight: 500; cursor: pointer;
+  font-family: 'Work Sans', sans-serif;
+}
+.btn-outline:hover { border-color: #9839D1; color: #9839D1; }
+.btn-ghost {
+  background: none; color: #94a3b8; border: none;
+  font-size: 13px; font-weight: 500; cursor: pointer; padding: 8px 12px;
+  font-family: 'Work Sans', sans-serif;
+}
+.btn-ghost:hover { color: #64748b; }
+.btn-edit {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: #f3e8ff; color: #7c3aed; border: none; border-radius: 6px;
+  padding: 5px 11px; font-size: 12px; font-weight: 500; cursor: pointer;
+  font-family: 'Work Sans', sans-serif;
+}
+.btn-edit:hover { background: #ede9fe; }
+
+/* form elements */
+.field { display: flex; flex-direction: column; gap: 5px; }
+.field label { font-size: 13px; font-weight: 500; color: #270D38; }
+.field .hint { font-size: 11px; color: #7E7E7E; }
+.fi {
+  font-family: 'Work Sans', sans-serif; background: #F6F5F2;
+  border: 1.5px solid #e5e7eb; border-radius: 9px;
+  padding: 11px 14px; font-size: 15px; font-weight: 500; color: #270D38;
+  width: 100%; outline: none;
+}
+.fi:focus { border-color: #9839D1; box-shadow: 0 0 0 3px rgba(152,57,209,.1); background: white; }
+.fi-date { font-size: 14px; }
+textarea.fi { font-size: 13px; font-weight: 400; resize: vertical; min-height: 70px; }
+.fi-lg { font-size: 24px; text-align: center; padding: 14px 10px; }
+.fi-readonly {
+  background: #f3e8ff; border-color: #c4b5fd; color: #6d28d9; font-weight: 600;
+  cursor: default;
+}
+
+/* ══════════════════════════════════
+   VIEW 1 — Patient Hub (Protocol)
+══════════════════════════════════ */
+.hub-shell { display: flex; flex: 1; overflow: hidden; }
+.hub-sidebar {
+  width: 64px; background: #4B164F; flex-shrink: 0;
+  display: flex; flex-direction: column; align-items: center; padding: 16px 0; gap: 6px;
+}
+.sbi { width: 36px; height: 36px; background: #B738F2; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; margin-bottom: 12px; }
+.sb-ico {
+  width: 42px; height: 42px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,.45); cursor: pointer;
+}
+.sb-ico:hover { background: rgba(255,255,255,.1); color: rgba(255,255,255,.85); }
+.sb-ico.act { background: rgba(255,255,255,.15); color: white; }
+.sb-spacer { flex: 1; }
+
+.hub-main { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
+
+.pat-header {
+  background: white; border-bottom: 1px solid rgba(0,0,0,.07);
+  padding: 0 32px; flex-shrink: 0;
+}
+.pat-header-top { display: flex; align-items: center; gap: 16px; padding: 20px 0 0; }
+.back { display: flex; align-items: center; gap: 5px; font-size: 13px; color: #9839D1;
+  font-weight: 500; cursor: pointer; padding: 5px 9px; border-radius: 8px; border: none;
+  background: none; font-family: 'Work Sans', sans-serif; }
+.back:hover { background: #f3e8ff; }
+.pat-av { width: 52px; height: 52px; border-radius: 50%;
+  background: linear-gradient(135deg, #9839D1, #B738F2);
+  display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 600; color: white; }
+.pat-name { font-size: 22px; font-weight: 600; color: #270D38; }
+.pat-pills { display: flex; gap: 7px; margin-top: 5px; flex-wrap: wrap; }
+.ppill {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 10px; border-radius: 9999px; font-size: 12px; font-weight: 500;
+  background: #f3e8ff; color: #6b21a8;
+}
+.ppill.gray { background: #f3f4f6; color: #4b5563; }
+.hub-tabs { display: flex; border-top: 1px solid rgba(0,0,0,.06); margin-top: 14px; }
+.hub-tab {
+  padding: 11px 18px; font-size: 13px; font-weight: 500; color: #7E7E7E;
+  cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px;
+}
+.hub-tab:hover { color: #270D38; }
+.hub-tab.act { color: #9839D1; border-bottom-color: #9839D1; }
+
+.hub-content { padding: 28px 32px; flex: 1; }
+
+/* plan summary bar */
+.plan-bar {
+  display: flex; align-items: center; gap: 14px;
+  background: white; border-radius: 12px;
+  box-shadow: 0 1px 4px rgba(0,0,0,.09); border: 1px solid rgba(0,0,0,.06);
+  padding: 16px 20px; margin-bottom: 24px;
+}
+.plan-icon { width: 40px; height: 40px; border-radius: 10px; background: #f3e8ff;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.plan-title { font-size: 15px; font-weight: 600; color: #270D38; }
+.plan-meta { font-size: 12px; color: #7E7E7E; margin-top: 2px; }
+.plan-badge {
+  margin-left: auto; display: flex; align-items: center; gap: 6px;
+  background: #fef3c7; color: #a16207; border-radius: 9999px;
+  padding: 5px 13px; font-size: 12px; font-weight: 600; white-space: nowrap;
+}
+.plan-badge-dot { width: 7px; height: 7px; border-radius: 50%; background: #f59e0b; }
+
+/* session timeline */
+.timeline { display: flex; flex-direction: column; gap: 0; }
+.tl-item { display: flex; gap: 16px; }
+.tl-left { display: flex; flex-direction: column; align-items: center; width: 32px; flex-shrink: 0; }
+.tl-node {
+  width: 32px; height: 32px; border-radius: 50%; border: 2px solid transparent;
+  display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0;
+}
+.tl-done    { background: #d1fae5; border-color: #22c55e; color: #15803d; }
+.tl-partial { background: #fef3c7; border-color: #f59e0b; color: #a16207; }
+.tl-new     { background: #f3f4f6; border-color: #d1d5db; color: #9ca3af; border-style: dashed; }
+.tl-line    { flex: 1; width: 2px; background: #e5e7eb; min-height: 16px; }
+.tl-line-dash { flex: 1; width: 2px; border-left: 2px dashed #e5e7eb; min-height: 16px; }
+.tl-body { flex: 1; margin-bottom: 14px; }
+
+.sess-card {
+  background: white; border-radius: 12px;
+  box-shadow: 0 1px 4px rgba(0,0,0,.09); border: 1px solid rgba(0,0,0,.06);
+  padding: 16px 18px;
+}
+.sess-card-partial { border-color: #fde68a; }
+.sc-hdr { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.sc-title { font-size: 14px; font-weight: 600; color: #270D38; }
+.sc-date { font-size: 12px; color: #7E7E7E; }
+.sc-tag {
+  margin-left: auto; border-radius: 9999px; padding: 3px 10px;
+  font-size: 11px; font-weight: 600;
+}
+.sc-tag-done    { background: #d1fae5; color: #15803d; }
+.sc-tag-partial { background: #fef3c7; color: #a16207; }
+.sc-tests { display: flex; flex-wrap: wrap; gap: 6px; }
+.sc-test {
+  display: flex; align-items: center; gap: 6px;
+  background: #f8f7f5; border-radius: 8px; padding: 6px 11px; font-size: 12px;
+}
+.sc-test-done .tc-name { color: #270D38; font-weight: 500; }
+.sc-test-done .tc-score { color: #7c3aed; font-weight: 600; font-size: 11px; }
+.sc-test-done .tc-class { font-size: 11px; color: #7E7E7E; }
+.tc-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.tc-dot-done    { background: #22c55e; }
+.tc-dot-pend    { background: #d1d5db; }
+.tc-dot-warn    { background: #f59e0b; }
+
+/* new session CTA */
+.new-sess-btn {
+  display: flex; align-items: center; gap: 12px;
+  background: white; border-radius: 12px;
+  box-shadow: 0 1px 4px rgba(0,0,0,.09);
+  border: 2px dashed #e5e7eb; padding: 16px 18px; cursor: pointer;
+  transition: border-color .15s;
+}
+.new-sess-btn:hover { border-color: #f59e0b; }
+.new-sess-btn:hover .nsb-icon { background: #fef3c7; color: #a16207; }
+.nsb-icon { width: 36px; height: 36px; border-radius: 50%; background: #f3f4f6;
+  display: flex; align-items: center; justify-content: center; color: #6b7280; flex-shrink: 0; }
+.nsb-text { font-size: 13px; font-weight: 600; color: #270D38; }
+.nsb-sub { font-size: 11px; color: #7E7E7E; margin-top: 2px; }
+
+/* ══════════════════════════════════
+   VIEW 2 — Register Session (form)
+══════════════════════════════════ */
+.reg-shell { display: flex; flex: 1; overflow: hidden; }
+.reg-main { flex: 1; overflow-y: auto; padding: 32px; display: flex; justify-content: center; }
+.reg-form { width: 100%; max-width: 640px; }
+.reg-title { font-size: 22px; font-weight: 600; color: #270D38; margin-bottom: 4px; }
+.reg-sub { font-size: 13px; color: #7E7E7E; margin-bottom: 28px; }
+.reg-section { background: white; border-radius: 12px;
+  box-shadow: 0 1px 4px rgba(0,0,0,.09); padding: 22px 24px; margin-bottom: 16px; }
+.reg-section-title { font-size: 13px; font-weight: 600; color: #270D38; margin-bottom: 14px;
+  display: flex; align-items: center; gap: 8px; }
+.rnum { width: 22px; height: 22px; border-radius: 50%; background: #9839D1;
+  display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: white; flex-shrink: 0; }
+
+/* test selector */
+.test-selector { display: flex; flex-direction: column; gap: 8px; }
+.ts-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px; border-radius: 10px; border: 1.5px solid #e5e7eb;
+  cursor: pointer; transition: border-color .15s, background .15s;
+}
+.ts-item:hover:not(.ts-done) { border-color: #9839D1; background: #faf5ff; }
+.ts-item.ts-selected { border-color: #9839D1; background: #faf5ff; }
+.ts-item.ts-done { cursor: default; opacity: .65; background: #f9fafb; }
+.ts-cb {
+  width: 20px; height: 20px; border-radius: 5px; border: 2px solid #d1d5db;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: white;
+}
+.ts-item.ts-selected .ts-cb { background: #9839D1; border-color: #9839D1; }
+.ts-item.ts-done .ts-cb { background: #d1d5db; border-color: #d1d5db; }
+.ts-name { font-size: 13px; font-weight: 500; color: #270D38; }
+.ts-cat { font-size: 11px; color: #7E7E7E; margin-top: 1px; }
+.ts-prev { margin-left: auto; display: flex; align-items: center; gap: 5px;
+  background: #f3f4f6; color: #6b7280; border-radius: 9999px; padding: 3px 10px; font-size: 11px; font-weight: 500; }
+
+/* reg footer */
+.reg-footer { display: flex; align-items: center; justify-content: flex-end; gap: 10px; margin-top: 24px; }
+.sel-count { font-size: 13px; color: #7E7E7E; margin-right: auto; }
+.sel-count strong { color: #9839D1; }
+
+/* ══════════════════════════════════
+   VIEW 3 — Enter Scores (FAS)
+══════════════════════════════════ */
+.eval-shell { display: flex; flex: 1; overflow: hidden; }
+.eval-main { flex: 1; overflow-y: auto; padding: 28px 28px; display: flex; justify-content: center; }
+.eval-form-wrap { width: 100%; max-width: 580px; }
+
+/* session progress (only current session tests, not entire protocol) */
+.sess-prog { background: white; border-radius: 10px;
+  box-shadow: 0 1px 3px rgba(0,0,0,.07); padding: 12px 16px; margin-bottom: 20px;
+  display: flex; align-items: center; gap: 12px; }
+.sp-label { font-size: 12px; color: #7E7E7E; }
+.sp-pills { display: flex; gap: 5px; }
+.sp-pill {
+  height: 26px; border-radius: 9999px; padding: 0 12px;
+  font-size: 11px; font-weight: 500; display: flex; align-items: center;
+}
+.sp-cur  { background: #270D38; color: white; }
+.sp-pend { background: #e5e7eb; color: #9ca3af; }
+.sp-done { background: #9839D1; color: white; }
+
+.eval-card { background: white; border-radius: 14px;
+  box-shadow: 0 2px 8px rgba(0,0,0,.09); padding: 28px 30px; }
+.ev-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: #f3e8ff; color: #7c3aed; border-radius: 9999px;
+  padding: 4px 12px; font-size: 11px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: .5px; margin-bottom: 10px;
+}
+.ev-title { font-size: 24px; font-weight: 600; color: #270D38; line-height: 1.2; margin-bottom: 6px; }
+.ev-sub { font-size: 13px; color: #7E7E7E; line-height: 1.5; margin-bottom: 24px; }
+.ev-section { margin-bottom: 22px; }
+.ev-section-title { font-size: 11px; font-weight: 600; color: #7E7E7E;
+  text-transform: uppercase; letter-spacing: .6px; margin-bottom: 12px;
+  padding-bottom: 8px; border-bottom: 1px solid rgba(0,0,0,.06); }
+
+/* FAS grid */
+.fas-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; }
+.fas-cell { display: flex; flex-direction: column; gap: 6px; align-items: center; }
+.fas-lbl { font-size: 12px; font-weight: 600; color: #7E7E7E; text-align: center; }
+.fas-lbl-total { color: #7c3aed; }
+
+.ev-actions { display: flex; align-items: center; gap: 8px; margin-top: 24px;
+  padding-top: 18px; border-top: 1px solid rgba(0,0,0,.06); }
+
+/* info panel */
+.info-panel { width: 264px; flex-shrink: 0; background: #faf9f8;
+  border-left: 1px solid rgba(0,0,0,.07); overflow-y: auto; padding: 18px 16px;
+  display: flex; flex-direction: column; gap: 12px; }
+.ic { background: white; border-radius: 10px; box-shadow: 0 1px 3px rgba(0,0,0,.07); padding: 14px; }
+.ic-title { font-size: 11px; font-weight: 600; color: #7E7E7E;
+  text-transform: uppercase; letter-spacing: .6px; margin-bottom: 10px; }
+.vrow { display: flex; justify-content: space-between; align-items: baseline;
+  padding: 4px 0; border-bottom: 1px solid #f3f4f6; font-size: 12px; }
+.vrow:last-child { border-bottom: none; }
+.vk { color: #7E7E7E; }
+.vv { color: #270D38; font-weight: 500; }
+.vv-p { color: #7c3aed; font-weight: 500; }
+.hist-row { display: flex; align-items: baseline; gap: 6px; padding: 4px 0;
+  border-bottom: 1px solid #f3f4f6; font-size: 12px; }
+.hist-row:last-child { border-bottom: none; }
+.hist-test { color: #270D38; font-weight: 500; flex: 1; }
+.hist-score { color: #7c3aed; font-weight: 600; }
+.hist-class { color: #7E7E7E; font-size: 11px; }
+.instr-step { display: flex; gap: 9px; margin-bottom: 8px; }
+.instr-num { width: 20px; height: 20px; border-radius: 50%; background: #f3e8ff;
+  color: #7c3aed; font-size: 10px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+.instr-txt { font-size: 11px; color: #4b5563; line-height: 1.5; }
+
+/* ══════════════════════════════════
+   VIEW 4 — Saved + Edit
+══════════════════════════════════ */
+.saved-shell { display: flex; flex: 1; overflow: hidden; }
+.saved-main { flex: 1; overflow-y: auto; padding: 28px; }
+
+/* toast */
+.toast {
+  display: flex; align-items: center; gap: 10px;
+  background: #d1fae5; border: 1px solid #86efac; border-radius: 10px;
+  padding: 12px 16px; margin-bottom: 20px; max-width: 580px;
+}
+.toast-icon { color: #15803d; flex-shrink: 0; }
+.toast-title { font-size: 13px; font-weight: 600; color: #15803d; }
+.toast-sub { font-size: 12px; color: #166534; margin-top: 1px; }
+
+/* session results list */
+.results-card { background: white; border-radius: 12px;
+  box-shadow: 0 1px 4px rgba(0,0,0,.09); padding: 20px 22px; max-width: 580px; margin-bottom: 16px; }
+.rc-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.rc-title { font-size: 14px; font-weight: 600; color: #270D38; }
+.rc-date { font-size: 12px; color: #7E7E7E; }
+.result-row { display: flex; align-items: center; gap: 12px;
+  padding: 10px 0; border-bottom: 1px solid rgba(0,0,0,.05); }
+.result-row:last-child { border-bottom: none; }
+.rr-test { font-size: 13px; font-weight: 500; color: #270D38; flex: 1; }
+.rr-pe { font-size: 13px; font-weight: 600; color: #7c3aed; }
+.rr-pct { font-size: 12px; color: #7E7E7E; }
+.rr-class { font-size: 11px; font-weight: 500; padding: 3px 9px; border-radius: 9999px; }
+.class-normal  { background: #d1fae5; color: #15803d; }
+.class-limite  { background: #fef3c7; color: #a16207; }
+.class-bajo    { background: #fee2e2; color: #991b1b; }
+.class-nb      { background: #fef3c7; color: #92400e; }
+.rr-edited { font-size: 11px; color: #9ca3af; display: flex; align-items: center; gap: 3px; }
+
+/* edit form (inline, not modal) */
+.edit-banner {
+  background: #faf5ff; border: 1.5px solid #c4b5fd; border-radius: 10px;
+  padding: 10px 14px; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;
+  font-size: 12px; color: #6d28d9; font-weight: 500;
+}
+.recalc-notice {
+  background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px;
+  padding: 10px 14px; margin-top: 14px; font-size: 12px; color: #92400e; line-height: 1.5;
+  display: flex; align-items: flex-start; gap: 8px;
+}
+.diff-row { display: flex; align-items: center; gap: 8px; padding: 8px 0;
+  border-bottom: 1px solid rgba(0,0,0,.05); font-size: 12px; }
+.diff-row:last-child { border-bottom: none; }
+.diff-k { color: #7E7E7E; min-width: 80px; }
+.diff-before { color: #94a3b8; text-decoration: line-through; }
+.diff-arrow { color: #d1d5db; }
+.diff-after { color: #7c3aed; font-weight: 600; }
+
+/* ══════════════════════════════════
+   VIEW 5 — Multi-session summary
+══════════════════════════════════ */
+.sum-shell { flex: 1; overflow-y: auto; }
+.sum-header {
+  background: white; border-bottom: 1px solid rgba(0,0,0,.07);
+  padding: 24px 32px; display: flex; align-items: flex-start; justify-content: space-between;
+}
+.sum-title { font-size: 22px; font-weight: 600; color: #270D38; margin-bottom: 4px; }
+.sum-sub { font-size: 13px; color: #7E7E7E; }
+.sum-content { padding: 28px 32px; max-width: 900px; }
+.sum-sess-block { margin-bottom: 28px; }
+.ssb-hdr { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.ssb-badge {
+  display: flex; align-items: center; gap: 7px;
+  background: #f3f4f6; border-radius: 9999px; padding: 5px 14px;
+  font-size: 13px; font-weight: 600; color: #270D38;
+}
+.ssb-badge-done { background: #d1fae5; color: #15803d; }
+.ssb-date { font-size: 12px; color: #7E7E7E; }
+
+/* results table */
+.res-table { background: white; border-radius: 12px;
+  box-shadow: 0 1px 4px rgba(0,0,0,.09); overflow: hidden; }
+.rt-head { display: grid; grid-template-columns: 1fr 110px 60px 80px 130px;
+  background: #f8f7f5; padding: 10px 18px; gap: 8px;
+  font-size: 11px; font-weight: 600; color: #7E7E7E; text-transform: uppercase; letter-spacing: .5px; }
+.rt-row { display: grid; grid-template-columns: 1fr 110px 60px 80px 130px;
+  padding: 12px 18px; gap: 8px; border-top: 1px solid rgba(0,0,0,.05);
+  align-items: center; }
+.rt-row:hover { background: #faf9f8; }
+.rt-name { font-size: 13px; font-weight: 500; color: #270D38; }
+.rt-raw { font-size: 12px; color: #7E7E7E; }
+.rt-pe { font-size: 14px; font-weight: 600; color: #7c3aed; }
+.rt-pct { font-size: 12px; color: #270D38; font-weight: 500; }
+.rt-pend { font-size: 12px; color: #9ca3af; }
+
+/* pending test row */
+.rt-row-pend { opacity: .8; }
+.reg-now { display: inline-flex; align-items: center; gap: 5px;
+  background: #f3e8ff; color: #7c3aed; border-radius: 6px;
+  padding: 4px 10px; font-size: 11px; font-weight: 500; cursor: pointer; border: none;
+  font-family: 'Work Sans', sans-serif; }
+.reg-now:hover { background: #ede9fe; }
+
+/* clinical note */
+.clin-note {
+  background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px;
+  padding: 14px 16px; display: flex; gap: 10px; align-items: flex-start; margin-bottom: 28px;
+}
+.cn-icon { color: #a16207; flex-shrink: 0; margin-top: 1px; }
+.cn-title { font-size: 13px; font-weight: 600; color: #92400e; margin-bottom: 3px; }
+.cn-text { font-size: 12px; color: #78350f; line-height: 1.5; }
+
+/* report CTAs */
+.report-ctas { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.btn-report {
+  display: inline-flex; align-items: center; gap: 8px;
+  border-radius: 9999px; padding: 11px 24px; font-size: 14px; font-weight: 600;
+  cursor: pointer; font-family: 'Work Sans', sans-serif; border: none;
+}
+.btn-pdf  { background: #9839D1; color: white; }
+.btn-pdf:hover { background: #7c2fb5; }
+.btn-word { background: white; color: #270D38; border: 1.5px solid #e5e7eb; }
+.btn-word:hover { border-color: #9839D1; color: #9839D1; }
+.report-note { font-size: 12px; color: #7E7E7E; margin-left: 4px; }
+</style>
+</head>
+<body>
+
+<!-- ── Demo nav ── -->
+<nav class="demo-nav">
+  <span class="demo-label">Mock 8</span>
+  <button class="nb act" id="nb1" onclick="showView(1)">① Hub paciente</button>
+  <button class="nb" id="nb2" onclick="showView(2)">② Registar sessão</button>
+  <button class="nb" id="nb3" onclick="showView(3)">③ Introduzir scores</button>
+  <button class="nb" id="nb4" onclick="showView(4)">④ Guardado + editar</button>
+  <button class="nb" id="nb5" onclick="showView(5)">⑤ Sumário multi-sessão</button>
+</nav>
+
+
+<!-- ═══════════════════════════════════════════════
+     VIEW 1 — Patient Hub — Protocol tab
+════════════════════════════════════════════════ -->
+<div class="view on" id="view1">
+  <div class="hub-shell">
+
+    <!-- collapsed sidebar -->
+    <nav class="hub-sidebar">
+      <div class="sbi">N</div>
+      <div class="sb-ico">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+      </div>
+      <div class="sb-ico act">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+      </div>
+      <div class="sb-ico">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      </div>
+      <div class="sb-spacer"></div>
+      <div class="sb-ico">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 1 0-16 0"/></svg>
+      </div>
+    </nav>
+
+    <main class="hub-main">
+      <!-- patient header -->
+      <div class="pat-header">
+        <div class="pat-header-top">
+          <button class="back">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>
+            Pacientes
+          </button>
+          <div class="pat-av">MG</div>
+          <div>
+            <div class="pat-name">P-2847 <span style="font-size:15px;font-weight:400;color:#7E7E7E">· MG</span></div>
+            <div class="pat-pills">
+              <span class="ppill">68 años</span>
+              <span class="ppill">12a educ.</span>
+              <span class="ppill gray">Diestro</span>
+              <span class="ppill gray">♂</span>
+            </div>
+          </div>
+          <div style="margin-left:auto;display:flex;gap:10px">
+            <button class="btn-amber" onclick="showView(2)">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Registar nova sessão
+            </button>
+          </div>
+        </div>
+        <div class="hub-tabs">
+          <div class="hub-tab">Informações</div>
+          <div class="hub-tab act">Evaluación · NEURONORMA Estándar</div>
+          <div class="hub-tab">Informes</div>
+          <div class="hub-tab">Accesos</div>
+        </div>
+      </div>
+
+      <div class="hub-content">
+
+        <!-- plan bar -->
+        <div class="plan-bar">
+          <div class="plan-icon">
+            <svg width="20" height="20" fill="none" stroke="#9839D1" stroke-width="2" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          </div>
+          <div>
+            <div class="plan-title">NEURONORMA Estándar</div>
+            <div class="plan-meta">8 testes · Modo papel · Iniciado 3 mar 2026</div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;margin-left:auto">
+            <div class="plan-badge">
+              <div class="plan-badge-dot"></div>
+              Em progresso — 2 sessões registadas
+            </div>
+            <button class="btn-outline" onclick="showView(5)" style="font-size:12px;padding:7px 15px">Ver sumário</button>
+          </div>
+        </div>
+
+        <div class="sec-hdr">Sessões clínicas</div>
+
+        <div class="timeline">
+
+          <!-- S1 — completa -->
+          <div class="tl-item">
+            <div class="tl-left">
+              <div class="tl-node tl-done">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20,6 9,17 4,12"/></svg>
+              </div>
+              <div class="tl-line"></div>
+            </div>
+            <div class="tl-body">
+              <div class="sess-card">
+                <div class="sc-hdr">
+                  <div>
+                    <span class="sc-title">Sessão 1</span>
+                    <span class="sc-date"> — 3 mar 2026 · 2 testes</span>
+                  </div>
+                  <span class="sc-tag sc-tag-done">Completa</span>
+                  <button class="btn-edit" style="margin-left:8px">
+                    <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg>
+                    Ver / Editar
+                  </button>
+                </div>
+                <div class="sc-tests">
+                  <div class="sc-test sc-test-done">
+                    <div class="tc-dot tc-dot-done"></div>
+                    <div>
+                      <div class="tc-name">TMT-A</div>
+                      <div><span class="tc-score">PE13 · P87</span> <span class="tc-class">Superior</span></div>
+                    </div>
+                  </div>
+                  <div class="sc-test sc-test-done">
+                    <div class="tc-dot tc-dot-warn"></div>
+                    <div>
+                      <div class="tc-name">TMT-B</div>
+                      <div><span class="tc-score">PE8 · P25</span> <span class="tc-class">Limítrofe</span></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- S2 — incompleta -->
+          <div class="tl-item">
+            <div class="tl-left">
+              <div class="tl-node tl-partial">2</div>
+              <div class="tl-line-dash"></div>
+            </div>
+            <div class="tl-body">
+              <div class="sess-card sess-card-partial">
+                <div class="sc-hdr">
+                  <div>
+                    <span class="sc-title">Sessão 2</span>
+                    <span class="sc-date"> — 10 mar 2026 · 1 de 2 testes</span>
+                  </div>
+                  <span class="sc-tag sc-tag-partial">Incompleta</span>
+                  <button class="btn-edit" style="margin-left:8px">
+                    <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg>
+                    Continuar
+                  </button>
+                </div>
+                <div class="sc-tests">
+                  <div class="sc-test sc-test-done">
+                    <div class="tc-dot tc-dot-done"></div>
+                    <div>
+                      <div class="tc-name">TAVEC</div>
+                      <div><span class="tc-score">PE10 · P50</span> <span class="tc-class">Normal</span></div>
+                    </div>
+                  </div>
+                  <div class="sc-test" style="opacity:.6">
+                    <div class="tc-dot tc-dot-pend"></div>
+                    <div>
+                      <div class="tc-name" style="color:#7E7E7E">FAS</div>
+                      <div style="font-size:11px;color:#9ca3af">Pendente</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- nova sessão -->
+          <div class="tl-item">
+            <div class="tl-left">
+              <div class="tl-node tl-new">+</div>
+            </div>
+            <div class="tl-body">
+              <div class="new-sess-btn" onclick="showView(2)">
+                <div class="nsb-icon">
+                  <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                </div>
+                <div>
+                  <div class="nsb-text">Registar Sessão 3</div>
+                  <div class="nsb-sub">Adicionar testes administrados numa nova visita clínica</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /timeline -->
+      </div>
+    </main>
+  </div>
+</div><!-- /view1 -->
+
+
+<!-- ═══════════════════════════════════════════════
+     VIEW 2 — Register Session
+════════════════════════════════════════════════ -->
+<div class="view" id="view2">
+  <div class="topbar">
+    <div class="tb-dot">N</div>
+    <span class="tb-name">Nóos</span>
+    <div class="tb-div"></div>
+    <div class="tb-pat">
+      <div class="tb-av">MG</div>
+      <span class="tb-id">P-2847</span>
+      <span class="tb-meta">· 68a · 12a educ.</span>
+    </div>
+    <div class="tb-div"></div>
+    <span class="tb-proto"><strong>NEURONORMA Estándar</strong></span>
+    <div class="tb-right">
+      <button class="btn-tb-ghost" onclick="showView(1)">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>
+        Voltar ao hub
+      </button>
+    </div>
+  </div>
+
+  <div class="reg-shell">
+    <div class="reg-main">
+      <div class="reg-form">
+        <div class="reg-title">Registar Sessão 3</div>
+        <div class="reg-sub">Protocolo: NEURONORMA Estándar · 3 testes por registar</div>
+
+        <!-- Date section -->
+        <div class="reg-section">
+          <div class="reg-section-title">
+            <div class="rnum">1</div>
+            Data da visita clínica
+          </div>
+          <div class="field">
+            <label>Data em que o teste foi administrado ao paciente</label>
+            <span class="hint">Pode ser hoje ou uma data anterior</span>
+            <input type="date" class="fi fi-date" value="2026-04-12" />
+          </div>
+          <div class="field" style="margin-top:14px">
+            <label>Notas gerais da sessão <span style="color:#9ca3af;font-weight:400">(opcional)</span></label>
+            <textarea class="fi" placeholder="Ex: paciente mostrou alguma fadiga no final…" style="min-height:56px;font-size:13px"></textarea>
+          </div>
+        </div>
+
+        <!-- Test selection -->
+        <div class="reg-section">
+          <div class="reg-section-title">
+            <div class="rnum">2</div>
+            Que testes foram administrados nesta visita?
+          </div>
+          <div class="test-selector">
+
+            <div class="ts-item ts-done" title="Já registado na Sessão 1">
+              <div class="ts-cb">
+                <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><polyline points="20,6 9,17 4,12"/></svg>
+              </div>
+              <div>
+                <div class="ts-name">TMT-A</div>
+                <div class="ts-cat">Atención y velocidad de procesamiento</div>
+              </div>
+              <div class="ts-prev">
+                <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20,6 9,17 4,12"/></svg>
+                Registado S1
+              </div>
+            </div>
+
+            <div class="ts-item ts-done" title="Já registado na Sessão 1">
+              <div class="ts-cb">
+                <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><polyline points="20,6 9,17 4,12"/></svg>
+              </div>
+              <div>
+                <div class="ts-name">TMT-B</div>
+                <div class="ts-cat">Función ejecutiva · Flexibilidad mental</div>
+              </div>
+              <div class="ts-prev">
+                <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20,6 9,17 4,12"/></svg>
+                Registado S1
+              </div>
+            </div>
+
+            <div class="ts-item ts-done" title="Já registado na Sessão 2">
+              <div class="ts-cb">
+                <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><polyline points="20,6 9,17 4,12"/></svg>
+              </div>
+              <div>
+                <div class="ts-name">TAVEC</div>
+                <div class="ts-cat">Memoria verbal · Aprendizaje</div>
+              </div>
+              <div class="ts-prev">
+                <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20,6 9,17 4,12"/></svg>
+                Registado S2
+              </div>
+            </div>
+
+            <div class="ts-item ts-selected" id="ts-fas" onclick="toggleTest('fas')">
+              <div class="ts-cb">
+                <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><polyline points="20,6 9,17 4,12"/></svg>
+              </div>
+              <div>
+                <div class="ts-name">FAS</div>
+                <div class="ts-cat">Linguagem · Fluidez verbal fonológica</div>
+              </div>
+            </div>
+
+            <div class="ts-item" id="ts-sem" onclick="toggleTest('sem')">
+              <div class="ts-cb"></div>
+              <div>
+                <div class="ts-name">Semántica</div>
+                <div class="ts-cat">Linguagem · Fluidez verbal semântica</div>
+              </div>
+            </div>
+
+            <div class="ts-item" id="ts-dig" onclick="toggleTest('dig')">
+              <div class="ts-cb"></div>
+              <div>
+                <div class="ts-name">Dígitos</div>
+                <div class="ts-cat">Memoria de trabajo · Span numérico</div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="reg-footer">
+          <span class="sel-count" id="sel-count"><strong>1 teste</strong> seleccionado</span>
+          <button class="btn-outline" onclick="showView(1)">Cancelar</button>
+          <button class="btn-pri" id="btn-continue" onclick="showView(3)">
+            Continuar para introdução de scores
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div><!-- /view2 -->
+
+
+<!-- ═══════════════════════════════════════════════
+     VIEW 3 — Enter Scores: FAS
+════════════════════════════════════════════════ -->
+<div class="view" id="view3">
+  <div class="topbar">
+    <div class="tb-dot">N</div>
+    <span class="tb-name">Nóos</span>
+    <div class="tb-div"></div>
+    <div class="tb-pat">
+      <div class="tb-av">MG</div>
+      <span class="tb-id">P-2847</span>
+      <span class="tb-meta">· 68a · 12a educ.</span>
+    </div>
+    <div class="tb-div"></div>
+    <span class="tb-proto"><strong>NEURONORMA Estándar</strong></span>
+    <div class="tb-div"></div>
+    <span class="tb-sess-chip">Sessão 3 — 12 abr 2026</span>
+    <div class="tb-right">
+      <button class="btn-tb-ghost" onclick="showView(1)">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16,17 21,12 16,7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Guardar e sair
+      </button>
+    </div>
+  </div>
+
+  <div class="eval-shell">
+    <div class="eval-main">
+      <div class="eval-form-wrap">
+
+        <!-- session progress — only this session's tests -->
+        <div class="sess-prog">
+          <span class="sp-label">Sessão 3:</span>
+          <div class="sp-pills">
+            <div class="sp-pill sp-cur">FAS</div>
+          </div>
+          <span style="font-size:12px;color:#7E7E7E;margin-left:auto">1 de 1 testes nesta sessão</span>
+        </div>
+
+        <div class="eval-card">
+          <div class="ev-badge">
+            <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            Linguagem · Fluidez verbal fonológica
+          </div>
+          <div class="ev-title">FAS — <span style="color:#B738F2">Fluidez Verbal</span></div>
+          <div class="ev-sub">Número de palavras produzidas em 60 segundos para cada letra. Excluem-se nomes próprios e variantes da mesma palavra.</div>
+
+          <div class="ev-section">
+            <div class="ev-section-title">Resultado por letra</div>
+            <div class="fas-grid">
+              <div class="fas-cell">
+                <div class="fas-lbl">F</div>
+                <input type="number" class="fi fi-lg" id="fas-f" value="12" oninput="calcFasTotal()" placeholder="0" />
+              </div>
+              <div class="fas-cell">
+                <div class="fas-lbl">A</div>
+                <input type="number" class="fi fi-lg" id="fas-a" value="9" oninput="calcFasTotal()" placeholder="0" />
+              </div>
+              <div class="fas-cell">
+                <div class="fas-lbl">S</div>
+                <input type="number" class="fi fi-lg" id="fas-s" value="11" oninput="calcFasTotal()" placeholder="0" />
+              </div>
+              <div class="fas-cell">
+                <div class="fas-lbl fas-lbl-total">Total</div>
+                <input type="number" class="fi fi-lg fi-readonly" id="fas-total" value="32" readonly tabindex="-1" />
+              </div>
+            </div>
+          </div>
+
+          <div class="ev-section" style="margin-bottom:0">
+            <div class="ev-section-title">Notas do clínico <span style="font-weight:400;color:#9ca3af">(opcional)</span></div>
+            <textarea class="fi" placeholder="Observações do comportamento durante a prova…"></textarea>
+          </div>
+
+          <div class="ev-actions">
+            <button class="btn-ghost">Omitir este teste</button>
+            <div style="margin-left:auto;display:flex;gap:10px">
+              <button class="btn-outline" onclick="showView(2)">
+                <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>
+                Anterior
+              </button>
+              <button class="btn-pri" onclick="showView(4)">
+                Guardar resultado
+                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- info panel -->
+    <div class="info-panel">
+      <div class="ic">
+        <div class="ic-title">Sessão 3 — 12 abr 2026</div>
+        <div class="vrow"><span class="vk">Testes nesta sessão</span><span class="vv">1</span></div>
+        <div class="vrow"><span class="vk">Completados</span><span class="vv" style="color:#f59e0b">0 de 1</span></div>
+      </div>
+      <div class="ic">
+        <div class="ic-title">Sessões anteriores</div>
+        <div style="font-size:11px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">S1 — 3 mar</div>
+        <div class="hist-row"><span class="hist-test">TMT-A</span><span class="hist-score">PE13</span><span class="hist-class"> P87 Superior</span></div>
+        <div class="hist-row"><span class="hist-test">TMT-B</span><span class="hist-score">PE8</span><span class="hist-class"> P25 Limítrofe</span></div>
+        <div style="font-size:11px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:.5px;margin:10px 0 6px">S2 — 10 mar</div>
+        <div class="hist-row"><span class="hist-test">TAVEC</span><span class="hist-score">PE10</span><span class="hist-class"> P50 Normal</span></div>
+      </div>
+      <div class="ic">
+        <div class="ic-title">Normativa NEURONORMA</div>
+        <div class="vrow"><span class="vk">Rango edad</span><span class="vv-p">65–74 anos</span></div>
+        <div class="vrow"><span class="vk">Educação</span><span class="vv-p">8–12 anos</span></div>
+        <div class="vrow"><span class="vk">Score</span><span class="vv">Total F+A+S</span></div>
+        <div class="vrow"><span class="vk">Direcção</span><span class="vv">↑ Maior = melhor</span></div>
+      </div>
+      <div class="ic">
+        <div class="ic-title">Procedimento FAS</div>
+        <div class="instr-step"><div class="instr-num">1</div><div class="instr-txt">Explicar que deve dizer palavras começadas pela letra indicada durante 60 seg.</div></div>
+        <div class="instr-step"><div class="instr-num">2</div><div class="instr-txt">Excluir nomes próprios (Pedro, Paris) e derivados da mesma raiz (cama, camada).</div></div>
+        <div class="instr-step"><div class="instr-num">3</div><div class="instr-txt">Administrar F, depois A, depois S, com pausa entre letras.</div></div>
+        <div class="instr-step"><div class="instr-num">4</div><div class="instr-txt">Registar o total de palavras válidas em cada letra.</div></div>
+      </div>
+    </div>
+  </div>
+</div><!-- /view3 -->
+
+
+<!-- ═══════════════════════════════════════════════
+     VIEW 4 — Saved + Edit flow
+════════════════════════════════════════════════ -->
+<div class="view" id="view4">
+  <div class="topbar">
+    <div class="tb-dot">N</div>
+    <span class="tb-name">Nóos</span>
+    <div class="tb-div"></div>
+    <div class="tb-pat">
+      <div class="tb-av">MG</div>
+      <span class="tb-id">P-2847</span>
+      <span class="tb-meta">· 68a</span>
+    </div>
+    <div class="tb-div"></div>
+    <span class="tb-sess-chip">Sessão 3 — 12 abr 2026</span>
+    <div class="tb-right">
+      <button class="btn-tb-ghost" onclick="showView(1)">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
+        Hub do paciente
+      </button>
+    </div>
+  </div>
+
+  <div class="saved-shell">
+    <div class="saved-main">
+
+      <!-- success toast -->
+      <div class="toast" style="max-width:580px">
+        <div class="toast-icon">
+          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20,6 9,17 4,12"/></svg>
+        </div>
+        <div>
+          <div class="toast-title">FAS guardado com sucesso</div>
+          <div class="toast-sub">PE9 · P37 · Normal-Bajo — calculado automaticamente com NEURONORMA España (65–74a, 8–12a educ.)</div>
+        </div>
+      </div>
+
+      <!-- session results -->
+      <div class="results-card">
+        <div class="rc-header">
+          <div>
+            <div class="rc-title">Sessão 3 — 12 abr 2026</div>
+            <div class="rc-date" style="margin-top:2px">1 de 1 testes registados</div>
+          </div>
+          <span class="sc-tag sc-tag-done" style="font-size:12px">Completa</span>
+        </div>
+        <div class="result-row">
+          <div class="rr-test">FAS — Fluidez Verbal Fonológica</div>
+          <div class="rr-pe">PE 9</div>
+          <div class="rr-pct">P37</div>
+          <div class="rr-class class-nb">Normal-Bajo</div>
+          <button class="btn-edit" id="btn-edit-fas" onclick="toggleEdit()">
+            <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg>
+            Editar
+          </button>
+        </div>
+      </div>
+
+      <!-- edit form (hidden by default, shown on click) -->
+      <div id="edit-form" style="display:none;max-width:580px">
+        <div class="edit-banner">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg>
+          A editar FAS — Sessão 3 · 12 abr 2026
+        </div>
+
+        <div class="results-card" style="margin-bottom:0">
+          <div class="ev-section-title" style="margin-bottom:14px">Resultado por letra</div>
+          <div class="fas-grid" style="margin-bottom:18px">
+            <div class="fas-cell">
+              <div class="fas-lbl">F</div>
+              <input type="number" class="fi fi-lg" id="edit-fas-f" value="14" oninput="calcEditTotal()" />
+            </div>
+            <div class="fas-cell">
+              <div class="fas-lbl">A</div>
+              <input type="number" class="fi fi-lg" id="edit-fas-a" value="9" oninput="calcEditTotal()" />
+            </div>
+            <div class="fas-cell">
+              <div class="fas-lbl">S</div>
+              <input type="number" class="fi fi-lg" id="edit-fas-s" value="11" oninput="calcEditTotal()" />
+            </div>
+            <div class="fas-cell">
+              <div class="fas-lbl fas-lbl-total">Total</div>
+              <input type="number" class="fi fi-lg fi-readonly" id="edit-fas-total" value="34" readonly tabindex="-1" />
+            </div>
+          </div>
+
+          <!-- diff preview -->
+          <div style="background:#f8f7f5;border-radius:8px;padding:12px 14px;margin-bottom:14px">
+            <div style="font-size:11px;font-weight:600;color:#7E7E7E;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Alteração</div>
+            <div class="diff-row">
+              <span class="diff-k">Letra F</span>
+              <span class="diff-before">12</span>
+              <span class="diff-arrow">→</span>
+              <span class="diff-after" id="diff-f">14</span>
+            </div>
+            <div class="diff-row">
+              <span class="diff-k">Total</span>
+              <span class="diff-before">32</span>
+              <span class="diff-arrow">→</span>
+              <span class="diff-after" id="diff-total">34</span>
+            </div>
+          </div>
+
+          <div class="recalc-notice">
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <span>Ao guardar, o resultado normativo será recalculado automaticamente. O novo PE e percentil substituirão os anteriores.</span>
+          </div>
+
+          <div class="ev-actions" style="border-top:none;padding-top:14px;margin-top:14px;border-top:1px solid rgba(0,0,0,.06)">
+            <button class="btn-ghost" onclick="toggleEdit()">Cancelar</button>
+            <div style="margin-left:auto;display:flex;gap:10px">
+              <button class="btn-pri" onclick="saveEdit()">
+                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20,6 9,17 4,12"/></svg>
+                Guardar alterações
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- navigation -->
+      <div style="display:flex;align-items:center;gap:12px;margin-top:20px;max-width:580px">
+        <button class="btn-outline" onclick="showView(1)">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>
+          Voltar ao hub
+        </button>
+        <button class="btn-amber" onclick="showView(5)" style="margin-left:auto">
+          Ver sumário completo
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div><!-- /view4 -->
+
+
+<!-- ═══════════════════════════════════════════════
+     VIEW 5 — Multi-session summary
+════════════════════════════════════════════════ -->
+<div class="view" id="view5">
+  <div class="sum-shell">
+
+    <div class="sum-header">
+      <div>
+        <div class="sum-title">NEURONORMA Estándar — Sumário completo</div>
+        <div class="sum-sub">Paciente P-2847 · MG · 3 sessões · 5 de 6 testes registados</div>
+      </div>
+      <button class="btn-outline" onclick="showView(1)" style="flex-shrink:0">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>
+        Hub do paciente
+      </button>
+    </div>
+
+    <div class="sum-content">
+
+      <!-- S1 -->
+      <div class="sum-sess-block">
+        <div class="ssb-hdr">
+          <div class="ssb-badge ssb-badge-done">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20,6 9,17 4,12"/></svg>
+            Sessão 1
+          </div>
+          <span class="ssb-date">3 mar 2026 · 2 testes</span>
+        </div>
+        <div class="res-table">
+          <div class="rt-head">
+            <span>Teste</span>
+            <span>Score bruto</span>
+            <span>PE</span>
+            <span>Percentil</span>
+            <span>Classificação</span>
+          </div>
+          <div class="rt-row">
+            <span class="rt-name">TMT-A</span>
+            <span class="rt-raw">41 seg</span>
+            <span class="rt-pe">13</span>
+            <span class="rt-pct">P87</span>
+            <span><div class="rr-class class-normal" style="display:inline-block">Superior</div></span>
+          </div>
+          <div class="rt-row">
+            <span class="rt-name">TMT-B</span>
+            <span class="rt-raw">94 seg</span>
+            <span class="rt-pe">8</span>
+            <span class="rt-pct">P25</span>
+            <span><div class="rr-class class-limite" style="display:inline-block">Limítrofe</div></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- clinical note -->
+      <div class="clin-note">
+        <div class="cn-icon">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        </div>
+        <div>
+          <div class="cn-title">Nota clínica — Função executiva</div>
+          <div class="cn-text">Ratio TMT B/A = 2.29 (94s ÷ 41s). Valor acima do esperado para a faixa etária. Vigilar velocidade de processamento vs. controlo executivo nos restantes testes.</div>
+        </div>
+      </div>
+
+      <!-- S2 -->
+      <div class="sum-sess-block">
+        <div class="ssb-hdr">
+          <div class="ssb-badge ssb-badge-done">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20,6 9,17 4,12"/></svg>
+            Sessão 2
+          </div>
+          <span class="ssb-date">10 mar 2026 · 1 teste</span>
+        </div>
+        <div class="res-table">
+          <div class="rt-head">
+            <span>Teste</span>
+            <span>Score bruto</span>
+            <span>PE</span>
+            <span>Percentil</span>
+            <span>Classificação</span>
+          </div>
+          <div class="rt-row">
+            <span class="rt-name">TAVEC — Total ensayos</span>
+            <span class="rt-raw">56 palavras</span>
+            <span class="rt-pe">10</span>
+            <span class="rt-pct">P50</span>
+            <span><div class="rr-class class-normal" style="display:inline-block">Normal</div></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- S3 -->
+      <div class="sum-sess-block">
+        <div class="ssb-hdr">
+          <div class="ssb-badge ssb-badge-done">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20,6 9,17 4,12"/></svg>
+            Sessão 3
+          </div>
+          <span class="ssb-date">12 abr 2026 · 1 teste</span>
+        </div>
+        <div class="res-table">
+          <div class="rt-head">
+            <span>Teste</span>
+            <span>Score bruto</span>
+            <span>PE</span>
+            <span>Percentil</span>
+            <span>Classificação</span>
+          </div>
+          <div class="rt-row">
+            <span class="rt-name">FAS — Total F+A+S</span>
+            <span class="rt-raw">36 palavras</span>
+            <span class="rt-pe">9</span>
+            <span class="rt-pct">P37</span>
+            <span><div class="rr-class class-nb" style="display:inline-block">Normal-Bajo</div></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- pending test -->
+      <div class="sum-sess-block">
+        <div class="ssb-hdr">
+          <div class="ssb-badge" style="background:#fef3c7;color:#a16207">
+            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            Testes por registar
+          </div>
+        </div>
+        <div class="res-table">
+          <div class="rt-head">
+            <span>Teste</span>
+            <span>Score bruto</span>
+            <span>PE</span>
+            <span>Percentil</span>
+            <span>Acção</span>
+          </div>
+          <div class="rt-row rt-row-pend">
+            <span class="rt-name" style="color:#7E7E7E">Semántica</span>
+            <span class="rt-raw" style="color:#d1d5db">—</span>
+            <span class="rt-pend">—</span>
+            <span class="rt-pend">—</span>
+            <span style="display:flex;gap:6px">
+              <button class="reg-now" onclick="showView(2)">
+                <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Registar
+              </button>
+              <button class="btn-ghost" style="font-size:11px;padding:4px 8px;color:#d1d5db">Omitir</button>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- report CTAs -->
+      <div style="background:white;border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,.09);padding:22px 24px;margin-top:8px">
+        <div style="font-size:15px;font-weight:600;color:#270D38;margin-bottom:4px">Gerar relatório</div>
+        <div style="font-size:13px;color:#7E7E7E;margin-bottom:18px">O relatório incluirá os 5 testes registados. "Semántica" aparecerá como não administrado, ou pode omiti-lo antes de gerar.</div>
+        <div class="report-ctas">
+          <button class="btn-report btn-pdf">
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
+            Gerar PDF
+          </button>
+          <button class="btn-report btn-word">
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
+            Gerar Word
+          </button>
+          <span class="report-note">NEURONORMA España · 65–74a · 8–12a educ.</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div><!-- /view5 -->
+
+
+<script>
+// ── navigation
+function showView(n) {
+  for (let i = 1; i <= 5; i++) {
+    const v = document.getElementById('view' + i);
+    if (v) { v.style.display = 'none'; v.classList.remove('on'); }
+    const b = document.getElementById('nb' + i);
+    if (b) b.classList.remove('act');
+  }
+  const tv = document.getElementById('view' + n);
+  if (tv) { tv.style.display = 'flex'; tv.classList.add('on'); }
+  const tb = document.getElementById('nb' + n);
+  if (tb) tb.classList.add('act');
+}
+
+// ── FAS total calculation (view 3)
+function calcFasTotal() {
+  const f = parseInt(document.getElementById('fas-f').value) || 0;
+  const a = parseInt(document.getElementById('fas-a').value) || 0;
+  const s = parseInt(document.getElementById('fas-s').value) || 0;
+  document.getElementById('fas-total').value = f + a + s;
+}
+
+// ── edit total calculation + diff (view 4)
+function calcEditTotal() {
+  const f = parseInt(document.getElementById('edit-fas-f').value) || 0;
+  const a = parseInt(document.getElementById('edit-fas-a').value) || 0;
+  const s = parseInt(document.getElementById('edit-fas-s').value) || 0;
+  const total = f + a + s;
+  document.getElementById('edit-fas-total').value = total;
+  document.getElementById('diff-f').textContent = f;
+  document.getElementById('diff-total').textContent = total;
+}
+
+// ── toggle edit form (view 4)
+function toggleEdit() {
+  const form = document.getElementById('edit-form');
+  const btn  = document.getElementById('btn-edit-fas');
+  const show = form.style.display === 'none';
+  form.style.display = show ? 'block' : 'none';
+  btn.textContent = show ? '✕ Cancelar' : '✏ Editar';
+}
+
+function saveEdit() {
+  // update the displayed result row
+  const total = parseInt(document.getElementById('edit-fas-total').value) || 0;
+  document.querySelector('.rr-pe').textContent = 'PE 10';
+  document.querySelector('.rr-pct').textContent = 'P46';
+  document.querySelector('.rr-class').textContent = 'Normal-Bajo';
+  document.querySelector('.rr-class').className = 'rr-class class-nb';
+
+  // hide edit form + add edited badge
+  document.getElementById('edit-form').style.display = 'none';
+  const btn = document.getElementById('btn-edit-fas');
+  btn.textContent = '✏ Editar';
+
+  const editedNote = document.createElement('span');
+  editedNote.className = 'rr-edited';
+  editedNote.innerHTML = `<svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg> editado 11 abr`;
+  const row = document.querySelector('.result-row');
+  if (!row.querySelector('.rr-edited')) row.insertBefore(editedNote, btn);
+
+  // swap toast
+  const toast = document.querySelector('.toast');
+  toast.style.background = '#f0fdf4';
+  toast.querySelector('.toast-title').textContent = 'FAS actualizado';
+  toast.querySelector('.toast-sub').textContent = 'Score recalculado: F=14 · A=9 · S=11 · Total=34 · PE10 · P46 · Normal-Bajo';
+}
+
+// ── test selector (view 2)
+const selected = new Set(['fas']);
+function toggleTest(id) {
+  const el = document.getElementById('ts-' + id);
+  if (!el || el.classList.contains('ts-done')) return;
+  if (selected.has(id)) { selected.delete(id); el.classList.remove('ts-selected'); }
+  else { selected.add(id); el.classList.add('ts-selected'); }
+  const n = selected.size;
+  document.getElementById('sel-count').innerHTML = `<strong>${n} teste${n !== 1 ? 's' : ''}</strong> seleccionado${n !== 1 ? 's' : ''}`;
+  document.getElementById('btn-continue').disabled = n === 0;
+}
+</script>
+</body>
+</html>

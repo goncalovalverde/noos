@@ -267,7 +267,7 @@ A concrete instance of a protocol being applied to a patient.
 | Field | Values | Description |
 |---|---|---|
 | `status` | `draft` / `active` / `completed` / `abandoned` | Current state |
-| `mode` | `live` / `paper` | Live = real-time; Paper = entering results from paper test |
+| `mode` | `paper` | Always `paper` — UI enforces paper-first entry (live mode removed) |
 | `test_customizations` | JSON array | Per-test overrides of the protocol template |
 | `is_saved_variant` | Boolean | Whether this is a saved named variant |
 | `variant_name` | String | Name of the saved variant |
@@ -290,6 +290,26 @@ Each entry in `test_customizations`:
 - `repeat_later=true`: test deferred to a subsequent session
 - `order`: determines execution sequence
 
+### ClinicalSession
+A ClinicalSession groups tests performed in a single patient visit. Protocols typically span 2+ visits (sessions), but the number of sessions is not known in advance.
+
+| Field | Description |
+|---|---|
+| `id` | UUID PK |
+| `execution_plan_id` | FK to `execution_plans` (CASCADE delete) |
+| `session_number` | Auto-assigned sequential integer (1, 2, 3…) |
+| `session_date` | `Date` — the actual date of the patient visit (not entry date) |
+| `notes` | Optional free-text notes |
+| `created_at` | When the record was entered |
+
+Rules:
+- Always belongs to an `ExecutionPlan` — never standalone
+- `session_number` is assigned automatically (`count(existing) + 1`) and is immutable
+- `session_date` can be in the past (retroactive entry is the normal workflow)
+- Deleting a ClinicalSession cascades to its `TestSession` records
+
+API routes (all require plan access): `POST /api/plans/{plan_id}/sessions`, `GET /api/plans/{plan_id}/sessions`, `GET /api/plans/{plan_id}/sessions/{session_id}`, `DELETE /api/plans/{plan_id}/sessions/{session_id}`
+
 ### TestSession
 Each completed test produces one `TestSession` record:
 
@@ -298,15 +318,16 @@ Each completed test produces one `TestSession` record:
 | `patient_id` | FK to patient |
 | `protocol_id` | FK to protocol (nullable) |
 | `execution_plan_id` | FK to plan (nullable) |
+| `clinical_session_id` | FK to `clinical_sessions` (nullable, CASCADE delete) — which visit this test belongs to |
 | `test_type` | String key (e.g. `"TMT-A"`) |
 | `date` | When the test was performed |
 | `raw_data` | JSON: test-specific measurements |
 | `calculated_scores` | JSON: `{puntuacion_escalar, percentil, z_score, clasificacion, norma_aplicada}` |
 | `qualitative_data` | JSON: `{observaciones, checklist_items}` |
+| `updated_at` | Last modification timestamp (auto-updated) |
 
-### Modes
-- **Live**: evaluation performed in real-time; `performed_at` set to now at plan creation
-- **Paper**: clinician enters scores from a paper test; `performed_at` set manually
+### Mode policy
+All evaluations use **paper mode** only. The `mode` field on `ExecutionPlan` is always `"paper"`. The live-mode UI (real-time timer, session chrome) has been removed. Clinicians perform tests on paper during the patient visit and enter results retrospectively.
 
 ### Incomplete evaluations
 Plans with `status=draft` or `status=active` appear on the `/evaluaciones/incompletas` page.
@@ -552,13 +573,19 @@ PatientProtocol
 
 ExecutionPlan
   id, patient_id, protocol_id
-  mode (live|paper), status (draft|active|completed|abandoned)
+  mode (always "paper"), status (draft|active|completed|abandoned)
   test_customizations: JSON [{test_type, order, skip, added, repeat_later, notes}]
   is_saved_variant, variant_name, performed_at
 
+ClinicalSession
+  id, execution_plan_id (FK CASCADE)
+  session_number (int, auto-assigned), session_date (Date)
+  notes, created_at
+
 TestSession
   id, patient_id, protocol_id, execution_plan_id
-  test_type, date
+  clinical_session_id (FK to clinical_sessions, nullable, CASCADE)
+  test_type, date, updated_at
   raw_data: JSON (test-specific)
   calculated_scores: JSON {puntuacion_escalar, percentil, z_score, clasificacion, norma_aplicada}
   qualitative_data: JSON {observaciones, checklist_items}
@@ -596,4 +623,4 @@ All logged via `audit()` in `backend/app/api/utils/audit.py`:
 
 ---
 
-*Last updated: 2026-04-10 — reflects codebase state at commit `b9b6e1a`*
+*Last updated: 2026-04-11 — reflects codebase state at commit `31492fa` + ClinicalSession feature*

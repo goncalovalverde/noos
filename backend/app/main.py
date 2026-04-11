@@ -20,6 +20,7 @@ from app.api.routes import patients as patients_router
 from app.api.routes import protocols as protocols_router
 from app.api.routes import tests as tests_router
 from app.api.routes import execution_plans as execution_plans_router
+from app.api.routes import clinical_sessions as clinical_sessions_router
 from app.api.routes import reports as reports_router
 from app.api.routes import stats as stats_router
 
@@ -154,6 +155,7 @@ app.include_router(patients_router.router)
 app.include_router(protocols_router.router)
 app.include_router(tests_router.router)
 app.include_router(execution_plans_router.router)
+app.include_router(clinical_sessions_router.router)
 app.include_router(reports_router.router)
 app.include_router(stats_router.router)
 

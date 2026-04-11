@@ -17,7 +17,7 @@ class TestCustomization(BaseModel):
 class ExecutionPlanCreate(BaseModel):
     patient_id: str = Field(min_length=36, max_length=36)
     protocol_id: str = Field(min_length=36, max_length=36)
-    mode: VALID_MODES = "live"
+    mode: VALID_MODES = "paper"
     performed_at: Optional[datetime] = None
 
 class ExecutionPlanUpdate(BaseModel):

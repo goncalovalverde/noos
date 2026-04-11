@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { ChevronLeft, ClipboardList, PlayCircle, Radio, ListChecks, Plus, X } from 'lucide-react'
+import { ChevronLeft, ClipboardList, PlayCircle, CalendarDays, ListChecks, Plus, X } from 'lucide-react'
 import { protocolsApi, type Protocol } from '@/api/protocols'
 import { evaluationsApi, type TestCustomization } from '@/api/evaluations'
 import { extractApiError } from '@/utils/apiError'
@@ -18,7 +18,6 @@ export default function EvaluationSetup() {
 
   const [protocols, setProtocols] = useState<Protocol[]>([])
   const [selectedProtocol, setSelectedProtocol] = useState<Protocol | null>(null)
-  const [mode, setMode] = useState<'live' | 'paper'>('live')
   const [performedDate, setPerformedDate] = useState<string>('')
   const [loading, setLoading] = useState(true)
   const [starting, setStarting] = useState(false)
@@ -62,8 +61,8 @@ export default function EvaluationSetup() {
     setStarting(true)
     setError(null)
     try {
-      const performed_at = mode === 'paper' && performedDate ? new Date(performedDate).toISOString() : undefined
-      const plan = await evaluationsApi.create(patientId, selectedProtocol.id, mode, performed_at)
+      const performed_at = performedDate ? new Date(performedDate).toISOString() : undefined
+      const plan = await evaluationsApi.create(patientId, selectedProtocol.id, 'paper', performed_at)
       // Apply customizations if protocol allows it and user made changes
       if (selectedProtocol.allow_customization) {
         await evaluationsApi.update(plan.id, { test_customizations: customTests })
@@ -131,47 +130,25 @@ export default function EvaluationSetup() {
           )}
         </div>
 
-        {/* Step 2: Mode selector */}
+        {/* Step 2: Date of evaluation */}
         <div className="bg-white rounded-card shadow-card p-6">
           <div className="flex items-center gap-2 mb-4">
-            <Radio className="w-5 h-5 text-brand-mid" />
-            <h2 className="text-base font-semibold text-brand-ink">Modo de entrada</h2>
+            <CalendarDays className="w-5 h-5 text-brand-mid" />
+            <h2 className="text-base font-semibold text-brand-ink">Data de realização</h2>
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            {[
-              { value: 'live', label: 'En vivo', desc: 'Paciente presente — cronómetro activo', icon: '⚡' },
-              { value: 'paper', label: 'Diferido', desc: 'Transcripción diferida — sin cronómetro', icon: '📋' },
-            ].map(opt => (
-              <button
-                key={opt.value}
-                onClick={() => setMode(opt.value as 'live' | 'paper')}
-                className={`text-left p-4 rounded-card border-2 transition-all ${
-                  mode === opt.value
-                    ? 'border-brand-mid bg-brand-mid/5'
-                    : 'border-gray-200 hover:border-brand-mid/40'
-                }`}
-              >
-                <span className="text-xl">{opt.icon}</span>
-                <p className="font-medium text-brand-ink mt-1">{opt.label}</p>
-                <p className="text-xs text-brand-muted mt-0.5">{opt.desc}</p>
-              </button>
-            ))}
+          <div>
+            <label className="block text-sm font-medium text-brand-ink mb-1">
+              Quando foi administrada esta avaliação ao paciente?
+            </label>
+            <p className="text-xs text-brand-muted mb-3">Pode ser hoje ou uma data anterior. Se deixar vazio usa-se a data de hoje.</p>
+            <input
+              type="date"
+              value={performedDate}
+              max={new Date().toISOString().split('T')[0]}
+              onChange={e => setPerformedDate(e.target.value)}
+              className="w-56 px-3 py-2 border border-gray-200 rounded-input text-sm focus:outline-none focus:ring-2 focus:ring-brand-mid"
+            />
           </div>
-          {mode === 'paper' && (
-            <div className="mt-4 pt-4 border-t border-dashed border-gray-200">
-              <label className="block text-sm font-medium text-brand-ink mb-1">
-                📅 Fecha de realización <span className="text-brand-muted font-normal">(cuándo se hizo el test)</span>
-              </label>
-              <input
-                type="date"
-                value={performedDate}
-                max={new Date().toISOString().split('T')[0]}
-                onChange={e => setPerformedDate(e.target.value)}
-                className="w-48 px-3 py-2 border border-gray-200 rounded-input text-sm focus:outline-none focus:ring-2 focus:ring-brand-mid"
-              />
-              <p className="text-xs text-brand-muted mt-1">Si se deja vacío, se usará la fecha de hoy.</p>
-            </div>
-          )}
         </div>
 
         {/* Step 3: Customize tests (only when protocol allows it) */}
