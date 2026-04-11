@@ -34,9 +34,44 @@ class NormativeCalculator:
                     self._tables[test_type] = json.load(f)
 
     def calculate(self, test_type: str, raw_score: float, age: int, education_years: int) -> dict:
+        if test_type == "MoCA":
+            return self._calculate_moca(raw_score, education_years)
         if test_type in self._tables:
             return self._calculate_from_table(test_type, raw_score, age, education_years)
         return self._calculate_simulated(test_type, raw_score, age, education_years)
+
+    def _calculate_moca(self, total_bruto: float, education_years: int) -> dict:
+        """
+        MoCA (Montreal Cognitive Assessment) — Nasreddine et al., 2005.
+        Total max = 30 points. Education adjustment: +1 if ≤12 years (capped at 30).
+        Cutoffs: ≥26 Normal | 18-25 DCL | 10-17 Moderado | ≤9 Grave
+        """
+        edu_adjustment = 1 if education_years <= 12 else 0
+        total_adjusted = min(30, int(total_bruto) + edu_adjustment)
+
+        if total_adjusted >= 26:
+            clasificacion = "Normal"
+        elif total_adjusted >= 18:
+            clasificacion = "Deterioro cognitivo leve"
+        elif total_adjusted >= 10:
+            clasificacion = "Deterioro cognitivo moderado"
+        else:
+            clasificacion = "Deterioro cognitivo grave"
+
+        return {
+            "puntuacion_escalar": total_adjusted,
+            "percentil": None,
+            "z_score": None,
+            "clasificacion": clasificacion,
+            "norma_aplicada": {
+                "fuente": "MoCA — Nasreddine et al. (2005)",
+                "test": "MoCA",
+                "ajuste_educacion": edu_adjustment,
+                "puntuacion_bruta": int(total_bruto),
+                "puntuacion_ajustada": total_adjusted,
+                "punto_corte": 26,
+            },
+        }
 
     def _calculate_from_table(self, test_type: str, raw_score: float, age: int, education_years: int) -> dict:
         table = self._tables[test_type]

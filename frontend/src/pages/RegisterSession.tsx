@@ -27,6 +27,7 @@ const TEST_CATEGORIES: Record<string, string> = {
   'Cubos': 'Función visuoespacial · Construcción',
   'Torre-Londres': 'Función ejecutiva · Planificación',
   'Stroop': 'Función ejecutiva · Inhibición de respuesta',
+  'MoCA': 'Evaluación cognitiva global · Cribado',
 }
 
 export default function RegisterSession() {

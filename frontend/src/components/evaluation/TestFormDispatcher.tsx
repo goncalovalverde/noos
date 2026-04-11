@@ -8,6 +8,7 @@ import DigitosForm from './forms/DigitosForm'
 import WaisSubtestForm from './forms/WaisSubtestForm'
 import TorreForm from './forms/TorreForm'
 import StroopForm from './forms/StroopForm'
+import MocaForm from './forms/MocaForm'
 
 interface Props {
   testType: string
@@ -66,5 +67,6 @@ export default function TestFormDispatcher({ testType, mode, onSave, onSkip, sav
     )
   if (testType === 'Torre-Londres') return <TorreForm {...commonProps} />
   if (testType === 'Stroop') return <StroopForm {...commonProps} />
+  if (testType === 'MoCA') return <MocaForm {...commonProps} />
   return <GenericForm testType={testType} {...commonProps} />
 }

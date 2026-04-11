@@ -23,6 +23,7 @@ def extract_raw_score(test_type: str, raw_data: Dict[str, Any]) -> float:
         "BADS-Llave":        lambda d: d["puntuacion_estrategia"],
         "FCSRT":             lambda d: d["total_inmediato"],
         "Perfil-Sensorial":  lambda d: sum(d.values()),
+        "MoCA":              lambda d: float(d.get("total_bruto", 0)),
     }
 
     if test_type not in extractors:
