@@ -11,13 +11,7 @@ import { CSS } from '@dnd-kit/utilities'
 import { useAuthStore } from '@/store/auth'
 import { protocolsApi, type Protocol, type ProtocolTestIn } from '@/api/protocols'
 import { extractApiError } from '@/utils/apiError'
-
-const ALL_TEST_TYPES = [
-  'TMT-A', 'TMT-B', 'TAVEC', 'Fluidez-FAS', 'Rey-Copia', 'Rey-Memoria',
-  'Dígitos-Directos', 'Dígitos-Inversos', 'Letras-Números', 'Aritmética',
-  'Clave-Números', 'Búsqueda-Símbolos', 'Semejanzas', 'Vocabulario',
-  'Matrices', 'Cubos', 'Torre-Londres', 'Stroop', 'FAS-Verbal',
-]
+import { ALL_TEST_TYPES } from '@/constants/tests'
 
 const CATEGORY_SUGGESTIONS = ['Rastreio', 'Memoria', 'Atención', 'Completo', 'Personalizado']
 

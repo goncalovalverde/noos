@@ -4,13 +4,7 @@ import { ChevronLeft, ClipboardList, ListChecks, Plus, X, ArrowRight } from 'luc
 import { protocolsApi, type Protocol } from '@/api/protocols'
 import { evaluationsApi, type TestCustomization } from '@/api/evaluations'
 import { extractApiError } from '@/utils/apiError'
-
-const ALL_TEST_TYPES = [
-  'TMT-A', 'TMT-B', 'TAVEC', 'Fluidez-FAS', 'Rey-Copia', 'Rey-Memoria',
-  'Dígitos-Directos', 'Dígitos-Inversos', 'Letras-Números', 'Aritmética',
-  'Clave-Números', 'Búsqueda-Símbolos', 'Semejanzas', 'Vocabulario',
-  'Matrices', 'Cubos', 'Torre-Londres', 'Stroop', 'FAS-Verbal', 'MoCA',
-]
+import { ALL_TEST_TYPES } from '@/constants/tests'
 
 export default function EvaluationSetup() {
   const { id: patientId } = useParams<{ id: string }>()
