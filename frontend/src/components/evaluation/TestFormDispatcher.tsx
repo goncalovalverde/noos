@@ -41,16 +41,12 @@ export default function TestFormDispatcher({ testType, mode, onSave, onSkip, sav
   if (testType === 'Rey-Copia' || testType === 'Rey-Memoria')
     return <ReyForm testType={testType as 'Rey-Copia' | 'Rey-Memoria'} {...commonProps} />
   if (
+    testType === 'Dígitos-WAIS' ||
     testType === 'Dígitos-Directos' ||
     testType === 'Dígitos-Inversos' ||
     testType === 'Letras-Números'
   )
-    return (
-      <DigitosForm
-        testType={testType as 'Dígitos-Directos' | 'Dígitos-Inversos' | 'Letras-Números'}
-        {...commonProps}
-      />
-    )
+    return <DigitosForm {...commonProps} />
   if (
     testType === 'Aritmética' ||
     testType === 'Semejanzas' ||

@@ -17,6 +17,7 @@ def extract_raw_score(test_type: str, raw_data: Dict[str, Any]) -> float:
         "DIVA-5":            lambda d: d["inatención_actual"] + d["hiperactividad_actual"],
         "BRIEF-A":           lambda d: sum(d.values()),
         "WAIS-IV":           lambda d: d["CI_total"],
+        "Dígitos-WAIS":      lambda d: d.get("puntuacion_escalar_wais") or (d.get("orden_directo", 0) + d.get("orden_inverso", 0) + d.get("orden_creciente", 0)),
         "Dígitos":           lambda d: d["digitos_directos"] + d["digitos_inversos"] + d["secuencia_letras_numeros"],
         "Test-d2-R":         lambda d: d["indice_concentracion"],
         "FDT":               lambda d: d["elegir_tiempo"] + d["alternar_tiempo"],

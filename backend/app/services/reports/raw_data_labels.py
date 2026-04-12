@@ -79,6 +79,19 @@ def format_raw_data(test_type: str, raw: Dict[str, Any]) -> List[Tuple[str, str]
             rows.append(('Estrategia', str(raw.get('estrategia'))))
         return rows
 
+    if t == 'Dígitos-WAIS':
+        rows = []
+        if raw.get('orden_directo') is not None:
+            rows.append(('Orden Directo', _v(raw.get('orden_directo'), '/ 16')))
+        if raw.get('orden_inverso') is not None:
+            rows.append(('Orden Inverso', _v(raw.get('orden_inverso'), '/ 14')))
+        if raw.get('orden_creciente') is not None:
+            rows.append(('Orden Creciente', _v(raw.get('orden_creciente'), '/ 14')))
+        if raw.get('total_bruto') is not None:
+            rows.append(('Total bruto', _v(raw.get('total_bruto'), '/ 44')))
+        return rows
+
+    # Legacy aliases
     if t == 'Dígitos-Directos':
         return [
             ('Span máximo directo', _v(raw.get('span_maximo'))),

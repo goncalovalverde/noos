@@ -10,7 +10,7 @@ export const ALL_TEST_TYPES: string[] = [
   // Verbal fluency
   'Fluidez-FAS', 'FAS-Verbal', 'Fluidez-PRM', 'Fluidez-Semantica',
   // WAIS subtests
-  'Dígitos-Directos', 'Dígitos-Inversos', 'Letras-Números',
+  'Dígitos-WAIS',
   'Aritmética', 'Semejanzas', 'Vocabulario',
   'Matrices', 'Cubos', 'Clave-Números', 'Búsqueda-Símbolos',
   // Executive function

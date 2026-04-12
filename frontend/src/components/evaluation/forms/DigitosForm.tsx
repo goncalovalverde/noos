@@ -1,10 +1,7 @@
 import { useState } from 'react'
 import FormBase from './FormBase'
 
-type DigitosTestType = 'Dígitos-Directos' | 'Dígitos-Inversos' | 'Letras-Números'
-
 interface Props {
-  testType: DigitosTestType
   mode: 'live' | 'paper'
   onSave: (raw: Record<string, unknown>, qual?: Record<string, unknown>) => Promise<void>
   onSkip?: () => void
@@ -14,39 +11,23 @@ interface Props {
   saveLabel?: string
 }
 
-const DESCRIPTIONS: Record<DigitosTestType, string> = {
-  'Dígitos-Directos': 'WAIS-IV — Repetición de dígitos en orden directo (span 2–9, 2 ensayos por span)',
-  'Dígitos-Inversos': 'WAIS-IV — Repetición en orden inverso (span 2–8, 2 ensayos por span)',
-  'Letras-Números': 'WAIS-IV — Secuenciación de letras y números (span 2–8, 2 ensayos por span)',
-}
-
-/** Maximum span depends on subtest */
-const MAX_SPAN: Record<DigitosTestType, number> = {
-  'Dígitos-Directos': 9,
-  'Dígitos-Inversos': 8,
-  'Letras-Números': 8,
-}
-
-/** Total possible correct trials given a span_maximo (each span has 2 trials) */
-function maxPossibleAciertos(spanMaximo: number, minSpan = 2): number {
-  if (spanMaximo < minSpan) return 0
-  return (spanMaximo - minSpan + 1) * 2
-}
-
-export default function DigitosForm({ testType, mode: _mode, onSave, onSkip, saving, initialData, initialQual, saveLabel }: Props) {
+export default function DigitosForm({ mode: _mode, onSave, onSkip, saving, initialData, initialQual, saveLabel }: Props) {
+  const [directo, setDirecto] = useState(() => initialData?.orden_directo != null ? String(initialData.orden_directo) : '')
+  const [inverso, setInverso] = useState(() => initialData?.orden_inverso != null ? String(initialData.orden_inverso) : '')
+  const [creciente, setCreciente] = useState(() => initialData?.orden_creciente != null ? String(initialData.orden_creciente) : '')
   const [pe, setPe] = useState(() => initialData?.puntuacion_escalar_wais != null ? String(initialData.puntuacion_escalar_wais) : '')
-  const [spanMaximo, setSpanMaximo] = useState(() => initialData?.span_maximo != null ? String(initialData.span_maximo) : '')
-  const [totalAciertos, setTotalAciertos] = useState(() => initialData?.total_aciertos != null ? String(initialData.total_aciertos) : '')
 
-  const maxSpan = MAX_SPAN[testType]
-  const spanNum = Number(spanMaximo)
-  const aciertosNum = Number(totalAciertos)
-  const possibleMax = spanMaximo !== '' ? maxPossibleAciertos(spanNum) : null
+  const directoN = directo !== '' ? Number(directo) : 0
+  const inversoN = inverso !== '' ? Number(inverso) : 0
+  const crecienteN = creciente !== '' ? Number(creciente) : 0
+  const total = directoN + inversoN + crecienteN
 
   const raw = {
+    orden_directo: directo !== '' ? directoN : null,
+    orden_inverso: inverso !== '' ? inversoN : null,
+    orden_creciente: creciente !== '' ? crecienteN : null,
+    total_bruto: (directo !== '' || inverso !== '' || creciente !== '') ? total : null,
     puntuacion_escalar_wais: pe !== '' ? Number(pe) : null,
-    span_maximo: spanMaximo !== '' ? spanNum : null,
-    total_aciertos: totalAciertos !== '' ? aciertosNum : null,
   }
 
   const isValid =
@@ -54,10 +35,16 @@ export default function DigitosForm({ testType, mode: _mode, onSave, onSkip, sav
     Number(pe) >= 1 &&
     Number(pe) <= 19
 
+  const components = [
+    { label: 'Orden Directo', val: directo, setter: setDirecto, max: 16, hint: 'Spans 2–9, 2 ensayos/span (máx. 16)' },
+    { label: 'Orden Inverso', val: inverso, setter: setInverso, max: 14, hint: 'Spans 2–8, 2 ensayos/span (máx. 14)' },
+    { label: 'Orden Creciente', val: creciente, setter: setCreciente, max: 14, hint: 'Spans 2–8, 2 ensayos/span (máx. 14)' },
+  ]
+
   return (
     <FormBase
-      testType={testType}
-      description={DESCRIPTIONS[testType]}
+      testType="Dígitos-WAIS"
+      description="WAIS-IV — Dígitos: Orden Directo, Orden Inverso y Orden Creciente"
       onSave={onSave}
       onSkip={onSkip}
       saving={saving}
@@ -66,13 +53,41 @@ export default function DigitosForm({ testType, mode: _mode, onSave, onSkip, sav
       initialQual={initialQual}
       saveLabel={saveLabel}
     >
-      {/* WAIS-IV scaled score (PE) — primary normative field */}
+      {/* Three raw score components */}
+      <div className="grid grid-cols-3 gap-4">
+        {components.map(({ label, val, setter, max, hint }) => (
+          <div key={label}>
+            <label className="block text-sm font-medium text-brand-ink mb-1">{label}</label>
+            <input
+              type="number"
+              min={0}
+              max={max}
+              value={val}
+              onChange={e => setter(e.target.value)}
+              placeholder={`0–${max}`}
+              className="w-full text-xl font-semibold text-center px-3 py-3 border border-gray-200 rounded-input focus:outline-none focus:ring-2 focus:ring-brand-mid"
+            />
+            <p className="text-xs text-brand-muted mt-1">{hint}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Auto-computed total */}
+      {(directo !== '' || inverso !== '' || creciente !== '') && (
+        <div className="rounded-input bg-brand-bg border border-brand-mid/20 px-4 py-2 text-sm text-brand-ink">
+          Puntuación bruta total:{' '}
+          <strong className="text-brand-dark">{total}</strong>
+          <span className="text-brand-muted"> / 44</span>
+        </div>
+      )}
+
+      {/* PE — required, entered from WAIS-IV normative booklet */}
       <div>
         <label htmlFor="digitos-pe" className="block text-sm font-medium text-brand-ink mb-1">
           Puntuación Escalar WAIS-IV (1–19) <span className="text-clinical-impaired">*</span>
         </label>
         <p className="text-xs text-brand-muted mb-2">
-          Introduce la Puntuación Escalar (PE) de 1–19 obtenida de la tabla normativa del manual WAIS-IV, según la edad del paciente.
+          Consulta la tabla normativa del manual WAIS-IV (por edad) e introduce la Puntuación Escalar (PE) correspondiente a la puntuación bruta total.
         </p>
         <input
           id="digitos-pe"
@@ -85,57 +100,6 @@ export default function DigitosForm({ testType, mode: _mode, onSave, onSkip, sav
           className="w-full text-2xl font-semibold px-4 py-3 border border-gray-200 rounded-input focus:outline-none focus:ring-2 focus:ring-brand-mid"
         />
       </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        {/* Span máximo */}
-        <div>
-          <label htmlFor="digitos-span" className="block text-sm font-medium text-brand-ink mb-1">
-            Span máximo alcanzado <span className="text-brand-muted font-normal">(opcional)</span>
-          </label>
-          <input
-            id="digitos-span"
-            type="number"
-            min={2}
-            max={maxSpan}
-            value={spanMaximo}
-            onChange={e => setSpanMaximo(e.target.value)}
-            placeholder={`2–${maxSpan}`}
-            className="w-full px-3 py-2 border border-gray-200 rounded-input text-sm focus:outline-none focus:ring-2 focus:ring-brand-mid"
-          />
-          <p className="text-xs text-brand-muted mt-1">Rango: 2–{maxSpan}</p>
-        </div>
-
-        {/* Total aciertos */}
-        <div>
-          <label htmlFor="digitos-aciertos" className="block text-sm font-medium text-brand-ink mb-1">
-            Total aciertos (ensayos correctos) <span className="text-brand-muted font-normal">(opcional)</span>
-          </label>
-          <input
-            id="digitos-aciertos"
-            type="number"
-            min={0}
-            max={16}
-            value={totalAciertos}
-            onChange={e => setTotalAciertos(e.target.value)}
-            placeholder="0–16"
-            className="w-full px-3 py-2 border border-gray-200 rounded-input text-sm focus:outline-none focus:ring-2 focus:ring-brand-mid"
-          />
-          <p className="text-xs text-brand-muted mt-1">Máx. total posible: 16</p>
-        </div>
-      </div>
-
-      {/* Live hint: max possible given span */}
-      {possibleMax !== null && (
-        <div className="rounded-input bg-brand-bg border border-brand-mid/20 px-4 py-2 text-sm text-brand-ink">
-          Con span máximo <strong>{spanNum}</strong>, el total máximo posible es{' '}
-          <strong>{possibleMax}</strong> aciertos
-          {aciertosNum > possibleMax && (
-            <span className="ml-2 text-clinical-impaired font-medium">
-              ⚠ Total introducido supera el máximo esperado
-            </span>
-          )}
-        </div>
-      )}
     </FormBase>
   )
 }
