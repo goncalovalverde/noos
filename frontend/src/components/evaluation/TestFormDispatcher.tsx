@@ -5,6 +5,7 @@ import StaiForm from './forms/StaiForm'
 import TmtForm from './forms/TmtForm'
 import TavecForm from './forms/TavecForm'
 import FluidezFasForm from './forms/FluidezFasForm'
+import FluidezPrmForm from './forms/FluidezPrmForm'
 import FluidezSemanticaForm from './forms/FluidezSemanticaForm'
 import GenericForm from './forms/GenericForm'
 import ReyForm from './forms/ReyForm'
@@ -33,6 +34,8 @@ export default function TestFormDispatcher({ testType, mode, onSave, onSkip, sav
   if (testType === 'TAVEC') return <TavecForm {...commonProps} />
   if (testType === 'Fluidez-FAS' || testType === 'FAS-Verbal')
     return <FluidezFasForm {...commonProps} />
+  if (testType === 'Fluidez-PRM')
+    return <FluidezPrmForm {...commonProps} />
   if (testType === 'Fluidez-Semantica')
     return <FluidezSemanticaForm {...commonProps} />
   if (testType === 'Rey-Copia' || testType === 'Rey-Memoria')

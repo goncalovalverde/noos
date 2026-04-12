@@ -8,7 +8,7 @@ export const ALL_TEST_TYPES: string[] = [
   // Attention / Processing speed
   'Stroop', 'Test-d2-R', 'BTA',
   // Verbal fluency
-  'Fluidez-FAS', 'FAS-Verbal', 'Fluidez-Semantica',
+  'Fluidez-FAS', 'FAS-Verbal', 'Fluidez-PRM', 'Fluidez-Semantica',
   // WAIS subtests
   'Dígitos-Directos', 'Dígitos-Inversos', 'Letras-Números',
   'Aritmética', 'Semejanzas', 'Vocabulario',

@@ -10,6 +10,7 @@ class NormativeCalculator:
         "TMT-A": "tmt_a.json",
         "TMT-B": "tmt_b.json",
         "Fluidez-FAS": "fluidez_fas.json",
+        "Fluidez-PRM": "fluidez_fas.json",
         "Fluidez-Semantica": "fluidez_semantica.json",
         "TAVEC": "tavec.json",
         "Rey-Copia": "rey_copia.json",
