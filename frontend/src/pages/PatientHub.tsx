@@ -39,12 +39,14 @@ function fmtSessionDate(d: string | null | undefined) {
 const fmtDate = fmtSessionDate
 
 // Expandable row: loads full results on first open, shows sessions timeline
-function EvaluationRow({ plan, patientId }: { plan: ExecutionPlanSummary; patientId: string }) {
+function EvaluationRow({ plan, patientId, onDeleted }: { plan: ExecutionPlanSummary; patientId: string; onDeleted: (planId: string) => void }) {
   const navigate = useNavigate()
   const [open, setOpen] = useState(false)
   const [details, setDetails] = useState<ExecutionPlanWithResults | null>(null)
   const [loading, setLoading] = useState(false)
   const [downloading, setDownloading] = useState<'pdf' | 'word' | null>(null)
+  const [confirmDelete, setConfirmDelete] = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
   const toggle = async () => {
     if (!open && !details) {
@@ -68,6 +70,17 @@ function EvaluationRow({ plan, patientId }: { plan: ExecutionPlanSummary; patien
       await evaluationsApi.downloadReport(plan.id, format, `${slug}_${plan.id.slice(0, 6)}.${ext}`)
     } finally {
       setDownloading(null)
+    }
+  }
+
+  const handleDelete = async () => {
+    setDeleting(true)
+    try {
+      await evaluationsApi.delete(plan.id)
+      onDeleted(plan.id)
+    } finally {
+      setDeleting(false)
+      setConfirmDelete(false)
     }
   }
 
@@ -159,6 +172,38 @@ function EvaluationRow({ plan, patientId }: { plan: ExecutionPlanSummary; patien
           {downloading === 'word' ? <Loader2 className="w-3 h-3 animate-spin" /> : <FileDown className="w-3 h-3" />}
           Word
         </button>
+        {/* Spacer + delete button */}
+        <div className="flex-1" />
+        {!confirmDelete ? (
+          <button
+            onClick={e => { e.stopPropagation(); setConfirmDelete(true) }}
+            className="flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded border border-gray-200 text-gray-400 hover:border-red-300 hover:text-red-600 hover:bg-red-50 transition-colors"
+            title="Eliminar evaluación"
+          >
+            <Trash2 className="w-3 h-3" />
+            Eliminar
+          </button>
+        ) : (
+          <div className="flex items-center gap-1.5 bg-red-50 border border-red-200 rounded px-2.5 py-1">
+            <AlertTriangle className="w-3 h-3 text-red-600 flex-shrink-0" />
+            <span className="text-[11px] text-red-700 font-medium">¿Eliminar evaluación y todos sus resultados?</span>
+            <button
+              onClick={e => { e.stopPropagation(); handleDelete() }}
+              disabled={deleting}
+              className="flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded bg-red-600 text-white hover:bg-red-700 transition-colors disabled:opacity-50"
+            >
+              {deleting ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />}
+              Confirmar
+            </button>
+            <button
+              onClick={e => { e.stopPropagation(); setConfirmDelete(false) }}
+              disabled={deleting}
+              className="text-[11px] font-medium px-2 py-0.5 rounded border border-red-200 text-red-600 hover:bg-red-100 transition-colors disabled:opacity-50"
+            >
+              Cancelar
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Expanded: sessions timeline */}
@@ -536,7 +581,7 @@ export default function PatientHub() {
             ) : (
               <div className="rounded-card shadow-card bg-white overflow-hidden divide-y divide-gray-100">
                 {plans.map(plan => (
-                  <EvaluationRow key={plan.id} plan={plan} patientId={id!} />
+                  <EvaluationRow key={plan.id} plan={plan} patientId={id!} onDeleted={(planId) => setPlans(prev => prev.filter(p => p.id !== planId))} />
                 ))}
               </div>
             )}

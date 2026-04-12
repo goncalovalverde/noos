@@ -115,4 +115,7 @@ export const evaluationsApi = {
     a.click()
     URL.revokeObjectURL(url)
   },
+  delete: async (planId: string): Promise<void> => {
+    await apiClient.delete(`/execution-plans/${planId}`)
+  },
 }

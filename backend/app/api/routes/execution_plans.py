@@ -56,6 +56,16 @@ async def get_execution_plan(
     return ExecutionPlanService(db).get_plan(plan_id, current_user)
 
 
+@router.delete("/{plan_id}", status_code=204)
+async def delete_execution_plan(
+    plan_id: str,
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role(UserRole.ADMIN, UserRole.NEURO)),
+):
+    ExecutionPlanService(db).delete_plan(plan_id, current_user, request)
+
+
 @router.patch("/{plan_id}", response_model=ExecutionPlanOut)
 async def update_execution_plan(
     plan_id: str,

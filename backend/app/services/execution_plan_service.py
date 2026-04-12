@@ -181,6 +181,21 @@ class ExecutionPlanService:
         out.test_customizations = plan._get_customizations()
         return out
 
+    def delete_plan(self, plan_id: str, user: User, request: Request) -> None:
+        plan = self._get_or_404(plan_id)
+        patient = self.db.query(Patient).filter(Patient.id == plan.patient_id).first()
+        if not patient or not can_access_patient(self.db, patient, user):
+            raise HTTPException(403, "No tienes acceso a este paciente")
+
+        # Explicitly delete TestSessions that may not be linked to a ClinicalSession
+        self.db.query(TestSession).filter(TestSession.execution_plan_id == plan_id).delete(synchronize_session=False)
+        audit(self.db, "execution_plan.delete", user_id=user.id,
+              resource_type="execution_plan", resource_id=plan_id,
+              details={"patient_id": plan.patient_id, "protocol_id": plan.protocol_id, "status": plan.status},
+              request=request)
+        self.db.delete(plan)
+        self.db.commit()
+
     # ── private helpers ────────────────────────────────────────────────────
 
     def _get_or_404(self, plan_id: str) -> ExecutionPlan:
