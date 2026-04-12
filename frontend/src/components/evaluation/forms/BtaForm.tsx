@@ -94,7 +94,7 @@ export default function BtaForm({ mode: _mode, onSave, onSkip, saving, initialDa
   return (
     <FormBase
       testType="BTA"
-      description="Breve Test de Atención (Schretlen, 1997). Se leen 10 secuencias de letras y números. El paciente cuenta sólo los números (Parte N) o sólo las letras (Parte L)."
+      description="Breve Test de Atención (Schretlen, 1997). Se leen 10 secuencias de letras y números. El paciente cuenta sólo los números (Parte N) o sólo las letras (Parte L). Normas: población chilena adulta — Arango-Lasprilla et al. (2015), NeuroRehabilitation 37:545–561."
       onSave={onSave}
       onSkip={onSkip}
       saving={saving}

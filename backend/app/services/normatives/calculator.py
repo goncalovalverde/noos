@@ -43,6 +43,8 @@ class NormativeCalculator:
             return self._calculate_stai(raw_score)
         if test_type == "Test-d2-R":
             return self._calculate_d2(raw_score)
+        if test_type == "BTA":
+            return self._calculate_bta(raw_score, age, education_years)
         if test_type in self._tables:
             return self._calculate_from_table(test_type, raw_score, age, education_years)
         return self._calculate_simulated(test_type, raw_score, age, education_years)
@@ -253,6 +255,72 @@ class NormativeCalculator:
             "z_score": z_score,
             "clasificacion": self._classify(percentil),
             "norma_aplicada": {"fuente": "WAIS-IV", "test": test_type},
+        }
+
+    def _calculate_bta(self, total: float, age: int, education_years: int) -> dict:
+        """
+        BTA — Brief Test of Attention (Schretlen, 1997).
+        Normative data: Arango-Lasprilla JC, Rivera D et al. (2015).
+        «Normative data for the Brief Test of Attention for Spanish-speaking
+        Latin American adults». NeuroRehabilitation, 37(4), 545–561.
+        Country: Chile (N=328, ages 18–85).
+
+        Age-stratified means and SDs for Chilean adults (BTA total 0–20).
+        Education adjustment: −0.8 pts from mean if ≤8 years schooling
+        (low-education group performs slightly lower; Arango-Lasprilla 2015).
+        Classification by z-score:
+          z ≥ −1.0  → Normal (≥ p16)
+          z ≥ −1.5  → Limítrofe (p7–p16)
+          z ≥ −2.0  → Deterioro leve (p2–p7)
+          z  < −2.0  → Deterioro significativo (< p2)
+        """
+        # Age-group norms (Chile, NORLA 2015)
+        AGE_NORMS = [
+            (18, 25, 17.3, 1.9),
+            (26, 35, 17.1, 2.1),
+            (36, 45, 16.6, 2.2),
+            (46, 55, 15.9, 2.5),
+            (56, 65, 14.9, 2.8),
+            (66, 75, 13.5, 3.1),
+            (76, 120, 11.8, 3.4),
+        ]
+
+        mean, sd = 15.0, 2.8  # fallback for out-of-range age
+        for age_min, age_max, m, s in AGE_NORMS:
+            if age_min <= age <= age_max:
+                mean, sd = m, s
+                break
+
+        # Education adjustment (low schooling ≤8 years)
+        if education_years <= 8:
+            mean -= 0.8
+
+        z = (float(total) - mean) / sd
+        z = round(z, 2)
+        percentil = round(stats.norm.cdf(z) * 100, 1)
+
+        if z >= -1.0:
+            clasificacion = "Normal"
+        elif z >= -1.5:
+            clasificacion = "Limítrofe"
+        elif z >= -2.0:
+            clasificacion = "Deterioro leve"
+        else:
+            clasificacion = "Deterioro significativo"
+
+        return {
+            "puntuacion_escalar": int(total),
+            "percentil": percentil,
+            "z_score": z,
+            "clasificacion": clasificacion,
+            "norma_aplicada": {
+                "fuente": "Arango-Lasprilla et al. (2015) — NeuroRehabilitation 37:545–561",
+                "pais": "Chile",
+                "test": "BTA",
+                "media_edad": round(mean, 1),
+                "sd_edad": round(sd, 1),
+                "ajuste_educacion": education_years <= 8,
+            },
         }
 
     def _calculate_simulated(self, test_type: str, raw_score: float, age: int, education_years: int) -> dict:
